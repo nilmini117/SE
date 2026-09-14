@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Process Payment')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/payments}" class="btn btn-secondary btn-sm">
+            &larr; Back to Payments
+        </a>
+    </div>
+
+    <div class="df-form-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+            Process Payment
+        </h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
+            Enter the transaction reference, settlement date, and amount received.
+        </p>
+
+        <form th:action="@{/payments}" th:object="${payment}" method="post">
+            <div class="form-group">
+                <label class="form-label">Transaction Reference Number</label>
+                <input type="text" th:field="*{refNo}" class="form-control" placeholder="e.g. TXN-940219" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Payment Date</label>
+                    <input type="date" th:field="*{paymentDate}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount Paid ($ USD)</label>
+                    <input type="number" step="0.01" th:field="*{amountPaid}" class="form-control" placeholder="0.00" min="0" required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Payment</button>
+                <a th:href="@{/payments}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

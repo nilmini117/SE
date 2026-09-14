@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Incident Report')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('incidents')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/incidents}" class="btn btn-secondary btn-sm">
+            &larr; Back to Incidents
+        </a>
+    </div>
+
+    <div class="df-form-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
+            th:text="${incident.incidentId} != null ? 'Edit Incident #' + ${incident.incidentId} : 'Report New Incident'">
+            Log Incident
+        </h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
+            Provide incident date, damage assessment, severity level, and current status.
+        </p>
+
+        <form th:action="${incident.incidentId} != null ? @{/incidents/{id}(id=${incident.incidentId})} : @{/incidents}"
+              th:object="${incident}" method="post">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Incident Date</label>
+                    <input type="date" th:field="*{date}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Severity Level</label>
+                    <select th:field="*{severity}" class="form-select">
+                        <option value="LOW">LOW — Minor cosmetic damage</option>
+                        <option value="MEDIUM">MEDIUM — Moderate repair needed</option>
+                        <option value="HIGH">HIGH — Severe mechanical / body damage</option>
+                        <option value="CRITICAL">CRITICAL — Vehicle inoperable</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Investigation / Resolution Status</label>
+                <select th:field="*{status}" class="form-select">
+                    <option value="OPEN">OPEN — Pending Review</option>
+                    <option value="IN_PROGRESS">IN_PROGRESS — Under Repair / Investigation</option>
+                    <option value="RESOLVED">RESOLVED — Claim Completed</option>
+                    <option value="CLOSED">CLOSED — Archive</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Incident Description & Damage Notes</label>
+                <textarea th:field="*{description}" class="form-control" rows="4" placeholder="Detail the circumstances, location, parties involved, and observed damage..." required></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Incident</button>
+                <a th:href="@{/incidents}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

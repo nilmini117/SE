@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Customer Feedback')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('feedback')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Customer Feedback & Reviews</h1>
+            <p class="df-header-subtitle">Review feedback inquiries, manage customer complaints, and audit service quality.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/feedback/new}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Submit Feedback
+            </a>
+        </div>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${feedbackList != null and !feedbackList.empty}">
+            <thead>
+            <tr>
+                <th>Ticket ID</th>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Customer Message</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="f : ${feedbackList}">
+                <td><strong th:text="'#FB-' + ${f.feedbackId}">#FB-1</strong></td>
+                <td th:text="${f.date}">2026-09-13</td>
+                <td>
+                    <span th:if="${f.category == 'INQUIRY'}" class="badge badge-info">Inquiry</span>
+                    <span th:if="${f.category == 'COMPLAINT'}" class="badge badge-danger">Complaint</span>
+                    <span th:if="${f.category != 'INQUIRY' and f.category != 'COMPLAINT'}" class="badge badge-success" th:text="${f.category}">General</span>
+                </td>
+                <td style="max-width: 360px; line-height: 1.4;" th:text="${f.message}">Excellent customer service at airport branch!</td>
+                <td style="text-align: right;">
+                    <a th:href="@{/feedback/{id}/resolve(id=${f.feedbackId})}" class="btn btn-success btn-sm">Resolve</a>
+                    <a th:href="@{/feedback/{id}/delete(id=${f.feedbackId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this feedback record?');">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${feedbackList == null or feedbackList.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Feedback Tickets</h3>
+            <p class="empty-state-desc">Customer inquiries and satisfaction ratings will appear in this inbox.</p>
+            <a th:href="@{/feedback/new}" class="btn btn-primary">Submit First Review</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

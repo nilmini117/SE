@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Booking Details')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/bookings}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+            &larr; Back to Bookings
+        </a>
+    </div>
+
+    <div class="df-form-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;" 
+            th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Create New Booking'">
+            New Booking
+        </h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
+            Fill in the reservation specifics, duration, and pricing details below.
+        </p>
+
+        <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
+              th:object="${booking}" method="post">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Booking Start Date</label>
+                    <input type="date" th:field="*{bookingDate}" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Booking End Date</label>
+                    <input type="date" th:field="*{endDate}" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Duration (Days)</label>
+                    <input type="number" th:field="*{duration}" class="form-control" placeholder="e.g. 5" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Vehicle Quantity</label>
+                    <input type="number" th:field="*{quantity}" class="form-control" placeholder="e.g. 1" min="1" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Charged Rate ($ USD)</label>
+                    <input type="number" step="0.01" th:field="*{chargedRate}" class="form-control" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reservation Status</label>
+                    <select th:field="*{status}" class="form-select">
+                        <option value="PENDING">PENDING</option>
+                        <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="COMPLETED">COMPLETED</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Booking</button>
+                <a th:href="@{/bookings}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Incidents & Safety')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('incidents')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Incidents & Damage Reports</h1>
+            <p class="df-header-subtitle">Document accidents, vehicle damage claims, severity, and resolution statuses.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/incidents/new}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Log Incident
+            </a>
+        </div>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${incidents != null and !incidents.empty}">
+            <thead>
+            <tr>
+                <th>Incident ID</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="i : ${incidents}">
+                <td><strong th:text="'#INC-' + ${i.incidentId}">#INC-1</strong></td>
+                <td th:text="${i.date}">2026-09-10</td>
+                <td style="max-width: 320px; line-height: 1.4;" th:text="${i.description}">Minor bumper scratch during parking</td>
+                <td>
+                    <span th:if="${i.severity == 'LOW'}" class="badge badge-info">Low</span>
+                    <span th:if="${i.severity == 'MEDIUM'}" class="badge badge-warning">Medium</span>
+                    <span th:if="${i.severity == 'HIGH' or i.severity == 'CRITICAL'}" class="badge badge-danger" th:text="${i.severity}">High</span>
+                    <span th:if="${i.severity != 'LOW' and i.severity != 'MEDIUM' and i.severity != 'HIGH' and i.severity != 'CRITICAL'}" class="badge badge-secondary" th:text="${i.severity}">Normal</span>
+                </td>
+                <td>
+                    <span th:if="${i.status == 'OPEN'}" class="badge badge-warning">Open</span>
+                    <span th:if="${i.status == 'RESOLVED' or i.status == 'CLOSED'}" class="badge badge-success">Resolved</span>
+                    <span th:if="${i.status != 'OPEN' and i.status != 'RESOLVED' and i.status != 'CLOSED'}" class="badge badge-secondary" th:text="${i.status}">Pending</span>
+                </td>
+                <td style="text-align: right;">
+                    <a th:href="@{/incidents/{id}/edit(id=${i.incidentId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a th:href="@{/incidents/{id}/delete(id=${i.incidentId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this incident report?');">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${incidents == null or incidents.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Incidents Logged</h3>
+            <p class="empty-state-desc">Your fleet is running with zero reported safety incidents.</p>
+            <a th:href="@{/incidents/new}" class="btn btn-primary">Report An Incident</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

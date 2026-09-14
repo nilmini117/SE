@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Bookings')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Booking Management</h1>
+            <p class="df-header-subtitle">Track, confirm, and manage customer car rental reservations.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/bookings/new}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Booking
+            </a>
+        </div>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${bookings != null and !bookings.empty}">
+            <thead>
+            <tr>
+                <th>Booking ID</th>
+                <th>Booking Date</th>
+                <th>End Date</th>
+                <th>Duration</th>
+                <th>Quantity</th>
+                <th>Charged Rate</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${bookings}">
+                <td><strong th:text="'#BK-' + ${b.bookingId}">#BK-1</strong></td>
+                <td th:text="${b.bookingDate}">2026-09-14</td>
+                <td th:text="${b.endDate}">2026-09-20</td>
+                <td th:text="${b.duration != null ? b.duration + ' Days' : '-'}">6 Days</td>
+                <td th:text="${b.quantity}">1</td>
+                <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">$150.00</strong></td>
+                <td>
+                    <span th:if="${b.status == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
+                    <span th:if="${b.status == 'PENDING'}" class="badge badge-warning">Pending</span>
+                    <span th:if="${b.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                    <span th:if="${b.status == 'COMPLETED'}" class="badge badge-info">Completed</span>
+                    <span th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Other</span>
+                </td>
+                <td style="text-align: right;">
+                    <a th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${bookings == null or bookings.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Bookings Found</h3>
+            <p class="empty-state-desc">There are no reservation records in the system yet.</p>
+            <a th:href="@{/bookings/new}" class="btn btn-primary">Create Your First Booking</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

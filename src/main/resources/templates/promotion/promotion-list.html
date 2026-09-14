@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Promotions & Discounts')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('promotions')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Promotions & Marketing Offers</h1>
+            <p class="df-header-subtitle">Manage seasonal campaigns, rate discounts, and promotion time windows.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/promotions/new}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Promotion
+            </a>
+        </div>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${promotions != null and !promotions.empty}">
+            <thead>
+            <tr>
+                <th>Promotion ID</th>
+                <th>Campaign Title</th>
+                <th>Discount Rate</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="p : ${promotions}">
+                <td><strong th:text="'#PR-' + ${p.promotionId}">#PR-1</strong></td>
+                <td><strong th:text="${p.title}">Summer Vacation Special</strong></td>
+                <td>
+                    <span class="badge badge-info" th:text="${p.discountRate != null ? p.discountRate + '%' : '0%'}">15%</span>
+                </td>
+                <td th:text="${p.startDate}">2026-06-01</td>
+                <td th:text="${p.endDate}">2026-08-31</td>
+                <td>
+                    <span th:if="${p.status == 'ACTIVE'}" class="badge badge-success">Active</span>
+                    <span th:if="${p.status == 'EXPIRED'}" class="badge badge-danger">Expired</span>
+                    <span th:if="${p.status != 'ACTIVE' and p.status != 'EXPIRED'}" class="badge badge-secondary" th:text="${p.status}">Scheduled</span>
+                </td>
+                <td style="text-align: right;">
+                    <a th:href="@{/promotions/{id}/edit(id=${p.promotionId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a th:href="@{/promotions/{id}/delete(id=${p.promotionId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this promotion offer?');">Delete</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${promotions == null or promotions.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Promotions Created</h3>
+            <p class="empty-state-desc">Create marketing discounts to attract more rental customers.</p>
+            <a th:href="@{/promotions/new}" class="btn btn-primary">Create First Promotion</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

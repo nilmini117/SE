@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Invoices')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Billing & Rental Invoices</h1>
+            <p class="df-header-subtitle">Generate rental bills, tally late surcharges, and track payment receipts.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/payments/invoices/new}" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Generate Invoice
+            </a>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Tabs -->
+    <div class="df-tabs">
+        <a th:href="@{/payments}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            Processed Payments
+        </a>
+        <a th:href="@{/payments/invoices}" class="df-tab-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Billing Invoices
+        </a>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${invoices != null and !invoices.empty}">
+            <thead>
+            <tr>
+                <th>Invoice ID</th>
+                <th>Invoice Date</th>
+                <th>Rental Amount</th>
+                <th>Late Fee</th>
+                <th>Total Bill</th>
+                <th>Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="i : ${invoices}">
+                <td><strong th:text="'#INV-' + ${i.invoiceId}">#INV-1</strong></td>
+                <td th:text="${i.invoiceDate}">2026-09-12</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(i.rentalAmt != null ? i.rentalAmt : 0, 1, 2)}">$250.00</td>
+                <td th:text="'$' + ${#numbers.formatDecimal(i.lateFee != null ? i.lateFee : 0, 1, 2)}">$0.00</td>
+                <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(i.totalAmt != null ? i.totalAmt : 0, 1, 2)}">$250.00</strong></td>
+                <td>
+                    <span th:if="${i.status == 'PAID'}" class="badge badge-success">Paid</span>
+                    <span th:if="${i.status == 'UNPAID' or i.status == 'PENDING'}" class="badge badge-warning">Unpaid</span>
+                    <span th:if="${i.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
+                    <span th:if="${i.status != 'PAID' and i.status != 'UNPAID' and i.status != 'PENDING' and i.status != 'CANCELLED'}" class="badge badge-secondary" th:text="${i.status}">Pending</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${invoices == null or invoices.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Invoices Issued</h3>
+            <p class="empty-state-desc">Generate customer billing invoices for concluded car rentals.</p>
+            <a th:href="@{/payments/invoices/new}" class="btn btn-primary">Generate First Invoice</a>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

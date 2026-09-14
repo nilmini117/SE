@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Generate Invoice')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/payments/invoices}" class="btn btn-secondary btn-sm">
+            &larr; Back to Invoices
+        </a>
+    </div>
+
+    <div class="df-form-card">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+            Generate Rental Invoice
+        </h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
+            Itemize base rental pricing, late delivery charges, and final bill amount.
+        </p>
+
+        <form th:action="@{/payments/invoices}" th:object="${invoice}" method="post">
+            <div class="form-group">
+                <label class="form-label">Invoice Date</label>
+                <input type="date" th:field="*{invoiceDate}" class="form-control" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Rental Charge ($ USD)</label>
+                    <input type="number" step="0.01" th:field="*{rentalAmt}" class="form-control" placeholder="0.00" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Late Return Surcharge ($ USD)</label>
+                    <input type="number" step="0.01" th:field="*{lateFee}" class="form-control" placeholder="0.00" min="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Total Payable Amount ($ USD)</label>
+                <input type="number" step="0.01" th:field="*{totalAmt}" class="form-control" placeholder="0.00" min="0" required>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Generate & Issue Invoice</button>
+                <a th:href="@{/payments/invoices}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>
