@@ -1,15 +1,38 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Bookings')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
 
 <main class="df-main">
+    <!-- Success Alert -->
+    <div th:if="${successMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Operation successful!</span>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${errorMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">An error occurred.</span>
+    </div>
+
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Booking Management</h1>
-            <p class="df-header-subtitle">Track, confirm, and manage customer car rental reservations.</p>
+            <p class="df-header-subtitle">
+                <span th:if="${isStaff}">Viewing all fleet customer reservations across branches.</span>
+                <span th:if="${!isStaff}">Your active and completed car rental reservations.</span>
+            </p>
         </div>
         <div class="df-header-actions">
             <a th:href="@{/bookings/new}" class="btn btn-primary">
@@ -17,7 +40,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                New Booking
+                Book a Vehicle
             </a>
         </div>
     </div>
@@ -27,10 +50,10 @@
             <thead>
             <tr>
                 <th>Booking ID</th>
-                <th>Booking Date</th>
-                <th>End Date</th>
+                <th th:if="${isStaff}">Customer</th>
+                <th>Vehicle</th>
+                <th>Dates</th>
                 <th>Duration</th>
-                <th>Quantity</th>
                 <th>Charged Rate</th>
                 <th>Status</th>
                 <th style="text-align: right;">Actions</th>
@@ -39,10 +62,20 @@
             <tbody>
             <tr th:each="b : ${bookings}">
                 <td><strong th:text="'#BK-' + ${b.bookingId}">#BK-1</strong></td>
-                <td th:text="${b.bookingDate}">2026-09-14</td>
-                <td th:text="${b.endDate}">2026-09-20</td>
+                <td th:if="${isStaff}">
+                    <div style="font-weight: 600;" th:text="${b.customer != null ? b.customer.firstName + ' ' + b.customer.lastName : 'Unassigned'}">Customer</div>
+                    <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${b.customer != null ? 'DL: ' + b.customer.drivingLicense : ''}">DL</div>
+                </td>
+                <td>
+                    <div style="font-weight: 600;" th:text="${b.vehicle != null ? b.vehicle.model : 'Any Fleet Vehicle'}">Toyota Prius</div>
+                    <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${b.vehicle != null ? b.vehicle.regNo : ''}">ABC-1234</div>
+                </td>
+                <td>
+                    <span th:text="${b.bookingDate}">2026-09-14</span>
+                    <span style="color: var(--slate-400);">&rarr;</span>
+                    <span th:text="${b.endDate}">2026-09-20</span>
+                </td>
                 <td th:text="${b.duration != null ? b.duration + ' Days' : '-'}">6 Days</td>
-                <td th:text="${b.quantity}">1</td>
                 <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">$150.00</strong></td>
                 <td>
                     <span th:if="${b.status == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
@@ -51,7 +84,7 @@
                     <span th:if="${b.status == 'COMPLETED'}" class="badge badge-info">Completed</span>
                     <span th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Other</span>
                 </td>
-                <td style="text-align: right;">
+                <td style="text-align: right; white-space: nowrap;">
                     <a th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
                     <a th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</a>
                 </td>
@@ -70,8 +103,8 @@
                 </svg>
             </div>
             <h3 class="empty-state-title">No Bookings Found</h3>
-            <p class="empty-state-desc">There are no reservation records in the system yet.</p>
-            <a th:href="@{/bookings/new}" class="btn btn-primary">Create Your First Booking</a>
+            <p class="empty-state-desc">You don't have any active rental bookings yet. Choose an available vehicle from our fleet to start.</p>
+            <a th:href="@{/vehicles}" class="btn btn-primary">Browse Vehicles</a>
         </div>
     </div>
 </main>

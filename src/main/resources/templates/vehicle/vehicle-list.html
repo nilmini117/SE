@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Vehicles & Fleet')}"></head>
 <body>
 
@@ -11,9 +11,12 @@
             <h1 class="df-header-title">Vehicle & Fleet Management</h1>
             <p class="df-header-subtitle">Oversee inventory, vehicle models, mileage records, and live operational status.</p>
         </div>
-        <div class="df-header-actions">
-            <a th:href="@{/vehicles/new}" class="btn btn-primary">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <a th:href="@{/bookings/new}" class="btn btn-secondary">
+                Book a Vehicle
+            </a>
+            <a th:href="@{/vehicles/new}" class="btn btn-primary" sec:authorize="hasRole('STAFF')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
@@ -54,9 +57,10 @@
                     <span th:if="${v.status == 'DECOMMISSIONED'}" class="badge badge-secondary">Decommissioned</span>
                     <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
                 </td>
-                <td style="text-align: right;">
-                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm">Edit</a>
-                    <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to remove this vehicle?');">Delete</a>
+                <td style="text-align: right; white-space: nowrap;">
+                    <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" th:if="${v.status == 'AVAILABLE'}">Book</a>
+                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
+                    <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}" class="btn btn-danger btn-sm" sec:authorize="hasRole('STAFF')" onclick="return confirm('Are you sure you want to remove this vehicle?');">Delete</a>
                 </td>
             </tr>
             </tbody>

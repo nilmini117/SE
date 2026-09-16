@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Booking Details')}"></head>
 <body>
 
@@ -14,15 +14,59 @@
 
     <div class="df-form-card">
         <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;" 
-            th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Create New Booking'">
-            New Booking
+            th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Reserve a Vehicle'">
+            Reserve a Vehicle
         </h2>
-        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
-            Fill in the reservation specifics, duration, and pricing details below.
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+            Select your preferred rental car, dates, and confirm your booking.
         </p>
+
+        <!-- Customer Identity Banner for Logged-In Customer -->
+        <div th:if="${currentCustomer != null}" 
+             style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                <span th:text="${#strings.substring(currentCustomer.firstName, 0, 1)}">C</span>
+            </div>
+            <div>
+                <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--primary);">Verified Customer</div>
+                <div style="font-weight: 700; color: var(--slate-900);" th:text="${currentCustomer.firstName + ' ' + currentCustomer.lastName}">Customer Name</div>
+                <div style="font-size: 0.82rem; color: var(--slate-600);">
+                    License: <strong th:text="${currentCustomer.drivingLicense}">DL-0000</strong> &bull; 
+                    Email: <span th:text="${currentCustomer.email}">customer@mail.com</span>
+                </div>
+            </div>
+        </div>
 
         <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
               th:object="${booking}" method="post">
+
+            <!-- Staff customer selector (if staff is booking on behalf of customer) -->
+            <div th:if="${isStaff and customers != null and !customers.empty}" class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Assign Customer (Staff Mode)</label>
+                <select name="customerId" class="form-select" required>
+                    <option value="">-- Choose Registered Customer --</option>
+                    <option th:each="c : ${customers}" 
+                            th:value="${c.systemId}"
+                            th:selected="${booking.customer != null and booking.customer.systemId == c.systemId}"
+                            th:text="${c.firstName + ' ' + c.lastName + ' (' + c.drivingLicense + ') - ' + c.email}">
+                        John Doe
+                    </option>
+                </select>
+            </div>
+
+            <!-- Vehicle Selection -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Select Rental Vehicle</label>
+                <select name="vehicleId" class="form-select" required>
+                    <option value="">-- Choose a Vehicle --</option>
+                    <option th:each="v : ${vehicles}"
+                            th:value="${v.vehicleId}"
+                            th:selected="${booking.vehicle != null and booking.vehicle.vehicleId == v.vehicleId or (selectedVehicle != null and selectedVehicle.vehicleId == v.vehicleId)}"
+                            th:text="${v.model + ' [' + v.regNo + '] - ' + v.color + ' (' + v.status + ')'}">
+                        Mercedes-Benz C200 [WP-CAR-8821]
+                    </option>
+                </select>
+            </div>
 
             <div class="form-row">
                 <div class="form-group">
@@ -38,32 +82,32 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Duration (Days)</label>
-                    <input type="number" th:field="*{duration}" class="form-control" placeholder="e.g. 5" min="1" required>
+                    <input type="number" th:field="*{duration}" class="form-control" placeholder="e.g. 3" min="1" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Vehicle Quantity</label>
-                    <input type="number" th:field="*{quantity}" class="form-control" placeholder="e.g. 1" min="1" required>
+                    <input type="number" th:field="*{quantity}" class="form-control" placeholder="1" min="1" required>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Charged Rate ($ USD)</label>
-                    <input type="number" step="0.01" th:field="*{chargedRate}" class="form-control" placeholder="0.00" required>
+                    <input type="number" step="0.01" th:field="*{chargedRate}" class="form-control" placeholder="150.00" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Reservation Status</label>
                     <select th:field="*{status}" class="form-select">
-                        <option value="PENDING">PENDING</option>
                         <option value="CONFIRMED">CONFIRMED</option>
+                        <option value="PENDING">PENDING</option>
                         <option value="COMPLETED">COMPLETED</option>
                         <option value="CANCELLED">CANCELLED</option>
                     </select>
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Save Booking</button>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Booking</button>
                 <a th:href="@{/bookings}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

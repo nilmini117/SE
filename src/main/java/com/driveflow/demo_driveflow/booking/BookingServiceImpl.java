@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.booking;
 
+import com.driveflow.demo_driveflow.users.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -14,6 +15,13 @@ public class BookingServiceImpl implements BookingService {
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
+
+    @Override
+    public List<Booking> getBookingsByCustomer(Customer customer) {
+        if (customer == null) return List.of();
+        return bookingRepository.findByCustomer(customer);
+    }
+
 
     @Override
     public Booking getBookingById(Long id) {

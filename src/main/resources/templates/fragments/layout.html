@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:fragment="head(title)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,16 +28,16 @@
                 </a>
             </li>
             <li>
-                <a th:href="@{/bookings}" th:classappend="${activeTab == 'bookings'} ? 'active' : ''" class="df-nav-link">
-                    Bookings
-                </a>
-            </li>
-            <li>
                 <a th:href="@{/vehicles}" th:classappend="${activeTab == 'vehicles'} ? 'active' : ''" class="df-nav-link">
                     Vehicles
                 </a>
             </li>
             <li>
+                <a th:href="@{/bookings}" th:classappend="${activeTab == 'bookings'} ? 'active' : ''" class="df-nav-link">
+                    Bookings
+                </a>
+            </li>
+            <li sec:authorize="hasRole('STAFF')">
                 <a th:href="@{/incidents}" th:classappend="${activeTab == 'incidents'} ? 'active' : ''" class="df-nav-link">
                     Incidents
                 </a>
@@ -47,12 +47,12 @@
                     Promotions
                 </a>
             </li>
-            <li>
+            <li sec:authorize="hasRole('STAFF')">
                 <a th:href="@{/maintenance}" th:classappend="${activeTab == 'maintenance'} ? 'active' : ''" class="df-nav-link">
                     Maintenance
                 </a>
             </li>
-            <li>
+            <li sec:authorize="hasRole('STAFF')">
                 <a th:href="@{/payments}" th:classappend="${activeTab == 'payments'} ? 'active' : ''" class="df-nav-link">
                     Payments
                 </a>
@@ -63,9 +63,43 @@
                 </a>
             </li>
         </ul>
-        <div class="df-nav-status">
-            <span class="df-status-dot"></span>
-            System Live
+
+        <!-- Auth Status & Profile Menu -->
+        <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <!-- Authenticated Profile -->
+            <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.65rem;">
+                <span sec:authorize="hasRole('STAFF')" 
+                      style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.55rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; background: rgba(99, 102, 241, 0.2); color: #a5b4fc; border: 1px solid rgba(165, 180, 252, 0.3);">
+                    STAFF
+                </span>
+                <span sec:authorize="hasRole('CUSTOMER')" 
+                      style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.55rem; border-radius: 9999px; font-size: 0.72rem; font-weight: 700; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(110, 231, 183, 0.3);">
+                    CUSTOMER
+                </span>
+                <span style="color: var(--slate-200); font-size: 0.85rem; font-weight: 600; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" 
+                      sec:authentication="name">
+                    user@driveflow.com
+                </span>
+                <a th:href="@{/logout}" 
+                   class="btn btn-secondary btn-sm" 
+                   style="padding: 0.32rem 0.75rem; font-size: 0.8rem; background: var(--slate-800); border-color: var(--slate-700); color: var(--slate-200);">
+                    Sign Out
+                </a>
+            </div>
+
+            <!-- Unauthenticated / Guest -->
+            <div sec:authorize="!isAuthenticated()" style="display: flex; align-items: center; gap: 0.5rem;">
+                <a th:href="@{/login}" 
+                   class="btn btn-secondary btn-sm" 
+                   style="padding: 0.35rem 0.85rem; font-size: 0.82rem; background: var(--slate-800); border-color: var(--slate-700); color: var(--slate-200);">
+                    Sign In
+                </a>
+                <a th:href="@{/register}" 
+                   class="btn btn-primary btn-sm" 
+                   style="padding: 0.35rem 0.85rem; font-size: 0.82rem;">
+                    Register
+                </a>
+            </div>
         </div>
     </div>
 </nav>

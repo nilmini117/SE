@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Customer Registration')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('register')}"></nav>
+
+<main class="df-main" style="display: flex; align-items: center; justify-content: center; padding: 2.5rem 1rem;">
+    <div style="width: 100%; max-width: 680px;">
+
+        <!-- Error Alert -->
+        <div th:if="${errorMessage}" 
+             style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.9rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span th:text="${errorMessage}">Registration error occurred.</span>
+        </div>
+
+        <div class="df-form-card" style="box-shadow: var(--shadow-lg); border: 1px solid var(--slate-200); padding: 2.5rem;">
+            <div style="margin-bottom: 2rem;">
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--primary); font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    New Customer Account
+                </div>
+                <h1 style="font-size: 1.65rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.35rem;">Register to Book a Vehicle</h1>
+                <p style="color: var(--slate-500); font-size: 0.9rem;">
+                    Create your customer profile with valid driving credentials to start making vehicle reservations.
+                </p>
+            </div>
+
+            <form th:action="@{/register}" th:object="${customerDto}" method="post">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="firstName">First Name</label>
+                        <input type="text" id="firstName" th:field="*{firstName}" class="form-control" placeholder="e.g. Jane" required>
+                        <div th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="lastName">Last Name</label>
+                        <input type="text" id="lastName" th:field="*{lastName}" class="form-control" placeholder="e.g. Smith" required>
+                        <div th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="jane.smith@example.com" required>
+                        <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="contactNumber">Contact Phone Number</label>
+                        <input type="text" id="contactNumber" th:field="*{contactNumber}" class="form-control" placeholder="e.g. 0771234567" required>
+                        <div th:if="${#fields.hasErrors('contactNumber')}" th:errors="*{contactNumber}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="nic">National Identity Card (NIC)</label>
+                        <input type="text" id="nic" th:field="*{nic}" class="form-control" placeholder="e.g. 199512345678" required>
+                        <div th:if="${#fields.hasErrors('nic')}" th:errors="*{nic}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="drivingLicense">Driving License Number</label>
+                        <input type="text" id="drivingLicense" th:field="*{drivingLicense}" class="form-control" placeholder="e.g. B1234567" required>
+                        <div th:if="${#fields.hasErrors('drivingLicense')}" th:errors="*{drivingLicense}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="dob">Date of Birth</label>
+                        <input type="date" id="dob" th:field="*{dob}" class="form-control" required>
+                        <div th:if="${#fields.hasErrors('dob')}" th:errors="*{dob}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Minimum 6 characters" required>
+                        <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Re-type your password" required>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.75rem;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; font-weight: 600;">
+                        Complete Customer Registration &rarr;
+                    </button>
+                </div>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--slate-500); border-top: 1px solid var(--slate-200); padding-top: 1.25rem;">
+                Already have an account? 
+                <a th:href="@{/login}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
+                    Sign in here &rarr;
+                </a>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>
