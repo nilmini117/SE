@@ -30,8 +30,8 @@
         <div>
             <h1 class="df-header-title">Booking Management</h1>
             <p class="df-header-subtitle">
-                <span th:if="${isStaff}">Viewing all fleet customer reservations across branches.</span>
-                <span th:if="${!isStaff}">Your active and completed car rental reservations.</span>
+                <span th:if="${isStaff != null and isStaff}">Viewing all fleet customer reservations across branches.</span>
+                <span th:if="${isStaff == null or !isStaff}">Your active and completed car rental reservations.</span>
             </p>
         </div>
         <div class="df-header-actions">
@@ -50,7 +50,7 @@
             <thead>
             <tr>
                 <th>Booking ID</th>
-                <th th:if="${isStaff}">Customer</th>
+                <th th:if="${isStaff != null and isStaff}">Customer</th>
                 <th>Vehicle</th>
                 <th>Dates</th>
                 <th>Duration</th>
@@ -62,7 +62,7 @@
             <tbody>
             <tr th:each="b : ${bookings}">
                 <td><strong th:text="'#BK-' + ${b.bookingId}">#BK-1</strong></td>
-                <td th:if="${isStaff}">
+                <td th:if="${isStaff != null and isStaff}">
                     <div style="font-weight: 600;" th:text="${b.customer != null ? b.customer.firstName + ' ' + b.customer.lastName : 'Unassigned'}">Customer</div>
                     <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${b.customer != null ? 'DL: ' + b.customer.drivingLicense : ''}">DL</div>
                 </td>

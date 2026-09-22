@@ -41,7 +41,7 @@
               th:object="${booking}" method="post">
 
             <!-- Staff customer selector (if staff is booking on behalf of customer) -->
-            <div th:if="${isStaff and customers != null and !customers.empty}" class="form-group" style="margin-bottom: 1.25rem;">
+            <div th:if="${isStaff != null and isStaff and customers != null and !customers.empty}" class="form-group" style="margin-bottom: 1.25rem;">
                 <label class="form-label">Assign Customer (Staff Mode)</label>
                 <select name="customerId" class="form-select" required>
                     <option value="">-- Choose Registered Customer --</option>

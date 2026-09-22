@@ -1,5 +1,7 @@
 package com.driveflow.demo_driveflow;
 
+import com.driveflow.demo_driveflow.branch.Branch;
+import com.driveflow.demo_driveflow.branch.BranchRepository;
 import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.users.CustomerRepository;
 import com.driveflow.demo_driveflow.users.Staff;
@@ -23,6 +25,9 @@ public class DataInitializer implements CommandLineRunner {
     private StaffRepository staffRepository;
 
     @Autowired
+    private BranchRepository branchRepository;
+
+    @Autowired
     private CustomerRepository customerRepository;
 
     @Autowired
@@ -41,6 +46,18 @@ public class DataInitializer implements CommandLineRunner {
             staff.setDob(LocalDate.of(1990, 1, 1));
             staff.setPassword(passwordEncoder.encode("Staff123!"));
             staff.setSalary(new BigDecimal("85000.00"));
+
+            Branch defaultBranch = branchRepository.findAll().stream().findFirst().orElseGet(() -> {
+                Branch b = new Branch();
+                b.setBranchName("Head Office");
+                b.setStreet("Main Street");
+                b.setCity("Colombo");
+                b.setContactNumber("0112345678");
+                b.setEmail("headoffice@driveflow.com");
+                return branchRepository.save(b);
+            });
+            staff.setBranch(defaultBranch);
+
             staffRepository.save(staff);
             System.out.println(">> Seeded default Staff account: staff@driveflow.com / Staff123!");
         }
@@ -54,7 +71,7 @@ public class DataInitializer implements CommandLineRunner {
             customer.setEmail("customer@driveflow.com");
             customer.setContactNumber("0719876543");
             customer.setDob(LocalDate.of(1995, 5, 15));
-            customer.setDrivingLicense("B98765432");
+            customer.setDrivingLicense("B11112222");
             customer.setPassword(passwordEncoder.encode("Customer123!"));
             customerRepository.save(customer);
             System.out.println(">> Seeded default Customer account: customer@driveflow.com / Customer123!");

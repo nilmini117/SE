@@ -38,13 +38,30 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking updateBooking(Long id, Booking updatedBooking) {
         Booking existing = getBookingById(id);
-        existing.setBookingDate(updatedBooking.getBookingDate());
-        existing.setEndDate(updatedBooking.getEndDate());
-        existing.setQuantity(updatedBooking.getQuantity());
-        existing.setChargedRate(updatedBooking.getChargedRate());
-        existing.setStatus(updatedBooking.getStatus());
-        existing.setDuration(updatedBooking.getDuration());
-        existing.setVehicle(updatedBooking.getVehicle());
+        if (updatedBooking.getBookingDate() != null) {
+            existing.setBookingDate(updatedBooking.getBookingDate());
+        }
+        if (updatedBooking.getEndDate() != null) {
+            existing.setEndDate(updatedBooking.getEndDate());
+        }
+        if (updatedBooking.getQuantity() != null) {
+            existing.setQuantity(updatedBooking.getQuantity());
+        }
+        if (updatedBooking.getChargedRate() != null) {
+            existing.setChargedRate(updatedBooking.getChargedRate());
+        }
+        if (updatedBooking.getStatus() != null) {
+            existing.setStatus(updatedBooking.getStatus());
+        }
+        if (updatedBooking.getDuration() != null) {
+            existing.setDuration(updatedBooking.getDuration());
+        }
+        if (updatedBooking.getVehicle() != null) {
+            existing.setVehicle(updatedBooking.getVehicle());
+        }
+        if (updatedBooking.getCustomer() != null) {
+            existing.setCustomer(updatedBooking.getCustomer());
+        }
         return bookingRepository.save(existing);
     }
 

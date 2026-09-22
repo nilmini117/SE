@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.users;
 
+import com.driveflow.demo_driveflow.branch.Branch;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,4 +18,9 @@ public class Staff extends User {
 
     @Column(name = "salary")
     private BigDecimal salary;
+
+    @ManyToOne
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
 }
+

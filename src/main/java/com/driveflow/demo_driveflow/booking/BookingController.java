@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.booking;
 
+import com.driveflow.demo_driveflow.branch.BranchRepository;
 import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.users.CustomerRepository;
 import com.driveflow.demo_driveflow.users.StaffRepository;
@@ -8,7 +9,6 @@ import com.driveflow.demo_driveflow.vehicle.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +35,9 @@ public class BookingController {
 
     @Autowired
     private StaffRepository staffRepository;
+
+    @Autowired
+    private BranchRepository branchRepository;
 
     @GetMapping
     public String listBookings(Model model, Authentication authentication) {
@@ -155,13 +158,31 @@ public class BookingController {
             booking.setStatus("CONFIRMED");
         }
 
+        if (booking.getPickupBranch() == null) {
+            branchRepository.findAll().stream().findFirst().ifPresent(booking::setPickupBranch);
+        }
+        if (booking.getReturnBranch() == null) {
+            booking.setReturnBranch(booking.getPickupBranch());
+        }
+
         bookingService.createBooking(booking);
         redirectAttributes.addFlashAttribute("successMessage", "Vehicle reservation confirmed successfully!");
         return "redirect:/bookings";
     }
 
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable Long id, Model model) {
+    public String showEditForm(@PathVariable Long id, Model model, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login?bookingRequired=true";
+        }
+
+        String email = authentication.getName();
+        boolean isStaff = staffRepository.findByEmail(email).isPresent();
+        model.addAttribute("isStaff", isStaff);
+
+        Optional<Customer> customerOpt = customerRepository.findByEmail(email);
+        customerOpt.ifPresent(c -> model.addAttribute("currentCustomer", c));
+
         Booking booking = bookingService.getBookingById(id);
         model.addAttribute("booking", booking);
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
