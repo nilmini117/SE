@@ -3,6 +3,8 @@ package com.driveflow.demo_driveflow.booking;
 import com.driveflow.demo_driveflow.payment.Invoice;
 import com.driveflow.demo_driveflow.payment.InvoiceRepository;
 import com.driveflow.demo_driveflow.users.Customer;
+import com.driveflow.demo_driveflow.vehicle.Vehicle;
+import com.driveflow.demo_driveflow.vehicle.VehicleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Autowired
     private InvoiceRepository invoiceRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
     private void ensureInvoiceForBooking(Booking booking) {
         if (booking == null || booking.getBookingId() == null) return;
@@ -105,6 +110,26 @@ public class BookingServiceImpl implements BookingService {
     public void cancelBooking(Long id) {
         Booking booking = getBookingById(id);
         booking.setStatus("CANCELLED");
+        
+        // Release assigned vehicle back to AVAILABLE if it was BOOKED
+        if (booking.getVehicle() != null) {
+            Vehicle vehicle = booking.getVehicle();
+            if ("BOOKED".equalsIgnoreCase(vehicle.getStatus())) {
+                vehicle.setStatus("AVAILABLE");
+                vehicleRepository.save(vehicle);
+            }
+        }
+
+        // Cancel unpaid invoice if present
+        try {
+            invoiceRepository.findByBooking(booking).ifPresent(inv -> {
+                if (!"PAID".equalsIgnoreCase(inv.getStatus())) {
+                    inv.setStatus("CANCELLED");
+                    invoiceRepository.save(inv);
+                }
+            });
+        } catch (Exception ignored) {}
+
         bookingRepository.save(booking);
     }
 }

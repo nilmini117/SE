@@ -34,7 +34,7 @@
                 <span th:if="${isStaff == null or !isStaff}">Your active and completed car rental reservations.</span>
             </p>
         </div>
-        <div class="df-header-actions">
+        <div class="df-header-actions" th:if="${isStaff == null or !isStaff}" sec:authorize="!hasRole('STAFF')">
             <a th:href="@{/bookings/new}" class="btn btn-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>

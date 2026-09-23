@@ -40,18 +40,10 @@
         <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
               th:object="${booking}" method="post">
 
-            <!-- Staff customer selector (if staff is booking on behalf of customer) -->
-            <div th:if="${isStaff != null and isStaff and customers != null and !customers.empty}" class="form-group" style="margin-bottom: 1.25rem;">
-                <label class="form-label">Assign Customer (Staff Mode)</label>
-                <select name="customerId" class="form-select" required>
-                    <option value="">-- Choose Registered Customer --</option>
-                    <option th:each="c : ${customers}" 
-                            th:value="${c.systemId}"
-                            th:selected="${booking.customer != null and booking.customer.systemId == c.systemId}"
-                            th:text="${c.firstName + ' ' + c.lastName + ' (' + c.drivingLicense + ') - ' + c.email}">
-                        John Doe
-                    </option>
-                </select>
+            <!-- Customer info display for staff editing an existing booking -->
+            <div th:if="${isStaff != null and isStaff and booking.bookingId != null}" class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Customer</label>
+                <input type="text" class="form-control" th:value="${booking.customer != null ? booking.customer.firstName + ' ' + booking.customer.lastName + ' (' + booking.customer.drivingLicense + ') - ' + booking.customer.email : 'Unassigned'}" readonly style="background: var(--slate-100); color: var(--slate-700);">
             </div>
 
             <!-- Vehicle Selection -->
@@ -106,9 +98,15 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
                 <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Booking</button>
-                <a th:href="@{/bookings}" class="btn btn-secondary">Cancel</a>
+                <a th:if="${isStaff and booking.bookingId != null and booking.status != 'CANCELLED' and booking.status != 'COMPLETED'}"
+                   th:href="@{/bookings/{id}/cancel(id=${booking.bookingId})}"
+                   class="btn btn-danger"
+                   onclick="return confirm('Are you sure you want to cancel this booking?');">
+                    Cancel Reservation
+                </a>
+                <a th:href="@{/bookings}" class="btn btn-secondary">Back to Bookings</a>
             </div>
         </form>
     </div>

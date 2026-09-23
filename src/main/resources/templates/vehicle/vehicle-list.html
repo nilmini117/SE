@@ -12,7 +12,7 @@
             <p class="df-header-subtitle">Oversee inventory, vehicle models, mileage records, and live operational status.</p>
         </div>
         <div style="display: flex; gap: 0.75rem; align-items: center;">
-            <a th:href="@{/bookings/new}" class="btn btn-secondary">
+            <a th:href="@{/bookings/new}" class="btn btn-secondary" sec:authorize="hasRole('CUSTOMER')">
                 Book a Vehicle
             </a>
             <a th:href="@{/vehicles/new}" class="btn btn-primary" sec:authorize="hasRole('STAFF')">
@@ -85,7 +85,7 @@
                     <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
                 </td>
                 <td style="text-align: right; white-space: nowrap;">
-                    <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" th:if="${v.status == 'AVAILABLE'}">Book</a>
+                    <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" sec:authorize="hasRole('CUSTOMER')" th:if="${v.status == 'AVAILABLE'}">Book</a>
                     <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
                     <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}" class="btn btn-danger btn-sm" sec:authorize="hasRole('STAFF')" onclick="return confirm('Are you sure you want to remove this vehicle?');">Delete</a>
                 </td>
