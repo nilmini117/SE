@@ -99,7 +99,7 @@
                     </td>
                     <td th:text="${b.bookingDate}">2026-09-10</td>
                     <td th:text="${b.endDate}">2026-09-15</td>
-                    <td><strong th:text="'$' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">$150.00</strong></td>
+                    <td><strong th:text="'Rs. ' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">Rs. 9,000.00</strong></td>
                     <td>
                         <span th:if="${b.status == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
                         <span th:if="${b.status == 'PENDING'}" class="badge badge-warning">Pending</span>

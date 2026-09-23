@@ -135,7 +135,7 @@ public class BookingController {
         booking.setEndDate(LocalDate.now().plusDays(3));
         booking.setDuration(3);
         booking.setQuantity(1);
-        booking.setChargedRate(new BigDecimal("150.00"));
+        booking.setChargedRate(new BigDecimal("9000.00")); // 3 days * Rs. 3,000.00/day
         booking.setStatus("PENDING");
 
         if (vehicleId != null) {
@@ -199,16 +199,15 @@ public class BookingController {
         if (booking.getEndDate() == null) {
             booking.setEndDate(booking.getBookingDate().plusDays(1));
         }
-        if (booking.getDuration() == null || booking.getDuration() <= 0) {
-            long days = ChronoUnit.DAYS.between(booking.getBookingDate(), booking.getEndDate());
-            booking.setDuration(days > 0 ? (int) days : 1);
+        if (booking.getEndDate().isBefore(booking.getBookingDate())) {
+            booking.setEndDate(booking.getBookingDate());
         }
-        if (booking.getQuantity() == null) {
-            booking.setQuantity(1);
-        }
-        if (booking.getChargedRate() == null) {
-            booking.setChargedRate(java.math.BigDecimal.valueOf(75.00));
-        }
+
+        long days = ChronoUnit.DAYS.between(booking.getBookingDate(), booking.getEndDate());
+        int durationDays = days > 0 ? (int) days : 1;
+        booking.setDuration(durationDays);
+        booking.setQuantity(1); // Enforce only one vehicle per booking
+        booking.setChargedRate(BigDecimal.valueOf(durationDays * 3000.00)); // Rs. 3,000 per day
 
         // Server-side status enforcement: Customers always create PENDING bookings
         booking.setStatus("PENDING");
@@ -305,6 +304,22 @@ public class BookingController {
                 booking.setVehicle(v);
             } catch (Exception ignored) {}
         }
+
+        if (booking.getBookingDate() == null) {
+            booking.setBookingDate(existing.getBookingDate() != null ? existing.getBookingDate() : LocalDate.now());
+        }
+        if (booking.getEndDate() == null) {
+            booking.setEndDate(booking.getBookingDate().plusDays(1));
+        }
+        if (booking.getEndDate().isBefore(booking.getBookingDate())) {
+            booking.setEndDate(booking.getBookingDate());
+        }
+        long days = ChronoUnit.DAYS.between(booking.getBookingDate(), booking.getEndDate());
+        int durationDays = days > 0 ? (int) days : 1;
+        booking.setDuration(durationDays);
+        booking.setQuantity(1);
+        booking.setChargedRate(BigDecimal.valueOf(durationDays * 3000.00));
+
         booking.setCustomer(existing.getCustomer());
         booking.setStatus("PENDING");
 

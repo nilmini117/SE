@@ -1,118 +1,175 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head th:replace="~{fragments/layout :: head('Booking Details')}"></head>
+
 <body>
 
-<nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
+    <nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
 
-<main class="df-main">
-    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
-        <a th:href="@{/bookings}" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 0.35rem;">
-            &larr; Back to Bookings
-        </a>
-    </div>
-
-    <div class="df-form-card">
-        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;" 
-            th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Reserve a Vehicle'">
-            Reserve a Vehicle
-        </h2>
-        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
-            Select your preferred rental car, dates, and confirm your booking.
-        </p>
-
-        <!-- Customer Identity Banner for Logged-In Customer -->
-        <div th:if="${currentCustomer != null}" 
-             style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
-                <span th:text="${#strings.substring(currentCustomer.firstName, 0, 1)}">C</span>
-            </div>
-            <div>
-                <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--primary);">Verified Customer</div>
-                <div style="font-weight: 700; color: var(--slate-900);" th:text="${currentCustomer.firstName + ' ' + currentCustomer.lastName}">Customer Name</div>
-                <div style="font-size: 0.82rem; color: var(--slate-600);">
-                    License: <strong th:text="${currentCustomer.drivingLicense}">DL-0000</strong> &bull; 
-                    Email: <span th:text="${currentCustomer.email}">customer@mail.com</span>
-                </div>
-            </div>
+    <main class="df-main">
+        <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+            <a th:href="@{/bookings}" class="btn btn-secondary btn-sm"
+                style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                &larr; Back to Bookings
+            </a>
         </div>
 
-        <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
-              th:object="${booking}" method="post">
+        <div class="df-form-card">
+            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
+                th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Reserve a Vehicle'">
+                Reserve a Vehicle
+            </h2>
+            <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                Select your preferred rental car, dates, and confirm your booking.
+            </p>
 
-            <!-- Customer info display for staff editing an existing booking -->
-            <div th:if="${isStaff != null and isStaff and booking.bookingId != null}" class="form-group" style="margin-bottom: 1.25rem;">
-                <label class="form-label">Customer</label>
-                <input type="text" class="form-control" th:value="${booking.customer != null ? booking.customer.firstName + ' ' + booking.customer.lastName + ' (' + booking.customer.drivingLicense + ') - ' + booking.customer.email : 'Unassigned'}" readonly style="background: var(--slate-100); color: var(--slate-700);">
+            <!-- Customer Identity Banner for Logged-In Customer -->
+            <div th:if="${currentCustomer != null}"
+                style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                <div
+                    style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
+                    <span th:text="${#strings.substring(currentCustomer.firstName, 0, 1)}">C</span>
+                </div>
+                <div>
+                    <div
+                        style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--primary);">
+                        Verified Customer</div>
+                    <div style="font-weight: 700; color: var(--slate-900);"
+                        th:text="${currentCustomer.firstName + ' ' + currentCustomer.lastName}">Customer Name</div>
+                    <div style="font-size: 0.82rem; color: var(--slate-600);">
+                        License: <strong th:text="${currentCustomer.drivingLicense}">DL-0000</strong> &bull;
+                        Email: <span th:text="${currentCustomer.email}">customer@mail.com</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- Vehicle Selection -->
-            <div class="form-group" style="margin-bottom: 1.25rem;">
-                <label class="form-label">Select Rental Vehicle</label>
-                <select name="vehicleId" class="form-select" required>
-                    <option value="">-- Choose a Vehicle --</option>
-                    <option th:each="v : ${vehicles}"
-                            th:value="${v.vehicleId}"
+            <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
+                th:object="${booking}" method="post">
+
+                <!-- Customer info display for staff editing an existing booking -->
+                <div th:if="${isStaff != null and isStaff and booking.bookingId != null}" class="form-group"
+                    style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Customer</label>
+                    <input type="text" class="form-control"
+                        th:value="${booking.customer != null ? booking.customer.firstName + ' ' + booking.customer.lastName + ' (' + booking.customer.drivingLicense + ') - ' + booking.customer.email : 'Unassigned'}"
+                        readonly style="background: var(--slate-100); color: var(--slate-700);">
+                </div>
+
+                <!-- Vehicle Selection -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Select Rental Vehicle</label>
+                    <select name="vehicleId" class="form-select" required>
+                        <option value="">-- Choose a Vehicle --</option>
+                        <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
                             th:selected="${booking.vehicle != null and booking.vehicle.vehicleId == v.vehicleId or (selectedVehicle != null and selectedVehicle.vehicleId == v.vehicleId)}"
                             th:text="${v.model + ' [' + v.regNo + '] - ' + v.color + ' (' + v.status + ')'}">
-                        Mercedes-Benz C200 [WP-CAR-8821]
-                    </option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Booking Start Date</label>
-                    <input type="date" th:field="*{bookingDate}" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Booking End Date</label>
-                    <input type="date" th:field="*{endDate}" class="form-control" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Duration (Days)</label>
-                    <input type="number" th:field="*{duration}" class="form-control" placeholder="e.g. 3" min="1" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Vehicle Quantity</label>
-                    <input type="number" th:field="*{quantity}" class="form-control" placeholder="1" min="1" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group" th:style="${isStaff} ? '' : 'flex: 1 1 100%;'">
-                    <label class="form-label">Charged Rate ($ USD)</label>
-                    <input type="number" step="0.01" th:field="*{chargedRate}" class="form-control" placeholder="150.00" required>
-                </div>
-                <div class="form-group" th:if="${isStaff}">
-                    <label class="form-label">Reservation Status</label>
-                    <select th:field="*{status}" class="form-select">
-                        <option value="PENDING">PENDING</option>
-                        <option value="CONFIRMED">CONFIRMED</option>
-                        <option value="COMPLETED">COMPLETED</option>
-                        <option value="CANCELLED">CANCELLED</option>
+                            Mercedes-Benz C200 [WP-CAR-8821]
+                        </option>
                     </select>
                 </div>
-            </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Booking</button>
-                <a th:if="${isStaff and booking.bookingId != null and booking.status != 'CANCELLED' and booking.status != 'COMPLETED'}"
-                   th:href="@{/bookings/{id}/cancel(id=${booking.bookingId})}"
-                   class="btn btn-danger"
-                   onclick="return confirm('Are you sure you want to cancel this booking?');">
-                    Cancel Reservation
-                </a>
-                <a th:href="@{/bookings}" class="btn btn-secondary">Back to Bookings</a>
-            </div>
-        </form>
-    </div>
-</main>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Booking Start Date</label>
+                        <input type="date" th:field="*{bookingDate}" id="bookingDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Booking End Date</label>
+                        <input type="date" th:field="*{endDate}" id="endDate" class="form-control" required>
+                    </div>
+                </div>
 
-<footer th:replace="~{fragments/layout :: footer}"></footer>
+                <!-- Hidden vehicle quantity: strictly 1 vehicle per reservation -->
+                <input type="hidden" th:field="*{quantity}" id="quantity" value="1">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Duration (Days)</label>
+                        <input type="number" th:field="*{duration}" id="duration" class="form-control" placeholder="1" min="1"
+                            readonly style="background: var(--slate-100); color: var(--slate-700); font-weight: 600;" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Charged Rate (Rs.) <small style="color: var(--slate-500); font-weight: 400;">(Rs. 3,000.00 / day)</small></label>
+                        <input type="number" step="0.01" th:field="*{chargedRate}" id="chargedRate" class="form-control"
+                            placeholder="3000.00" readonly style="background: var(--slate-100); color: var(--slate-800); font-weight: 700;" required>
+                    </div>
+                </div>
+
+                <div class="form-row" th:if="${isStaff}">
+                    <div class="form-group" style="flex: 1 1 100%;">
+                        <label class="form-label">Reservation Status</label>
+                        <select th:field="*{status}" class="form-select">
+                            <option value="PENDING">PENDING</option>
+                            <option value="CONFIRMED">CONFIRMED</option>
+                            <option value="COMPLETED">COMPLETED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Booking</button>
+                    <a th:if="${isStaff and booking.bookingId != null and booking.status != 'CANCELLED' and booking.status != 'COMPLETED'}"
+                        th:href="@{/bookings/{id}/cancel(id=${booking.bookingId})}" class="btn btn-danger"
+                        onclick="return confirm('Are you sure you want to cancel this booking?');">
+                        Cancel Reservation
+                    </a>
+                    <a th:href="@{/bookings}" class="btn btn-secondary">Back to Bookings</a>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <script>
+        function calculateBookingDetails() {
+            const startDateInput = document.getElementById('bookingDate');
+            const endDateInput = document.getElementById('endDate');
+            const durationInput = document.getElementById('duration');
+            const chargedRateInput = document.getElementById('chargedRate');
+
+            if (!startDateInput || !endDateInput) return;
+
+            if (startDateInput.value) {
+                endDateInput.min = startDateInput.value;
+                if (endDateInput.value && endDateInput.value < startDateInput.value) {
+                    endDateInput.value = startDateInput.value;
+                }
+            }
+
+            if (startDateInput.value && endDateInput.value) {
+                const start = new Date(startDateInput.value + 'T00:00:00');
+                const end = new Date(endDateInput.value + 'T00:00:00');
+                const diffTime = end.getTime() - start.getTime();
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+                const duration = diffDays > 0 ? diffDays : 1;
+
+                if (durationInput) {
+                    durationInput.value = duration;
+                }
+                if (chargedRateInput) {
+                    chargedRateInput.value = (duration * 3000).toFixed(2);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const startDateInput = document.getElementById('bookingDate');
+            const endDateInput = document.getElementById('endDate');
+            if (startDateInput) {
+                startDateInput.addEventListener('change', calculateBookingDetails);
+                startDateInput.addEventListener('input', calculateBookingDetails);
+            }
+            if (endDateInput) {
+                endDateInput.addEventListener('change', calculateBookingDetails);
+                endDateInput.addEventListener('input', calculateBookingDetails);
+            }
+            calculateBookingDetails();
+        });
+    </script>
 
 </body>
+
 </html>

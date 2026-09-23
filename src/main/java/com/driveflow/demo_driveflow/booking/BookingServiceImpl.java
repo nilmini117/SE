@@ -31,9 +31,12 @@ public class BookingServiceImpl implements BookingService {
                 Invoice invoice = new Invoice();
                 invoice.setBooking(booking);
                 invoice.setInvoiceDate(LocalDate.now());
-                BigDecimal rate = booking.getChargedRate() != null ? booking.getChargedRate() : BigDecimal.valueOf(75.00);
-                int duration = booking.getDuration() != null ? booking.getDuration() : 1;
-                invoice.setRentalAmt(rate.multiply(BigDecimal.valueOf(duration > 0 ? duration : 1)));
+                BigDecimal rentalAmt = booking.getChargedRate();
+                if (rentalAmt == null) {
+                    int duration = booking.getDuration() != null ? booking.getDuration() : 1;
+                    rentalAmt = BigDecimal.valueOf((duration > 0 ? duration : 1) * 3000.00);
+                }
+                invoice.setRentalAmt(rentalAmt);
                 invoice.setLateFee(BigDecimal.ZERO);
                 invoice.setStatus("UNPAID");
                 invoiceRepository.save(invoice);

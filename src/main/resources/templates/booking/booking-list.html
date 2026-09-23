@@ -121,7 +121,7 @@
                     <span th:text="${b.endDate}">2026-09-20</span>
                 </td>
                 <td th:text="${b.duration != null ? b.duration + ' Days' : '-'}">6 Days</td>
-                <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">$150.00</strong></td>
+                <td><strong style="color: var(--primary);" th:text="'Rs. ' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">Rs. 9,000.00</strong></td>
                 <td>
                     <span th:if="${b.status == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
                     <span th:if="${b.status == 'PENDING'}" class="badge badge-warning">Pending</span>

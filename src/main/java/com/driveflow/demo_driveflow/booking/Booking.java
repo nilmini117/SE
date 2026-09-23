@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -25,9 +26,11 @@ public class Booking {
     @Column(name = "booking_id")
     private Long bookingId;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "booking_date")
     private LocalDate bookingDate;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Column(name = "end_date")
     private LocalDate endDate;
 
