@@ -106,9 +106,22 @@
                         <span th:if="${b.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
                         <span th:if="${b.status == 'COMPLETED'}" class="badge badge-info">Completed</span>
                         <span th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Status</span>
+
+                        <!-- Staff Message Banner under Status -->
+                        <div th:if="${b.status == 'CONFIRMED' and b.staffMessage != null and !#strings.isEmpty(b.staffMessage)}"
+                             style="margin-top: 0.35rem; font-size: 0.78rem; color: #047857; display: flex; align-items: center; gap: 0.35rem; font-weight: 500;">
+                            <span style="font-weight: 700;">&#10003;</span>
+                            <span th:text="${b.staffMessage}">Your booking has been confirmed by our team.</span>
+                        </div>
+                        <div th:if="${b.status == 'CANCELLED' and b.staffMessage != null and !#strings.isEmpty(b.staffMessage)}"
+                             style="margin-top: 0.35rem; font-size: 0.78rem; color: #b91c1c; display: flex; align-items: flex-start; gap: 0.35rem; max-width: 230px; line-height: 1.3;">
+                            <span style="font-weight: 700; flex-shrink: 0;">&#9888;</span>
+                            <span><strong>Booking declined:</strong> <span th:text="${b.staffMessage}">Reason</span></span>
+                        </div>
                     </td>
-                    <td style="text-align: right;">
-                        <a th:if="${b.status != 'CANCELLED'}" th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a th:if="${b.status == 'PENDING'}" th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
+                        <a th:if="${b.status == 'PENDING'}" th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel your pending reservation?');">Cancel</a>
                     </td>
                 </tr>
                 </tbody>

@@ -13,13 +13,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findByStatus(String status);
 
+    List<Booking> findByStatusOrderByBookingDateAsc(String status);
+
+    @Query("SELECT b FROM Booking b ORDER BY CASE WHEN UPPER(b.status) = 'PENDING' THEN 1 WHEN UPPER(b.status) = 'CONFIRMED' THEN 2 WHEN UPPER(b.status) = 'COMPLETED' THEN 3 ELSE 4 END, b.bookingDate DESC")
+    List<Booking> findAllSortedWithPendingFirst();
+
     @Query("SELECT b FROM Booking b WHERE b.customer.systemId = :customerId")
     List<Booking> findByCustomerId(@Param("customerId") Long customerId);
+
+    @Query("SELECT b FROM Booking b WHERE b.customer.systemId = :customerId ORDER BY CASE WHEN UPPER(b.status) = 'PENDING' THEN 1 WHEN UPPER(b.status) = 'CONFIRMED' THEN 2 WHEN UPPER(b.status) = 'COMPLETED' THEN 3 ELSE 4 END, b.bookingDate DESC")
+    List<Booking> findByCustomerIdSorted(@Param("customerId") Long customerId);
+
+    long countByStatusIgnoreCase(String status);
 
     default List<Booking> findByCustomer(Customer customer) {
         if (customer == null || customer.getSystemId() == null) {
             return List.of();
         }
-        return findByCustomerId(customer.getSystemId());
+        return findByCustomerIdSorted(customer.getSystemId());
     }
 }

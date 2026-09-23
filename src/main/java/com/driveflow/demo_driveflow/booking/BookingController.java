@@ -56,6 +56,7 @@ public class BookingController {
 
     @GetMapping
     public String listBookings(
+            @RequestParam(value = "status", required = false) String status,
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "success", required = false) String success,
             Model model,
@@ -84,7 +85,11 @@ public class BookingController {
 
         List<Booking> bookingsList;
         if (staff) {
-            bookingsList = bookingService.getAllBookings();
+            // Default status filter to PENDING on load for staff
+            String activeStatus = (status == null || status.isBlank()) ? "PENDING" : status.trim().toUpperCase();
+            model.addAttribute("selectedStatus", activeStatus);
+            model.addAttribute("statusCounts", bookingService.getBookingStatusCounts());
+            bookingsList = bookingService.getBookingsByStatus(activeStatus);
         } else {
             Optional<Customer> customerOpt = customerRepository.findByEmail(email);
             if (customerOpt.isPresent()) {
@@ -227,27 +232,35 @@ public class BookingController {
             return "redirect:/login?bookingRequired=true";
         }
 
-        boolean staff = isStaff(authentication);
-        String email = authentication.getName();
-        model.addAttribute("isStaff", staff);
+        // Staff cannot edit booking records directly
+        if (isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Staff cannot directly edit customer booking details. Use Approve or Decline instead.");
+            return "redirect:/bookings";
+        }
 
+        String email = authentication.getName();
         Booking booking = bookingService.getBookingById(id);
         if (booking == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
             return "redirect:/bookings";
         }
 
-        if (!staff && (booking.getCustomer() == null || !booking.getCustomer().getEmail().equalsIgnoreCase(email))) {
+        if (booking.getCustomer() == null || !booking.getCustomer().getEmail().equalsIgnoreCase(email)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this booking.");
+            return "redirect:/bookings";
+        }
+
+        if (!"PENDING".equalsIgnoreCase(booking.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Only pending bookings can be modified.");
             return "redirect:/bookings";
         }
 
         Optional<Customer> customerOpt = customerRepository.findByEmail(email);
         customerOpt.ifPresent(c -> model.addAttribute("currentCustomer", c));
 
+        model.addAttribute("isStaff", false);
         model.addAttribute("booking", booking);
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
-        model.addAttribute("customers", customerRepository.findAll());
         return "booking/booking-form";
     }
 
@@ -256,7 +269,6 @@ public class BookingController {
             @PathVariable Long id,
             @ModelAttribute Booking booking,
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
-            @RequestParam(value = "customerId", required = false) Long customerId,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -264,17 +276,26 @@ public class BookingController {
             return "redirect:/login";
         }
 
-        boolean staff = isStaff(authentication);
-        String email = authentication.getName();
+        // Staff cannot edit booking records directly
+        if (isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Staff cannot directly edit customer booking details.");
+            return "redirect:/bookings";
+        }
 
+        String email = authentication.getName();
         Booking existing = bookingService.getBookingById(id);
         if (existing == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
             return "redirect:/bookings";
         }
 
-        if (!staff && (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email))) {
+        if (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to edit this booking.");
+            return "redirect:/bookings";
+        }
+
+        if (!"PENDING".equalsIgnoreCase(existing.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Only pending bookings can be modified.");
             return "redirect:/bookings";
         }
 
@@ -284,25 +305,8 @@ public class BookingController {
                 booking.setVehicle(v);
             } catch (Exception ignored) {}
         }
-        if (staff && customerId != null) {
-            customerRepository.findById(customerId).ifPresent(booking::setCustomer);
-        } else {
-            booking.setCustomer(existing.getCustomer());
-        }
-
-        // Server-side guard: Customer cannot flip status on edit — remains PENDING
-        if (!staff) {
-            booking.setStatus("PENDING");
-        } else if (booking.getStatus() == null || booking.getStatus().isBlank()) {
-            booking.setStatus(existing.getStatus());
-        }
-
-        // If staff changes status to CANCELLED in edit form, run cancel logic
-        if (staff && "CANCELLED".equalsIgnoreCase(booking.getStatus())) {
-            bookingService.cancelBooking(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Booking #BK-" + id + " has been cancelled.");
-            return "redirect:/bookings";
-        }
+        booking.setCustomer(existing.getCustomer());
+        booking.setStatus("PENDING");
 
         bookingService.updateBooking(id, booking);
         redirectAttributes.addFlashAttribute("successMessage", "Booking #BK-" + id + " updated successfully.");
@@ -321,8 +325,40 @@ public class BookingController {
         }
 
         bookingService.approveBooking(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Booking #BK-" + id + " has been approved successfully.");
-        return "redirect:/bookings";
+        redirectAttributes.addFlashAttribute("successMessage", "Booking #BK-" + id + " has been approved successfully and confirmation sent to customer.");
+        return "redirect:/bookings?status=PENDING";
+    }
+
+    @PostMapping("/{id}/decline")
+    public String declineBooking(
+            @PathVariable Long id,
+            @RequestParam(value = "reason", required = false) String reason,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+
+        if (!isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Only staff can decline reservations.");
+            return "redirect:/bookings";
+        }
+
+        if (reason == null || reason.trim().isBlank()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "A decline reason is required so the customer can be informed.");
+            return "redirect:/bookings?status=PENDING";
+        }
+
+        Booking existing = bookingService.getBookingById(id);
+        if (existing == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
+            return "redirect:/bookings";
+        }
+
+        bookingService.declineBooking(id, reason.trim());
+        redirectAttributes.addFlashAttribute("successMessage", "Booking #BK-" + id + " has been declined and customer notified with reason: \"" + reason.trim() + "\"");
+        return "redirect:/bookings?status=PENDING";
     }
 
     @RequestMapping(value = "/{id}/cancel", method = {RequestMethod.GET, RequestMethod.POST})
@@ -332,20 +368,24 @@ public class BookingController {
         }
 
         boolean staff = isStaff(authentication);
-        String email = authentication.getName();
+        if (staff) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Staff must provide a reason to decline or cancel a booking. Please use the Decline action.");
+            return "redirect:/bookings";
+        }
 
+        String email = authentication.getName();
         Booking existing = bookingService.getBookingById(id);
         if (existing == null) {
             redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
             return "redirect:/bookings";
         }
 
-        if (!staff && (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email))) {
+        if (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email)) {
             redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to cancel this booking.");
             return "redirect:/bookings";
         }
         // Customers can only cancel pending bookings
-        if (!staff && !"PENDING".equalsIgnoreCase(existing.getStatus())) {
+        if (!"PENDING".equalsIgnoreCase(existing.getStatus())) {
             redirectAttributes.addFlashAttribute("errorMessage", "Only pending bookings can be cancelled by customers.");
             return "redirect:/bookings";
         }

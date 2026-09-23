@@ -40,6 +40,9 @@ public class Booking {
     @Column(name = "status")
     private String status; // PENDING, CONFIRMED, CANCELLED, COMPLETED
 
+    @Column(name = "staff_message", length = 500)
+    private String staffMessage;
+
     @Column(name = "duration", insertable = false, updatable = false)
     private Integer duration;
 

@@ -45,7 +45,31 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
+        return bookingRepository.findAllSortedWithPendingFirst();
+    }
+
+    @Override
+    public List<Booking> getBookingsByStatus(String status) {
+        if (status == null || status.isBlank() || "ALL".equalsIgnoreCase(status)) {
+            return bookingRepository.findAllSortedWithPendingFirst();
+        }
+        return bookingRepository.findByStatusOrderByBookingDateAsc(status.trim().toUpperCase());
+    }
+
+    @Override
+    public java.util.Map<String, Long> getBookingStatusCounts() {
+        java.util.Map<String, Long> counts = new java.util.LinkedHashMap<>();
+        long total = bookingRepository.count();
+        long pending = bookingRepository.countByStatusIgnoreCase("PENDING");
+        long confirmed = bookingRepository.countByStatusIgnoreCase("CONFIRMED");
+        long completed = bookingRepository.countByStatusIgnoreCase("COMPLETED");
+        long cancelled = bookingRepository.countByStatusIgnoreCase("CANCELLED");
+        counts.put("ALL", total);
+        counts.put("PENDING", pending);
+        counts.put("CONFIRMED", confirmed);
+        counts.put("COMPLETED", completed);
+        counts.put("CANCELLED", cancelled);
+        return counts;
     }
 
     @Override
@@ -102,14 +126,44 @@ public class BookingServiceImpl implements BookingService {
     public void approveBooking(Long id) {
         Booking booking = getBookingById(id);
         booking.setStatus("CONFIRMED");
+        booking.setStaffMessage("Your booking has been confirmed by our team.");
         Booking saved = bookingRepository.save(booking);
         ensureInvoiceForBooking(saved);
+    }
+
+    @Override
+    public void declineBooking(Long id, String reason) {
+        Booking booking = getBookingById(id);
+        booking.setStatus("CANCELLED");
+        booking.setStaffMessage(reason != null ? reason.trim() : "Booking request was declined by staff.");
+
+        // Release assigned vehicle back to AVAILABLE if it was BOOKED
+        if (booking.getVehicle() != null) {
+            Vehicle vehicle = booking.getVehicle();
+            if ("BOOKED".equalsIgnoreCase(vehicle.getStatus())) {
+                vehicle.setStatus("AVAILABLE");
+                vehicleRepository.save(vehicle);
+            }
+        }
+
+        // Cancel unpaid invoice if present
+        try {
+            invoiceRepository.findByBooking(booking).ifPresent(inv -> {
+                if (!"PAID".equalsIgnoreCase(inv.getStatus())) {
+                    inv.setStatus("CANCELLED");
+                    invoiceRepository.save(inv);
+                }
+            });
+        } catch (Exception ignored) {}
+
+        bookingRepository.save(booking);
     }
 
     @Override
     public void cancelBooking(Long id) {
         Booking booking = getBookingById(id);
         booking.setStatus("CANCELLED");
+        booking.setStaffMessage(null); // Customer self-cancellation: no staff message
         
         // Release assigned vehicle back to AVAILABLE if it was BOOKED
         if (booking.getVehicle() != null) {
