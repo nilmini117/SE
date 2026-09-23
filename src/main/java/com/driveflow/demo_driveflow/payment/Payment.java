@@ -31,6 +31,9 @@ public class Payment {
     @Column(name = "amount_paid")
     private BigDecimal amountPaid;
 
+    @Column(name = "status")
+    private String status = "COMPLETED"; // COMPLETED, CANCELLED
+
     @ManyToOne
     @JoinColumn(name = "invoice_id")
     private Invoice invoice;

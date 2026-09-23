@@ -40,8 +40,17 @@ public class Booking {
     @Column(name = "status")
     private String status; // PENDING, CONFIRMED, CANCELLED, COMPLETED
 
-    @Column(name = "duration")
+    @Column(name = "duration", insertable = false, updatable = false)
     private Integer duration;
+
+    public Integer getDuration() {
+        if (duration != null) return duration;
+        if (bookingDate != null && endDate != null) {
+            long days = java.time.temporal.ChronoUnit.DAYS.between(bookingDate, endDate);
+            return days > 0 ? (int) days : 1;
+        }
+        return 1;
+    }
 
     // Relationships
     @ManyToOne

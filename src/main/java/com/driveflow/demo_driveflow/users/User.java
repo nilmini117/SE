@@ -41,4 +41,11 @@ public class User {
 
     @Column(name = "password")
     private String password;
+
+    public String getName() {
+        String first = firstName != null ? firstName : "";
+        String last = lastName != null ? lastName : "";
+        String combined = (first + " " + last).trim();
+        return combined.isEmpty() ? email : combined;
+    }
 }

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Refunds')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Payment Refunds & Reversals</h1>
+            <p class="df-header-subtitle">Review, approve, or reject customer refund claims on settled rental transactions.</p>
+        </div>
+    </div>
+
+    <!-- Sub-Navigation Tabs -->
+    <div class="df-tabs">
+        <a th:href="@{/payments}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            Processed Payments
+        </a>
+        <a th:href="@{/payments/invoices}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Billing Invoices
+        </a>
+        <a th:href="@{/payments/refunds}" class="df-tab-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            Refunds
+        </a>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table" th:if="${refunds != null and !refunds.empty}">
+            <thead>
+            <tr>
+                <th>Refund ID</th>
+                <th>Payment Ref</th>
+                <th>Amount</th>
+                <th>Approval Status</th>
+                <th style="text-align: right;">Staff Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="r : ${refunds}">
+                <td><strong th:text="'#REF-' + ${r.refundId}">#REF-1</strong></td>
+                <td>
+                    <code th:if="${r.payment != null}" style="background: var(--slate-100); padding: 0.2rem 0.4rem; border-radius: 4px; font-weight: 600;"
+                          th:text="${r.payment.refNo}">TXN-001</code>
+                    <span th:if="${r.payment == null}" style="color: var(--slate-400); font-style: italic;">No Payment</span>
+                </td>
+                <td>
+                    <strong style="color: #b45309;" th:text="'$' + ${#numbers.formatDecimal(r.amount != null ? r.amount : 0, 1, 2)}">$0.00</strong>
+                </td>
+                <td>
+                    <span th:if="${r.approvalStatus == 'APPROVED'}" class="badge badge-success">Approved</span>
+                    <span th:if="${r.approvalStatus == 'PENDING'}" class="badge badge-warning">Pending</span>
+                    <span th:if="${r.approvalStatus == 'REJECTED'}" class="badge badge-danger">Rejected</span>
+                    <span th:if="${r.approvalStatus != 'APPROVED' and r.approvalStatus != 'PENDING' and r.approvalStatus != 'REJECTED'}"
+                          class="badge badge-secondary" th:text="${r.approvalStatus}">Pending</span>
+                </td>
+                <td style="text-align: right; display: flex; gap: 0.4rem; justify-content: flex-end;">
+                    <a th:if="${r.approvalStatus == 'PENDING'}"
+                       th:href="@{/payments/refunds/{id}/approve(id=${r.refundId})}"
+                       class="btn btn-primary btn-sm"
+                       onclick="return confirm('Approve this refund request?');">Approve</a>
+                    <a th:if="${r.approvalStatus == 'PENDING'}"
+                       th:href="@{/payments/refunds/{id}/reject(id=${r.refundId})}"
+                       class="btn btn-danger btn-sm"
+                       onclick="return confirm('Reject this refund request?');">Reject</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" th:if="${refunds == null or refunds.empty}">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                </svg>
+            </div>
+            <h3 class="empty-state-title">No Refunds Issued</h3>
+            <p class="empty-state-desc">Customer refund requests and reversals will be displayed here for management approval.</p>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

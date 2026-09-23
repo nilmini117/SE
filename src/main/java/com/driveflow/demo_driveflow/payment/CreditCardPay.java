@@ -19,4 +19,17 @@ public class CreditCardPay extends Payment {
 
     @Column(name = "card_no")
     private String cardNo;
+
+    public void setCardNo(String rawCardNo) {
+        if (rawCardNo == null || rawCardNo.isBlank()) {
+            this.cardNo = null;
+        } else {
+            String digits = rawCardNo.replaceAll("[^0-9]", "");
+            if (digits.length() >= 4) {
+                this.cardNo = "**** **** **** " + digits.substring(digits.length() - 4);
+            } else {
+                this.cardNo = "**** " + rawCardNo;
+            }
+        }
+    }
 }

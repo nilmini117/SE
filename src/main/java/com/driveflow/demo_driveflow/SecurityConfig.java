@@ -45,11 +45,18 @@ public class SecurityConfig {
                     "/images/**",
                     "/favicon.ico"
                 ).permitAll()
+                // Customer profile (authenticated; staff is redirected to / in ProfileController)
+                .requestMatchers("/profile/**").authenticated()
                 // Booking creation strictly requires authenticated user (Customer or Staff)
                 .requestMatchers("/bookings/new", "/bookings", "/bookings/**").authenticated()
-                // Staff actions
-                .requestMatchers("/vehicles/new", "/vehicles/*/edit", "/vehicles/*/delete").hasRole("STAFF")
+                // Staff-only modules & endpoints
+                .requestMatchers("/incidents/**").hasRole("STAFF")
                 .requestMatchers("/maintenance/**").hasRole("STAFF")
+                .requestMatchers("/payments/**").hasRole("STAFF")
+                .requestMatchers("/vehicles/new", "/vehicles/*/edit", "/vehicles/*/delete").hasRole("STAFF")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/promotions", "/promotions/**").hasRole("STAFF")
+                .requestMatchers("/promotions/new", "/promotions/*/edit", "/promotions/*/delete").hasRole("STAFF")
+                .requestMatchers("/feedback/*/resolve", "/feedback/*/delete").hasRole("STAFF")
                 // Other views can be browsed by authenticated users
                 .anyRequest().authenticated()
             )

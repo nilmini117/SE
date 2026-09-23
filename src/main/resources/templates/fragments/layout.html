@@ -62,6 +62,11 @@
                     Feedback
                 </a>
             </li>
+            <li sec:authorize="hasRole('CUSTOMER')">
+                <a th:href="@{/profile}" th:classappend="${activeTab == 'profile'} ? 'active' : ''" class="df-nav-link">
+                    My Profile
+                </a>
+            </li>
         </ul>
 
         <!-- Auth Status & Profile Menu -->

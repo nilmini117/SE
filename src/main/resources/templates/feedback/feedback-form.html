@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Submit Feedback')}"></head>
+<head th:replace="~{fragments/layout :: head(${feedback.feedbackId != null} ? 'Edit Feedback' : 'Submit Feedback')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('feedback')}"></nav>
@@ -13,14 +13,16 @@
     </div>
 
     <div class="df-form-card">
-        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
+            th:text="${feedback.feedbackId != null} ? 'Edit Feedback Ticket' : 'Submit Customer Feedback'">
             Submit Customer Feedback
         </h2>
         <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
             Record customer comments, rental inquiries, or service complaints for review.
         </p>
 
-        <form th:action="@{/feedback}" th:object="${feedback}" method="post">
+        <form th:action="${feedback.feedbackId != null} ? @{/feedback/{id}(id=${feedback.feedbackId})} : @{/feedback}"
+              th:object="${feedback}" method="post">
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Submission Date</label>
@@ -29,12 +31,20 @@
                 <div class="form-group">
                     <label class="form-label">Category</label>
                     <select th:field="*{category}" class="form-select">
-                        <option value="INQUIRY">INQUIRY — General Question</option>
-                        <option value="COMPLAINT">COMPLAINT — Service Issue</option>
-                        <option value="PRAISE">PRAISE — Exceptional Experience</option>
-                        <option value="SUGGESTION">SUGGESTION — Feature Improvement</option>
+                        <option value="SERVICE">SERVICE — General Customer Service</option>
+                        <option value="VEHICLE">VEHICLE — Vehicle Quality & Performance</option>
+                        <option value="PRICING">PRICING — Billing & Pricing</option>
+                        <option value="STAFF">STAFF — Counter Staff & Interaction</option>
                     </select>
                 </div>
+            </div>
+
+            <div class="form-group" th:if="${feedback.feedbackId != null}">
+                <label class="form-label">Status</label>
+                <select th:field="*{status}" class="form-select">
+                    <option value="OPEN">OPEN</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -43,7 +53,10 @@
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Submit Feedback</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;"
+                        th:text="${feedback.feedbackId != null} ? 'Update Feedback' : 'Submit Feedback'">
+                    Submit Feedback
+                </button>
                 <a th:href="@{/feedback}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

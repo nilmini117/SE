@@ -30,6 +30,9 @@ public class Feedback {
     @Column(name = "message")
     private String message;
 
+    @Column(name = "status")
+    private String status = "OPEN"; // OPEN, RESOLVED
+
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private Customer customer;

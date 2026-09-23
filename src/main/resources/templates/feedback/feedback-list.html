@@ -28,8 +28,10 @@
             <tr>
                 <th>Ticket ID</th>
                 <th>Date</th>
+                <th>Customer</th>
                 <th>Category</th>
                 <th>Customer Message</th>
+                <th>Status</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -38,14 +40,27 @@
                 <td><strong th:text="'#FB-' + ${f.feedbackId}">#FB-1</strong></td>
                 <td th:text="${f.date}">2026-09-13</td>
                 <td>
-                    <span th:if="${f.category == 'INQUIRY'}" class="badge badge-info">Inquiry</span>
-                    <span th:if="${f.category == 'COMPLAINT'}" class="badge badge-danger">Complaint</span>
-                    <span th:if="${f.category != 'INQUIRY' and f.category != 'COMPLAINT'}" class="badge badge-success" th:text="${f.category}">General</span>
+                    <span th:if="${f.customer != null}" th:text="${f.customer.name}">Customer Name</span>
+                    <span th:if="${f.customer == null}" style="color: var(--slate-400); font-style: italic;">Anonymous</span>
                 </td>
-                <td style="max-width: 360px; line-height: 1.4;" th:text="${f.message}">Excellent customer service at airport branch!</td>
-                <td style="text-align: right;">
-                    <a th:href="@{/feedback/{id}/resolve(id=${f.feedbackId})}" class="btn btn-success btn-sm">Resolve</a>
-                    <a th:href="@{/feedback/{id}/delete(id=${f.feedbackId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this feedback record?');">Delete</a>
+                <td>
+                    <span th:if="${f.category == 'SERVICE'}" class="badge badge-info">Service</span>
+                    <span th:if="${f.category == 'VEHICLE'}" class="badge badge-success">Vehicle</span>
+                    <span th:if="${f.category == 'PRICING'}" class="badge badge-warning">Pricing</span>
+                    <span th:if="${f.category == 'STAFF'}" class="badge badge-primary">Staff</span>
+                    <span th:if="${f.category != 'SERVICE' and f.category != 'VEHICLE' and f.category != 'PRICING' and f.category != 'STAFF'}" class="badge badge-secondary" th:text="${f.category}">General</span>
+                </td>
+                <td style="max-width: 320px; line-height: 1.4;" th:text="${f.message}">Customer message content</td>
+                <td>
+                    <span th:if="${f.status == 'RESOLVED'}" class="badge badge-success">Resolved</span>
+                    <span th:if="${f.status != 'RESOLVED'}" class="badge badge-warning" th:text="${f.status != null ? f.status : 'OPEN'}">OPEN</span>
+                </td>
+                <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
+                    <a th:href="@{/feedback/{id}/edit(id=${f.feedbackId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <a th:if="${isStaff != null and isStaff and f.status != 'RESOLVED'}"
+                       th:href="@{/feedback/{id}/resolve(id=${f.feedbackId})}" class="btn btn-success btn-sm">Resolve</a>
+                    <a th:if="${isStaff != null and isStaff}"
+                       th:href="@{/feedback/{id}/delete(id=${f.feedbackId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this feedback record?');">Delete</a>
                 </td>
             </tr>
             </tbody>

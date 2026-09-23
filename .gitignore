@@ -33,3 +33,6 @@ build/
 .vscode/
 
 *.zip
+scratch/
+*cookie*.txt
+test_*.txt

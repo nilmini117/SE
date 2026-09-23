@@ -31,8 +31,15 @@ public class Invoice {
     @Column(name = "late_fee")
     private BigDecimal lateFee;
 
-    @Column(name = "total_amt")
+    @Column(name = "total_amt", insertable = false, updatable = false)
     private BigDecimal totalAmt;
+
+    public BigDecimal getTotalAmt() {
+        if (totalAmt != null) return totalAmt;
+        BigDecimal r = rentalAmt != null ? rentalAmt : BigDecimal.ZERO;
+        BigDecimal l = lateFee != null ? lateFee : BigDecimal.ZERO;
+        return r.add(l);
+    }
 
     @Column(name = "status")
     private String status;

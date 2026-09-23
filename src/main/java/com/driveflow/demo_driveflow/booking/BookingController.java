@@ -180,10 +180,14 @@ public class BookingController {
         boolean isStaff = staffRepository.findByEmail(email).isPresent();
         model.addAttribute("isStaff", isStaff);
 
+        Booking booking = bookingService.getBookingById(id);
+        if (!isStaff && (booking.getCustomer() == null || !booking.getCustomer().getEmail().equalsIgnoreCase(email))) {
+            return "redirect:/bookings?error=unauthorized";
+        }
+
         Optional<Customer> customerOpt = customerRepository.findByEmail(email);
         customerOpt.ifPresent(c -> model.addAttribute("currentCustomer", c));
 
-        Booking booking = bookingService.getBookingById(id);
         model.addAttribute("booking", booking);
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
         model.addAttribute("customers", customerRepository.findAll());
@@ -195,7 +199,20 @@ public class BookingController {
             @PathVariable Long id,
             @ModelAttribute Booking booking,
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
-            @RequestParam(value = "customerId", required = false) Long customerId) {
+            @RequestParam(value = "customerId", required = false) Long customerId,
+            Authentication authentication) {
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+
+        String email = authentication.getName();
+        boolean isStaff = staffRepository.findByEmail(email).isPresent();
+
+        Booking existing = bookingService.getBookingById(id);
+        if (!isStaff && (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email))) {
+            return "redirect:/bookings?error=unauthorized";
+        }
 
         if (vehicleId != null) {
             try {
@@ -203,8 +220,10 @@ public class BookingController {
                 booking.setVehicle(v);
             } catch (Exception ignored) {}
         }
-        if (customerId != null) {
+        if (isStaff && customerId != null) {
             customerRepository.findById(customerId).ifPresent(booking::setCustomer);
+        } else {
+            booking.setCustomer(existing.getCustomer());
         }
 
         bookingService.updateBooking(id, booking);
@@ -212,7 +231,19 @@ public class BookingController {
     }
 
     @GetMapping("/{id}/cancel")
-    public String cancelBooking(@PathVariable Long id) {
+    public String cancelBooking(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+
+        String email = authentication.getName();
+        boolean isStaff = staffRepository.findByEmail(email).isPresent();
+
+        Booking existing = bookingService.getBookingById(id);
+        if (!isStaff && (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email))) {
+            return "redirect:/bookings?error=unauthorized";
+        }
+
         bookingService.cancelBooking(id);
         return "redirect:/bookings";
     }

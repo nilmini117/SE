@@ -38,4 +38,19 @@ public class Vehicle {
     @ManyToOne
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
+    public String getBrand() {
+        if (model != null && model.contains(" ")) {
+            return model.substring(0, model.indexOf(" "));
+        }
+        return model != null ? model : "";
+    }
+
+    public String getVehicleType() {
+        return "Standard";
+    }
+
+    public String getDisplayName() {
+        return (model != null ? model : "Vehicle") + (regNo != null ? " (" + regNo + ")" : "");
+    }
 }

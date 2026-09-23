@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Generate Invoice')}"></head>
+<head th:replace="~{fragments/layout :: head(${invoice.invoiceId != null} ? 'Edit Invoice' : 'Generate Invoice')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
@@ -13,14 +13,29 @@
     </div>
 
     <div class="df-form-card">
-        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
+            th:text="${invoice.invoiceId != null} ? 'Edit Rental Invoice' : 'Generate Rental Invoice'">
             Generate Rental Invoice
         </h2>
         <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
-            Itemize base rental pricing, late delivery charges, and final bill amount.
+            Itemize base rental pricing, late delivery charges, and link to customer booking.
         </p>
 
-        <form th:action="@{/payments/invoices}" th:object="${invoice}" method="post">
+        <form th:action="${invoice.invoiceId != null} ? @{/payments/invoices/{id}(id=${invoice.invoiceId})} : @{/payments/invoices}"
+              th:object="${invoice}" method="post">
+
+            <div class="form-group">
+                <label class="form-label">Associated Rental Booking <span style="color: var(--danger);">*</span></label>
+                <select name="bookingId" class="form-control" required>
+                    <option value="" disabled th:selected="${invoice.booking == null}">-- Select Booking --</option>
+                    <option th:each="b : ${bookings}"
+                            th:value="${b.bookingId}"
+                            th:text="'Booking #' + ${b.bookingId} + ' - ' + (${b.customer != null ? b.customer.name : 'Unknown'}) + ' (' + (${b.vehicle != null ? b.vehicle.model : 'Vehicle'}) + ')'"
+                            th:selected="${invoice.booking != null and invoice.booking.bookingId == b.bookingId}">
+                    </option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label class="form-label">Invoice Date</label>
                 <input type="date" th:field="*{invoiceDate}" class="form-control" required>
@@ -29,21 +44,33 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Rental Charge ($ USD)</label>
-                    <input type="number" step="0.01" th:field="*{rentalAmt}" class="form-control" placeholder="0.00" min="0" required>
+                    <input type="number" step="0.01" th:field="*{rentalAmt}" id="rentalAmt" class="form-control" placeholder="0.00" min="0" required oninput="calculateTotal()">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Late Return Surcharge ($ USD)</label>
-                    <input type="number" step="0.01" th:field="*{lateFee}" class="form-control" placeholder="0.00" min="0">
+                    <input type="number" step="0.01" th:field="*{lateFee}" id="lateFee" class="form-control" placeholder="0.00" min="0" oninput="calculateTotal()">
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Total Payable Amount ($ USD)</label>
-                <input type="number" step="0.01" th:field="*{totalAmt}" class="form-control" placeholder="0.00" min="0" required>
+                <label class="form-label">Total Payable Amount ($ USD) (Auto-calculated)</label>
+                <input type="number" step="0.01" th:field="*{totalAmt}" id="totalAmt" class="form-control" placeholder="0.00" readonly style="background: var(--slate-100); color: var(--slate-700);">
+            </div>
+
+            <div class="form-group" th:if="${invoice.invoiceId != null}">
+                <label class="form-label">Invoice Status</label>
+                <select th:field="*{status}" class="form-control">
+                    <option value="UNPAID">UNPAID</option>
+                    <option value="PAID">PAID</option>
+                    <option value="CANCELLED">CANCELLED</option>
+                </select>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Generate & Issue Invoice</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;"
+                        th:text="${invoice.invoiceId != null} ? 'Update Invoice' : 'Generate & Issue Invoice'">
+                    Generate & Issue Invoice
+                </button>
                 <a th:href="@{/payments/invoices}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
@@ -51,6 +78,14 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+    function calculateTotal() {
+        const rental = parseFloat(document.getElementById('rentalAmt').value) || 0;
+        const late = parseFloat(document.getElementById('lateFee').value) || 0;
+        document.getElementById('totalAmt').value = (rental + late).toFixed(2);
+    }
+</script>
 
 </body>
 </html>

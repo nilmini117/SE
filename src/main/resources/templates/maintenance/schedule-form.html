@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Schedule Service')}"></head>
+<head th:replace="~{fragments/layout :: head(${record.maintenanceId != null} ? 'Edit Schedule' : 'Schedule Service')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('maintenance')}"></nav>
@@ -13,14 +13,29 @@
     </div>
 
     <div class="df-form-card">
-        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
+            th:text="${record.maintenanceId != null} ? 'Edit Fleet Maintenance' : 'Schedule Fleet Maintenance'">
             Schedule Fleet Maintenance
         </h2>
         <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
-            Record the scheduled workshop date and estimated service / repair cost.
+            Assign maintenance to a fleet vehicle, record scheduled workshop date, and estimated cost.
         </p>
 
-        <form th:action="@{/maintenance}" th:object="${record}" method="post">
+        <form th:action="${record.maintenanceId != null} ? @{/maintenance/{id}(id=${record.maintenanceId})} : @{/maintenance}"
+              th:object="${record}" method="post">
+
+            <div class="form-group">
+                <label class="form-label">Fleet Vehicle <span style="color: var(--danger);">*</span></label>
+                <select name="vehicleId" class="form-control" required>
+                    <option value="" disabled th:selected="${record.vehicle == null}">-- Select Vehicle --</option>
+                    <option th:each="v : ${vehicles}"
+                            th:value="${v.vehicleId}"
+                            th:text="${v.model} + ' (' + ${v.regNo} + ')'"
+                            th:selected="${record.vehicle != null and record.vehicle.vehicleId == v.vehicleId}">
+                    </option>
+                </select>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Scheduled Service Date</label>
@@ -33,7 +48,10 @@
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
-                <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm Schedule</button>
+                <button type="submit" class="btn btn-primary" style="flex: 1;"
+                        th:text="${record.maintenanceId != null} ? 'Update Schedule' : 'Confirm Schedule'">
+                    Confirm Schedule
+                </button>
                 <a th:href="@{/maintenance}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>

@@ -74,4 +74,49 @@ public class UserServiceImpl implements UserService {
         if (email == null) return Optional.empty();
         return userRepository.findByEmail(email.trim().toLowerCase());
     }
+
+    @Override
+    @Transactional
+    public Customer updateCustomerProfile(String email, String firstName, String lastName, String contactNumber, String drivingLicense) {
+        Customer customer = findCustomerByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Customer profile not found for: " + email));
+
+        String license = drivingLicense != null ? drivingLicense.trim().toUpperCase() : "";
+        if (!license.equalsIgnoreCase(customer.getDrivingLicense()) && customerRepository.existsByDrivingLicense(license)) {
+            throw new IllegalArgumentException("This driving license number is already registered to another account.");
+        }
+
+        if (firstName != null && !firstName.isBlank()) {
+            customer.setFirstName(firstName.trim());
+        }
+        if (lastName != null && !lastName.isBlank()) {
+            customer.setLastName(lastName.trim());
+        }
+        if (contactNumber != null && !contactNumber.isBlank()) {
+            customer.setContactNumber(contactNumber.trim());
+        }
+        if (!license.isBlank()) {
+            customer.setDrivingLicense(license);
+        }
+
+        return customerRepository.save(customer);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword) {
+        User user = findUserByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for: " + email));
+
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new IllegalArgumentException("Current password is incorrect.");
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters long.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
