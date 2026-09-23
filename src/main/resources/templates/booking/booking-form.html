@@ -91,15 +91,15 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" th:style="${isStaff} ? '' : 'flex: 1 1 100%;'">
                     <label class="form-label">Charged Rate ($ USD)</label>
                     <input type="number" step="0.01" th:field="*{chargedRate}" class="form-control" placeholder="150.00" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" th:if="${isStaff}">
                     <label class="form-label">Reservation Status</label>
                     <select th:field="*{status}" class="form-select">
-                        <option value="CONFIRMED">CONFIRMED</option>
                         <option value="PENDING">PENDING</option>
+                        <option value="CONFIRMED">CONFIRMED</option>
                         <option value="COMPLETED">COMPLETED</option>
                         <option value="CANCELLED">CANCELLED</option>
                     </select>

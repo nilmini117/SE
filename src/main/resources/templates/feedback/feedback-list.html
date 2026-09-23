@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Customer Feedback')}"></head>
 <body>
 
@@ -8,8 +8,10 @@
 <main class="df-main">
     <div class="df-header">
         <div>
-            <h1 class="df-header-title">Customer Feedback & Reviews</h1>
-            <p class="df-header-subtitle">Review feedback inquiries, manage customer complaints, and audit service quality.</p>
+            <h1 class="df-header-title" th:if="${isStaff}">Customer Feedback & Reviews</h1>
+            <h1 class="df-header-title" th:unless="${isStaff}">My Feedback & Support Requests</h1>
+            <p class="df-header-subtitle" th:if="${isStaff}">Review feedback inquiries, manage customer complaints, and audit service quality.</p>
+            <p class="df-header-subtitle" th:unless="${isStaff}">Submit an inquiry or complaint and track its status.</p>
         </div>
         <div class="df-header-actions">
             <a th:href="@{/feedback/new}" class="btn btn-primary">
@@ -28,7 +30,7 @@
             <tr>
                 <th>Ticket ID</th>
                 <th>Date</th>
-                <th>Customer</th>
+                <th th:if="${isStaff}">Customer</th>
                 <th>Category</th>
                 <th>Customer Message</th>
                 <th>Status</th>
@@ -39,7 +41,7 @@
             <tr th:each="f : ${feedbackList}">
                 <td><strong th:text="'#FB-' + ${f.feedbackId}">#FB-1</strong></td>
                 <td th:text="${f.date}">2026-09-13</td>
-                <td>
+                <td th:if="${isStaff}">
                     <span th:if="${f.customer != null}" th:text="${f.customer.name}">Customer Name</span>
                     <span th:if="${f.customer == null}" style="color: var(--slate-400); font-style: italic;">Anonymous</span>
                 </td>
@@ -73,8 +75,10 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
             </div>
-            <h3 class="empty-state-title">No Feedback Tickets</h3>
-            <p class="empty-state-desc">Customer inquiries and satisfaction ratings will appear in this inbox.</p>
+            <h3 class="empty-state-title" th:if="${isStaff}">No Feedback Tickets</h3>
+            <h3 class="empty-state-title" th:unless="${isStaff}">No Feedback Submitted Yet</h3>
+            <p class="empty-state-desc" th:if="${isStaff}">Customer inquiries and satisfaction ratings will appear in this inbox.</p>
+            <p class="empty-state-desc" th:unless="${isStaff}">Have a question, feedback, or need assistance? Submit your request here.</p>
             <a th:href="@{/feedback/new}" class="btn btn-primary">Submit First Review</a>
         </div>
     </div>

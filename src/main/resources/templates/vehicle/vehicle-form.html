@@ -46,14 +46,28 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Operational Status</label>
-                <select th:field="*{status}" class="form-select">
-                    <option value="AVAILABLE">AVAILABLE — Ready for Rent</option>
-                    <option value="BOOKED">BOOKED — Currently on Trip</option>
-                    <option value="MAINTENANCE">MAINTENANCE — In Workshop</option>
-                    <option value="DECOMMISSIONED">DECOMMISSIONED — Retired</option>
-                </select>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Operational Status</label>
+                    <select th:field="*{status}" class="form-select">
+                        <option value="AVAILABLE">AVAILABLE — Ready for Rent</option>
+                        <option value="BOOKED">BOOKED — Currently on Trip</option>
+                        <option value="MAINTENANCE">MAINTENANCE — In Workshop</option>
+                        <option value="DECOMMISSIONED">DECOMMISSIONED — Retired</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assigned Branch</label>
+                    <select name="branchId" class="form-select">
+                        <option value="">-- Select Branch --</option>
+                        <option th:each="b : ${branches}"
+                                th:value="${b.branchId}"
+                                th:selected="${vehicle.branch != null and vehicle.branch.branchId == b.branchId}"
+                                th:text="${b.branchName + ' (' + b.city + ')'}">
+                            Colombo Central (Colombo)
+                        </option>
+                    </select>
+                </div>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">

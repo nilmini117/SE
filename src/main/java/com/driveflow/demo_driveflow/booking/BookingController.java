@@ -39,6 +39,9 @@ public class BookingController {
     @Autowired
     private BranchRepository branchRepository;
 
+    @Autowired
+    private com.driveflow.demo_driveflow.payment.InvoiceRepository invoiceRepository;
+
     @GetMapping
     public String listBookings(Model model, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
@@ -49,17 +52,26 @@ public class BookingController {
         boolean isStaff = staffRepository.findByEmail(email).isPresent();
         model.addAttribute("isStaff", isStaff);
 
+        List<Booking> bookingsList;
         if (isStaff) {
-            model.addAttribute("bookings", bookingService.getAllBookings());
+            bookingsList = bookingService.getAllBookings();
         } else {
             Optional<Customer> customerOpt = customerRepository.findByEmail(email);
             if (customerOpt.isPresent()) {
-                model.addAttribute("bookings", bookingService.getBookingsByCustomer(customerOpt.get()));
+                bookingsList = bookingService.getBookingsByCustomer(customerOpt.get());
                 model.addAttribute("currentCustomer", customerOpt.get());
             } else {
-                model.addAttribute("bookings", List.of());
+                bookingsList = List.of();
             }
         }
+        model.addAttribute("bookings", bookingsList);
+
+        java.util.Map<Long, com.driveflow.demo_driveflow.payment.Invoice> bookingInvoices = new java.util.HashMap<>();
+        for (Booking b : bookingsList) {
+            invoiceRepository.findByBooking(b).ifPresent(inv -> bookingInvoices.put(b.getBookingId(), inv));
+        }
+        model.addAttribute("bookingInvoices", bookingInvoices);
+
         return "booking/booking-list";
     }
 
@@ -83,7 +95,7 @@ public class BookingController {
         booking.setDuration(3);
         booking.setQuantity(1);
         booking.setChargedRate(new BigDecimal("150.00"));
-        booking.setStatus("CONFIRMED");
+        booking.setStatus(isStaff ? "CONFIRMED" : "PENDING");
 
         if (vehicleId != null) {
             try {
@@ -120,6 +132,7 @@ public class BookingController {
 
         String email = authentication.getName();
         Optional<Customer> currentCustomerOpt = customerRepository.findByEmail(email);
+        boolean isStaff = staffRepository.findByEmail(email).isPresent();
 
         if (currentCustomerOpt.isPresent()) {
             // Logged in as customer: customer is always themselves
@@ -154,7 +167,14 @@ public class BookingController {
         if (booking.getQuantity() == null) {
             booking.setQuantity(1);
         }
-        if (booking.getStatus() == null || booking.getStatus().isBlank()) {
+        if (booking.getChargedRate() == null) {
+            booking.setChargedRate(java.math.BigDecimal.valueOf(75.00));
+        }
+
+        // Server-side status enforcement: Customers always create PENDING bookings
+        if (!isStaff) {
+            booking.setStatus("PENDING");
+        } else if (booking.getStatus() == null || booking.getStatus().isBlank()) {
             booking.setStatus("CONFIRMED");
         }
 
@@ -166,7 +186,8 @@ public class BookingController {
         }
 
         bookingService.createBooking(booking);
-        redirectAttributes.addFlashAttribute("successMessage", "Vehicle reservation confirmed successfully!");
+        redirectAttributes.addFlashAttribute("successMessage",
+                isStaff ? "Vehicle reservation confirmed successfully!" : "Vehicle reservation submitted successfully! Status is PENDING staff approval.");
         return "redirect:/bookings";
     }
 
@@ -226,7 +247,30 @@ public class BookingController {
             booking.setCustomer(existing.getCustomer());
         }
 
+        // Server-side guard: Customer cannot flip status on edit — remains PENDING
+        if (!isStaff) {
+            booking.setStatus("PENDING");
+        } else if (booking.getStatus() == null || booking.getStatus().isBlank()) {
+            booking.setStatus(existing.getStatus());
+        }
+
         bookingService.updateBooking(id, booking);
+        return "redirect:/bookings";
+    }
+
+    @GetMapping("/{id}/approve")
+    public String approveBooking(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+
+        String email = authentication.getName();
+        boolean isStaff = staffRepository.findByEmail(email).isPresent();
+        if (!isStaff) {
+            return "redirect:/bookings?error=unauthorized";
+        }
+
+        bookingService.approveBooking(id);
         return "redirect:/bookings";
     }
 
@@ -242,6 +286,10 @@ public class BookingController {
         Booking existing = bookingService.getBookingById(id);
         if (!isStaff && (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email))) {
             return "redirect:/bookings?error=unauthorized";
+        }
+        // Customers can only cancel pending bookings
+        if (!isStaff && !"PENDING".equalsIgnoreCase(existing.getStatus())) {
+            return "redirect:/bookings?error=cannot-cancel";
         }
 
         bookingService.cancelBooking(id);

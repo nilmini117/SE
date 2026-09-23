@@ -31,6 +31,12 @@ public class DataInitializer implements CommandLineRunner {
     private CustomerRepository customerRepository;
 
     @Autowired
+    private com.driveflow.demo_driveflow.booking.BookingRepository bookingRepository;
+
+    @Autowired
+    private com.driveflow.demo_driveflow.payment.InvoiceRepository invoiceRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -75,6 +81,24 @@ public class DataInitializer implements CommandLineRunner {
             customer.setPassword(passwordEncoder.encode("Customer123!"));
             customerRepository.save(customer);
             System.out.println(">> Seeded default Customer account: customer@driveflow.com / Customer123!");
+        }
+
+        // Ensure active bookings have invoices available for payment
+        for (com.driveflow.demo_driveflow.booking.Booking b : bookingRepository.findAll()) {
+            if (b.getBookingId() != null && invoiceRepository.findByBooking(b).isEmpty()
+                    && !"CANCELLED".equalsIgnoreCase(b.getStatus())) {
+                try {
+                    com.driveflow.demo_driveflow.payment.Invoice inv = new com.driveflow.demo_driveflow.payment.Invoice();
+                    inv.setBooking(b);
+                    inv.setInvoiceDate(LocalDate.now());
+                    BigDecimal rate = b.getChargedRate() != null ? b.getChargedRate() : BigDecimal.valueOf(75.00);
+                    int dur = b.getDuration() != null ? b.getDuration() : 1;
+                    inv.setRentalAmt(rate.multiply(BigDecimal.valueOf(dur > 0 ? dur : 1)));
+                    inv.setLateFee(BigDecimal.ZERO);
+                    inv.setStatus("UNPAID");
+                    invoiceRepository.save(inv);
+                } catch (Exception ignored) {}
+            }
         }
     }
 }

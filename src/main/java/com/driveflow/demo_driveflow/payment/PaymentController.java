@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.payment;
 
+import com.driveflow.demo_driveflow.booking.Booking;
 import com.driveflow.demo_driveflow.booking.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -18,10 +19,21 @@ public class PaymentController {
     @Autowired
     private BookingService bookingService;
 
+    @Autowired
+    private com.driveflow.demo_driveflow.users.StaffRepository staffRepository;
+
     // --- PAYMENTS ---
 
     @GetMapping
-    public String listPayments(Model model) {
+    public String listPayments(Model model, org.springframework.security.core.Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+            String email = authentication.getName();
+            boolean isStaff = staffRepository.findByEmail(email).isPresent();
+            if (!isStaff) {
+                return "redirect:/profile#invoices";
+            }
+        }
         model.addAttribute("payments", paymentService.getAllPayments());
         return "payment/payment-list";
     }

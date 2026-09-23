@@ -145,8 +145,8 @@
             </span>
         </a>
 
-        <!-- Incidents -->
-        <a th:href="@{/incidents}" class="df-module-card">
+        <!-- Incidents (Staff Only) -->
+        <a th:href="@{/incidents}" class="df-module-card" sec:authorize="hasRole('STAFF')">
             <div class="df-module-icon-wrap icon-rose">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -171,15 +171,15 @@
                 </svg>
             </div>
             <h3 class="df-module-title">Promotions & Discounts</h3>
-            <p class="df-module-desc">Manage seasonal discount rates, marketing campaigns, start/end schedules, and active statuses.</p>
+            <p class="df-module-desc">Explore seasonal discount rates, marketing campaigns, start/end schedules, and active offers.</p>
             <span class="df-module-link-text">
                 Explore Offers
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
             </span>
         </a>
 
-        <!-- Maintenance -->
-        <a th:href="@{/maintenance}" class="df-module-card">
+        <!-- Maintenance (Staff Only) -->
+        <a th:href="@{/maintenance}" class="df-module-card" sec:authorize="hasRole('STAFF')">
             <div class="df-module-icon-wrap icon-indigo">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
@@ -193,8 +193,8 @@
             </span>
         </a>
 
-        <!-- Payments -->
-        <a th:href="@{/payments}" class="df-module-card">
+        <!-- Payments (Staff Only) -->
+        <a th:href="@{/payments}" class="df-module-card" sec:authorize="hasRole('STAFF')">
             <div class="df-module-icon-wrap icon-emerald">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
@@ -209,6 +209,22 @@
             </span>
         </a>
 
+        <!-- Customer Profile & Billing (Customer Only) -->
+        <a th:href="@{/profile}" class="df-module-card" sec:authorize="hasRole('CUSTOMER')">
+            <div class="df-module-icon-wrap icon-emerald">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+            </div>
+            <h3 class="df-module-title">My Profile & Billing</h3>
+            <p class="df-module-desc">Review your personal details, active reservations, invoice statements, and pay balances online.</p>
+            <span class="df-module-link-text">
+                Manage Invoices & Pay
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </span>
+        </a>
+
         <!-- Feedback -->
         <a th:href="@{/feedback}" class="df-module-card">
             <div class="df-module-icon-wrap icon-teal">
@@ -217,7 +233,7 @@
                 </svg>
             </div>
             <h3 class="df-module-title">Feedback & Reporting</h3>
-            <p class="df-module-desc">Collect customer reviews, respond to satisfaction feedback, and resolve service issues.</p>
+            <p class="df-module-desc">Submit customer reviews, track ticket status, and communicate with service management.</p>
             <span class="df-module-link-text">
                 Customer Feedback
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>

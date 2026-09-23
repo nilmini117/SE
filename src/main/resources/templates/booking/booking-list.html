@@ -56,6 +56,7 @@
                 <th>Duration</th>
                 <th>Charged Rate</th>
                 <th>Status</th>
+                <th>Payment & Invoice</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -84,9 +85,52 @@
                     <span th:if="${b.status == 'COMPLETED'}" class="badge badge-info">Completed</span>
                     <span th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Other</span>
                 </td>
+                <td>
+                    <div th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId)}">
+                        <span th:if="${bookingInvoices.get(b.bookingId).status == 'PAID'}" class="badge badge-success">Paid</span>
+                        <div th:if="${bookingInvoices.get(b.bookingId).status != 'PAID'}">
+                            <span class="badge badge-warning" th:text="${bookingInvoices.get(b.bookingId).status}">UNPAID</span>
+                            <a th:if="${isStaff == null or !isStaff}"
+                               th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
+                               class="btn btn-primary btn-sm"
+                               style="display: inline-block; margin-top: 0.25rem; font-size: 0.75rem; padding: 0.2rem 0.55rem; font-weight: 700;">
+                                Pay Now
+                            </a>
+                        </div>
+                    </div>
+                    <div th:if="${bookingInvoices == null or !bookingInvoices.containsKey(b.bookingId)}">
+                        <span th:if="${b.status == 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem; font-style: italic;">Pending Approval</span>
+                        <span th:if="${b.status != 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem;">-</span>
+                    </div>
+                </td>
                 <td style="text-align: right; white-space: nowrap;">
-                    <a th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
-                    <a th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</a>
+                    <!-- Staff Actions -->
+                    <span th:if="${isStaff != null and isStaff}">
+                        <a th:if="${b.status == 'PENDING'}"
+                           th:href="@{/bookings/{id}/approve(id=${b.bookingId})}"
+                           class="btn btn-success btn-sm">Approve</a>
+                        <a th:if="${b.status != 'CANCELLED' and b.status != 'COMPLETED'}"
+                           th:href="@{/bookings/{id}/edit(id=${b.bookingId})}"
+                           class="btn btn-secondary btn-sm">Edit</a>
+                        <a th:if="${b.status != 'CANCELLED' and b.status != 'COMPLETED'}"
+                           th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel</a>
+                    </span>
+                    <!-- Customer Actions -->
+                    <span th:if="${isStaff == null or !isStaff}">
+                        <a th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId) and bookingInvoices.get(b.bookingId).status != 'PAID' and b.status != 'CANCELLED'}"
+                           th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
+                           class="btn btn-primary btn-sm"
+                           style="font-weight: 700; margin-right: 0.25rem;">Pay Now</a>
+                        <a th:if="${b.status == 'PENDING'}"
+                           th:href="@{/bookings/{id}/edit(id=${b.bookingId})}"
+                           class="btn btn-secondary btn-sm">Edit</a>
+                        <a th:if="${b.status == 'PENDING'}"
+                           th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to cancel your pending reservation?');">Cancel</a>
+                    </span>
                 </td>
             </tr>
             </tbody>

@@ -57,6 +57,11 @@
                     Payments
                 </a>
             </li>
+            <li sec:authorize="hasRole('CUSTOMER')">
+                <a th:href="@{/payments}" th:classappend="${activeTab == 'payments'} ? 'active' : ''" class="df-nav-link">
+                    Invoices & Payments
+                </a>
+            </li>
             <li>
                 <a th:href="@{/feedback}" th:classappend="${activeTab == 'feedback'} ? 'active' : ''" class="df-nav-link">
                     Feedback

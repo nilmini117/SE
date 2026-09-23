@@ -16,6 +16,11 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public List<Vehicle> searchVehicles(String search, String status) {
+        return vehicleRepository.searchVehicles(search, status);
+    }
+
+    @Override
     public Vehicle getVehicleById(Long id) {
         return vehicleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found with id: " + id));
@@ -23,7 +28,9 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Vehicle registerVehicle(Vehicle vehicle) {
-        vehicle.setStatus("AVAILABLE");
+        if (vehicle.getStatus() == null || vehicle.getStatus().isBlank()) {
+            vehicle.setStatus("AVAILABLE");
+        }
         return vehicleRepository.save(vehicle);
     }
 
@@ -35,6 +42,9 @@ public class VehicleServiceImpl implements VehicleService {
         existing.setMileage(updatedVehicle.getMileage());
         existing.setStatus(updatedVehicle.getStatus());
         existing.setRegNo(updatedVehicle.getRegNo());
+        if (updatedVehicle.getBranch() != null) {
+            existing.setBranch(updatedVehicle.getBranch());
+        }
         return vehicleRepository.save(existing);
     }
 

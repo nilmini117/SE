@@ -134,6 +134,7 @@
                     <th>Late Surcharge</th>
                     <th>Total Due</th>
                     <th>Status</th>
+                    <th style="text-align: right;">Action</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -152,6 +153,12 @@
                         <span th:if="${inv.status == 'UNPAID' or inv.status == 'PENDING'}" class="badge badge-warning">Unpaid</span>
                         <span th:if="${inv.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
                         <span th:if="${inv.status != 'PAID' and inv.status != 'UNPAID' and inv.status != 'PENDING' and inv.status != 'CANCELLED'}" class="badge badge-secondary" th:text="${inv.status}">Pending</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <a th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED'}"
+                           th:href="@{/profile/invoices/{id}/pay(id=${inv.invoiceId})}"
+                           class="btn btn-primary btn-sm">Pay Now</a>
+                        <span th:if="${inv.status == 'PAID'}" class="badge badge-success">Paid</span>
                     </td>
                 </tr>
                 </tbody>

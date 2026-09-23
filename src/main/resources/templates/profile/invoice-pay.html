@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Pay Invoice')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('profile')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/profile}" class="btn btn-secondary btn-sm">
+            &larr; Back to My Profile
+        </a>
+    </div>
+
+    <div class="df-form-card" style="max-width: 680px; margin: 0 auto;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--slate-900);"
+                th:text="'Pay Invoice #INV-' + ${invoice.invoiceId}">
+                Pay Invoice #INV-1
+            </h2>
+            <span class="badge badge-warning" th:text="${invoice.status}">UNPAID</span>
+        </div>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.75rem;">
+            Review your rental invoice breakdown and complete your payment securely via Credit or Debit card.
+        </p>
+
+        <!-- Invoice Breakdown Box -->
+        <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.75rem;">
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Booking Reference</span>
+                    <strong style="color: var(--slate-800);" th:text="${invoice.booking != null ? '#BK-' + invoice.booking.bookingId : '-'}">#BK-1</strong>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Reserved Vehicle</span>
+                    <strong style="color: var(--slate-800);" th:text="${invoice.booking != null and invoice.booking.vehicle != null ? invoice.booking.vehicle.model : 'Fleet Vehicle'}">Toyota Prius</strong>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Rental Period</span>
+                    <span style="color: var(--slate-700); font-size: 0.9rem;"
+                          th:text="${invoice.booking != null ? invoice.booking.bookingDate + ' to ' + invoice.booking.endDate : '-'}">2026-09-10 to 2026-09-15</span>
+                </div>
+                <div>
+                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Invoice Date</span>
+                    <span style="color: var(--slate-700); font-size: 0.9rem;" th:text="${invoice.invoiceDate}">2026-09-15</span>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid var(--slate-200); margin: 0.75rem 0;">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--slate-600);">
+                <span>Base Rental Amount:</span>
+                <span th:text="'$' + ${#numbers.formatDecimal(invoice.rentalAmt != null ? invoice.rentalAmt : 0, 1, 2)}">$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--slate-600);">
+                <span>Late Return Surcharge:</span>
+                <span th:text="'$' + ${#numbers.formatDecimal(invoice.lateFee != null ? invoice.lateFee : 0, 1, 2)}">$0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 2px dashed var(--slate-300);">
+                <span style="font-weight: 800; font-size: 1.1rem; color: var(--slate-900);">Total Due:</span>
+                <span style="font-weight: 800; font-size: 1.35rem; color: var(--primary);"
+                      th:text="'$' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)}">
+                    $150.00
+                </span>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <form th:action="@{/profile/invoices/{id}/pay(id=${invoice.invoiceId})}" method="post">
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Issuing Bank</label>
+                <input type="text" name="bankName" class="form-control" placeholder="e.g. Commercial Bank, Chase, HSBC" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Cardholder Name</label>
+                <input type="text" class="form-control" th:value="${customer.firstName + ' ' + customer.lastName}" readonly style="background-color: var(--slate-100); color: var(--slate-700);">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label">Credit / Debit Card Number</label>
+                <div style="position: relative;">
+                    <input type="text" name="cardNo" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19" required
+                           style="letter-spacing: 0.05em; font-family: monospace; font-size: 1rem;">
+                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-400); pointer-events: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                    </span>
+                </div>
+                <small style="color: var(--slate-500); font-size: 0.8rem; margin-top: 0.25rem; display: block;">
+                    For your security, card numbers are masked and only the last 4 digits are recorded.
+                </small>
+            </div>
+
+            <div class="form-row" style="margin-bottom: 1.25rem;">
+                <div class="form-group">
+                    <label class="form-label">Expiration Date (MM/YY)</label>
+                    <input type="text" class="form-control" placeholder="12/28" maxlength="5" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Security Code (CVV)</label>
+                    <input type="password" class="form-control" placeholder="123" maxlength="4" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+                <label class="form-label">Authorized Payment Amount</label>
+                <input type="text" class="form-control"
+                       th:value="'$' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)} + ' USD (Exact Amount Due)'"
+                       readonly style="background-color: var(--slate-100); font-weight: 700; color: var(--primary);">
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <button type="submit" class="btn btn-primary" style="flex: 1; padding: 0.85rem; font-size: 1.05rem;">
+                    Confirm & Pay Now
+                </button>
+                <a th:href="@{/profile}" class="btn btn-secondary" style="padding: 0.85rem;">Cancel</a>
+            </div>
+
+            <div style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--slate-500); font-size: 0.8rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Encrypted 256-Bit SSL Payment Processing</span>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

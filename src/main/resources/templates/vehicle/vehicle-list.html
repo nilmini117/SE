@@ -25,6 +25,28 @@
         </div>
     </div>
 
+    <!-- Search & Filter Controls -->
+    <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+        <form th:action="@{/vehicles}" method="get" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <div style="flex: 2; min-width: 200px;">
+                <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search by model or reg number (e.g. Prius, WP-CAR)...">
+            </div>
+            <div style="flex: 1; min-width: 150px;">
+                <select name="status" class="form-select">
+                    <option value="ALL" th:if="${isStaff}" th:selected="${status == 'ALL'}">All Statuses</option>
+                    <option value="AVAILABLE" th:selected="${status == 'AVAILABLE'}">Available Only</option>
+                    <option value="BOOKED" th:if="${isStaff}" th:selected="${status == 'BOOKED'}">Booked</option>
+                    <option value="MAINTENANCE" th:if="${isStaff}" th:selected="${status == 'MAINTENANCE'}">In Maintenance</option>
+                    <option value="DECOMMISSIONED" th:if="${isStaff}" th:selected="${status == 'DECOMMISSIONED'}">Decommissioned</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-primary btn-sm">Filter Fleet</button>
+                <a th:href="@{/vehicles}" class="btn btn-secondary btn-sm">Reset</a>
+            </div>
+        </form>
+    </div>
+
     <div class="df-table-container">
         <table class="df-table" th:if="${vehicles != null and !vehicles.empty}">
             <thead>
@@ -32,6 +54,7 @@
                 <th>Vehicle ID</th>
                 <th>Reg Number</th>
                 <th>Model</th>
+                <th>Branch</th>
                 <th>Color</th>
                 <th>Mileage</th>
                 <th>Status</th>
@@ -43,6 +66,10 @@
                 <td><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
                 <td><strong th:text="${v.regNo}">ABC-1234</strong></td>
                 <td th:text="${v.model}">Toyota Prius</td>
+                <td>
+                    <span th:if="${v.branch != null}" th:text="${v.branch.branchName}">Colombo Central</span>
+                    <span th:if="${v.branch == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
+                </td>
                 <td>
                     <span style="display: inline-flex; align-items: center; gap: 0.4rem;">
                         <span th:style="'width: 12px; height: 12px; border-radius: 50%; border: 1px solid #cbd5e1; background-color: ' + (${v.color} != null ? ${v.color.toLowerCase()} : '#94a3b8')"></span>
