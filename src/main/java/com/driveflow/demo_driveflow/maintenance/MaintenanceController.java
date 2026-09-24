@@ -6,6 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 @Controller
 @RequestMapping("/maintenance")
 public class MaintenanceController {
@@ -33,11 +35,13 @@ public class MaintenanceController {
 
     @PostMapping
     public String scheduleService(@ModelAttribute MaintenanceRecord record,
-                                  @RequestParam(value = "vehicleId", required = false) Long vehicleId) {
+                                  @RequestParam(value = "vehicleId", required = false) Long vehicleId,
+                                  RedirectAttributes redirectAttributes) {
         if (vehicleId != null) {
             record.setVehicle(vehicleService.getVehicleById(vehicleId));
         }
         maintenanceService.scheduleService(record);
+        redirectAttributes.addFlashAttribute("successMessage", "New maintenance service scheduled successfully.");
         return "redirect:/maintenance";
     }
 
@@ -51,17 +55,29 @@ public class MaintenanceController {
     @PostMapping("/{id}")
     public String updateSchedule(@PathVariable Long id,
                                  @ModelAttribute MaintenanceRecord record,
-                                 @RequestParam(value = "vehicleId", required = false) Long vehicleId) {
+                                 @RequestParam(value = "vehicleId", required = false) Long vehicleId,
+                                 RedirectAttributes redirectAttributes) {
         if (vehicleId != null) {
             record.setVehicle(vehicleService.getVehicleById(vehicleId));
         }
         maintenanceService.updateRecord(id, record);
+        redirectAttributes.addFlashAttribute("successMessage", "Maintenance service record #MNT-" + id + " updated successfully.");
         return "redirect:/maintenance";
     }
 
+    @PostMapping("/{id}/delete")
+    public String removeRecordPost(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        return removeRecord(id, redirectAttributes);
+    }
+
     @GetMapping("/{id}/delete")
-    public String removeRecord(@PathVariable Long id) {
-        maintenanceService.removeRecord(id);
+    public String removeRecord(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            maintenanceService.removeRecord(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Maintenance service record #MNT-" + id + " has been successfully deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not remove service record: " + e.getMessage());
+        }
         return "redirect:/maintenance";
     }
 
@@ -82,11 +98,13 @@ public class MaintenanceController {
 
     @PostMapping("/documents")
     public String addDocument(@ModelAttribute VehicleDocument document,
-                              @RequestParam(value = "vehicleId", required = false) Long vehicleId) {
+                              @RequestParam(value = "vehicleId", required = false) Long vehicleId,
+                              RedirectAttributes redirectAttributes) {
         if (vehicleId != null) {
             document.setVehicle(vehicleService.getVehicleById(vehicleId));
         }
         maintenanceService.addDocument(document);
+        redirectAttributes.addFlashAttribute("successMessage", "Vehicle document added successfully.");
         return "redirect:/maintenance/documents";
     }
 
@@ -100,17 +118,29 @@ public class MaintenanceController {
     @PostMapping("/documents/{id}")
     public String updateDocument(@PathVariable Long id,
                                  @ModelAttribute VehicleDocument document,
-                                 @RequestParam(value = "vehicleId", required = false) Long vehicleId) {
+                                 @RequestParam(value = "vehicleId", required = false) Long vehicleId,
+                                 RedirectAttributes redirectAttributes) {
         if (vehicleId != null) {
             document.setVehicle(vehicleService.getVehicleById(vehicleId));
         }
         maintenanceService.updateDocument(id, document);
+        redirectAttributes.addFlashAttribute("successMessage", "Vehicle document #DOC-" + id + " updated successfully.");
         return "redirect:/maintenance/documents";
     }
 
+    @PostMapping("/documents/{id}/delete")
+    public String removeDocumentPost(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        return removeDocument(id, redirectAttributes);
+    }
+
     @GetMapping("/documents/{id}/delete")
-    public String removeDocument(@PathVariable Long id) {
-        maintenanceService.removeDocument(id);
+    public String removeDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            maintenanceService.removeDocument(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Vehicle document #DOC-" + id + " has been successfully deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not remove document: " + e.getMessage());
+        }
         return "redirect:/maintenance/documents";
     }
 }

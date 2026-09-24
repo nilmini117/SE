@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 
@@ -104,9 +105,31 @@ public class PaymentController {
         return "redirect:/payments";
     }
 
+    @PostMapping("/{id}/cancel")
+    public String cancelPaymentPost(@PathVariable Long id,
+                                    @RequestParam(value = "cancelReason", required = false) String cancelReason,
+                                    RedirectAttributes redirectAttributes) {
+        try {
+            Payment payment = paymentService.getPaymentById(id);
+            paymentService.cancelPayment(id);
+            String ref = payment.getRefNo() != null ? payment.getRefNo() : ("#PAY-" + id);
+            redirectAttributes.addFlashAttribute("successMessage", "Payment transaction " + ref + " has been successfully cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel payment: " + e.getMessage());
+        }
+        return "redirect:/payments";
+    }
+
     @GetMapping("/{id}/cancel")
-    public String cancelPayment(@PathVariable Long id) {
-        paymentService.cancelPayment(id);
+    public String cancelPayment(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            Payment payment = paymentService.getPaymentById(id);
+            paymentService.cancelPayment(id);
+            String ref = payment.getRefNo() != null ? payment.getRefNo() : ("#PAY-" + id);
+            redirectAttributes.addFlashAttribute("successMessage", "Payment transaction " + ref + " has been successfully cancelled.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel payment: " + e.getMessage());
+        }
         return "redirect:/payments";
     }
 

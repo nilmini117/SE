@@ -98,6 +98,7 @@ CREATE TABLE vehicle (
     model VARCHAR(100) NOT NULL,
     color VARCHAR(50) NOT NULL,
     mileage INT NOT NULL CHECK (mileage >= 0),
+    quantity INT NOT NULL DEFAULT 1 CHECK (quantity >= 1),
     status VARCHAR(30) NOT NULL DEFAULT 'AVAILABLE',
     branch_id BIGINT NOT NULL,
     CONSTRAINT chk_vehicle_status CHECK (status IN ('AVAILABLE', 'BOOKED', 'MAINTENANCE', 'DECOMMISSIONED')),
@@ -248,6 +249,23 @@ CREATE TABLE feedback (
     customer_id BIGINT NOT NULL,
     CONSTRAINT chk_feedback_category CHECK (category IN ('SERVICE', 'VEHICLE', 'PRICING', 'STAFF', 'OTHER')),
     CONSTRAINT fk_feedback_customer FOREIGN KEY (customer_id) REFERENCES customer(system_id) ON DELETE CASCADE
+);
+GO
+
+-- 18. INCIDENT TABLE (Safety & Damage Reports, links to VEHICLE and CUSTOMER)
+CREATE TABLE incident (
+    incident_id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    date DATE NOT NULL,
+    description VARCHAR(1000) NOT NULL,
+    severity VARCHAR(50) NOT NULL DEFAULT 'LOW',
+    status VARCHAR(50) NOT NULL DEFAULT 'OPEN',
+    vehicle_id BIGINT NULL,
+    customer_id BIGINT NULL,
+    staff_message VARCHAR(1000) NULL,
+    CONSTRAINT chk_incident_severity CHECK (severity IN ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL')),
+    CONSTRAINT chk_incident_status CHECK (status IN ('OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED')),
+    CONSTRAINT fk_incident_vehicle FOREIGN KEY (vehicle_id) REFERENCES vehicle(vehicle_id) ON DELETE SET NULL,
+    CONSTRAINT fk_incident_customer FOREIGN KEY (customer_id) REFERENCES customer(system_id) ON DELETE SET NULL
 );
 GO
 

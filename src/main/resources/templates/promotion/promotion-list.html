@@ -23,6 +23,23 @@
         </div>
     </div>
 
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Success message</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">Error message</span>
+    </div>
+
     <div class="df-table-container">
         <table class="df-table" th:if="${promotions != null and !promotions.empty}">
             <thead>
@@ -52,7 +69,6 @@
                 </td>
                 <td sec:authorize="hasRole('STAFF')" style="text-align: right;">
                     <a th:href="@{/promotions/{id}/edit(id=${p.promotionId})}" class="btn btn-secondary btn-sm">Edit</a>
-                    <a th:href="@{/promotions/{id}/delete(id=${p.promotionId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this promotion offer?');">Delete</a>
                 </td>
             </tr>
             </tbody>

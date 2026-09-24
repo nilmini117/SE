@@ -2,6 +2,7 @@ package com.driveflow.demo_driveflow.vehicle;
 
 import com.driveflow.demo_driveflow.branch.Branch;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -26,6 +27,10 @@ public class Vehicle {
     @Column(name = "model")
     private String model;
 
+    @Min(value = 1, message = "Quantity must be at least 1")
+    @Column(name = "quantity", nullable = false)
+    private Integer quantity = 1;
+
     @Column(name = "color")
     private String color;
 
@@ -38,6 +43,7 @@ public class Vehicle {
     @ManyToOne
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
 
     public String getBrand() {
         if (model != null && model.contains(" ")) {

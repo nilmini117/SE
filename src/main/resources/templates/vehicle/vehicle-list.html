@@ -6,6 +6,26 @@
 <nav th:replace="~{fragments/layout :: navbar('vehicles')}"></nav>
 
 <main class="df-main">
+    <!-- Success Alert -->
+    <div th:if="${successMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Operation successful!</span>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${errorMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">An error occurred.</span>
+    </div>
+
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Vehicle & Fleet Management</h1>
@@ -25,6 +45,50 @@
         </div>
     </div>
 
+    <!-- Staff Fleet Status Filter Tabs -->
+    <div th:if="${isStaff != null and isStaff}" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <a th:href="@{/vehicles(status='ALL', search=${search})}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${status == 'ALL'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            All Active
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${status == 'ALL'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: var(--slate-100); color: var(--slate-600);'"
+                  th:text="${statusCounts != null ? statusCounts['ALL'] : 0}">0</span>
+        </a>
+        <a th:href="@{/vehicles(status='AVAILABLE', search=${search})}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${status == 'AVAILABLE'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Available
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${status == 'AVAILABLE'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #d1fae5; color: #065f46;'"
+                  th:text="${statusCounts != null ? statusCounts['AVAILABLE'] : 0}">0</span>
+        </a>
+        <a th:href="@{/vehicles(status='BOOKED', search=${search})}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${status == 'BOOKED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Booked
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${status == 'BOOKED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #fef3c7; color: #92400e;'"
+                  th:text="${statusCounts != null ? statusCounts['BOOKED'] : 0}">0</span>
+        </a>
+        <a th:href="@{/vehicles(status='MAINTENANCE', search=${search})}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${status == 'MAINTENANCE'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Maintenance
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${status == 'MAINTENANCE'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #fee2e2; color: #991b1b;'"
+                  th:text="${statusCounts != null ? statusCounts['MAINTENANCE'] : 0}">0</span>
+        </a>
+        <a th:href="@{/vehicles(status='DECOMMISSIONED', search=${search})}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${status == 'DECOMMISSIONED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Decommissioned
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${status == 'DECOMMISSIONED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: var(--slate-200); color: var(--slate-700);'"
+                  th:text="${statusCounts != null ? statusCounts['DECOMMISSIONED'] : 0}">0</span>
+        </a>
+    </div>
+
     <!-- Search & Filter Controls -->
     <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
         <form th:action="@{/vehicles}" method="get" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
@@ -33,7 +97,7 @@
             </div>
             <div style="flex: 1; min-width: 150px;">
                 <select name="status" class="form-select">
-                    <option value="ALL" th:if="${isStaff}" th:selected="${status == 'ALL'}">All Statuses</option>
+                    <option value="ALL" th:if="${isStaff}" th:selected="${status == 'ALL'}">All Active Statuses</option>
                     <option value="AVAILABLE" th:selected="${status == 'AVAILABLE'}">Available Only</option>
                     <option value="BOOKED" th:if="${isStaff}" th:selected="${status == 'BOOKED'}">Booked</option>
                     <option value="MAINTENANCE" th:if="${isStaff}" th:selected="${status == 'MAINTENANCE'}">In Maintenance</option>
@@ -54,6 +118,7 @@
                 <th>Vehicle ID</th>
                 <th>Reg Number</th>
                 <th>Model</th>
+                <th>Quantity</th>
                 <th>Branch</th>
                 <th>Color</th>
                 <th>Mileage</th>
@@ -66,6 +131,9 @@
                 <td><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
                 <td><strong th:text="${v.regNo}">ABC-1234</strong></td>
                 <td th:text="${v.model}">Toyota Prius</td>
+                <td>
+                    <span class="badge badge-info" style="font-weight: 700; font-size: 0.85rem; padding: 0.2rem 0.55rem;" th:text="${v.quantity != null ? v.quantity : 1}">1</span>
+                </td>
                 <td>
                     <span th:if="${v.branch != null}" th:text="${v.branch.branchName}">Colombo Central</span>
                     <span th:if="${v.branch == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
@@ -87,7 +155,6 @@
                 <td style="text-align: right; white-space: nowrap;">
                     <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" sec:authorize="hasRole('CUSTOMER')" th:if="${v.status == 'AVAILABLE'}">Book</a>
                     <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
-                    <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}" class="btn btn-danger btn-sm" sec:authorize="hasRole('STAFF')" onclick="return confirm('Are you sure you want to remove this vehicle?');">Delete</a>
                 </td>
             </tr>
             </tbody>
@@ -103,9 +170,10 @@
                     <circle cx="17" cy="17" r="2"></circle>
                 </svg>
             </div>
-            <h3 class="empty-state-title">No Vehicles Registered</h3>
-            <p class="empty-state-desc">Your fleet catalog is empty. Add your first rental vehicle to begin.</p>
-            <a th:href="@{/vehicles/new}" class="btn btn-primary">Register First Vehicle</a>
+            <h3 class="empty-state-title">No Vehicles Found</h3>
+            <p class="empty-state-desc">No fleet vehicles match the current filter or search criteria.</p>
+            <a th:href="@{/vehicles}" class="btn btn-secondary" style="margin-top: 0.5rem; margin-right: 0.5rem;">Clear Filters</a>
+            <a th:href="@{/vehicles/new}" class="btn btn-primary" sec:authorize="hasRole('STAFF')" style="margin-top: 0.5rem;">Register Vehicle</a>
         </div>
     </div>
 </main>

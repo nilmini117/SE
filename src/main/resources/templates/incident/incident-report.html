@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Report Vehicle Incident')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('profile')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 720px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/profile#incidents}" class="btn btn-secondary btn-sm">
+            &larr; Back to My Profile
+        </a>
+    </div>
+
+    <div class="df-form-card" style="max-width: 720px; margin: 0 auto;">
+        <!-- Header Banner -->
+        <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--slate-100);">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                &#9888;
+            </div>
+            <div>
+                <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900); margin: 0 0 0.35rem;">
+                    Report Vehicle Incident or Damage
+                </h1>
+                <p style="color: var(--slate-500); font-size: 0.9rem; margin: 0; line-height: 1.4;">
+                    If you experienced an accident, mechanical issue, breakdown, or damage during your rental, submit the details below. Our safety response team will review your report immediately.
+                </p>
+            </div>
+        </div>
+
+        <!-- Emergency Hotline Notice -->
+        <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-md); padding: 0.85rem 1.15rem; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.25rem;">&#128222;</span>
+            <div style="font-size: 0.85rem; color: #92400e;">
+                <strong>Emergency Roadside Assistance:</strong> Call <strong>+94 11 234 5678</strong> (24/7 Hotline) if you need immediate roadside towing or medical aid.
+            </div>
+        </div>
+
+        <form th:action="@{/incidents/report}" th:object="${incident}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <!-- Customer Read-Only Confirmation -->
+            <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Reporting Customer</span>
+                    <div style="font-weight: 700; color: var(--slate-800);" th:text="${customer.name}">John Customer</div>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Account Email</span>
+                    <div style="font-size: 0.85rem; color: var(--slate-700);" th:text="${customer.email}">customer@driveflow.com</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <!-- Vehicle Selector -->
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">
+                        Involved Rental Vehicle <span style="color: var(--danger);">*</span>
+                    </label>
+                    <select name="vehicleId" class="form-select" required>
+                        <option value="">-- Select Rented Vehicle --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.vehicleId}"
+                                th:text="${v.model + ' (' + v.regNo + ')'}">
+                            Toyota Prius (WP CA-1020)
+                        </option>
+                    </select>
+                    <small style="color: var(--slate-400); font-size: 0.78rem;">Select the vehicle associated with this event.</small>
+                </div>
+
+                <!-- Date -->
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">
+                        Date of Incident <span style="color: var(--danger);">*</span>
+                    </label>
+                    <input type="date" th:field="*{date}" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="form-row">
+                <!-- Severity Level -->
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600;">
+                        Severity Assessment <span style="color: var(--danger);">*</span>
+                    </label>
+                    <select th:field="*{severity}" class="form-select" required>
+                        <option value="LOW">LOW — Minor cosmetic / safe to drive</option>
+                        <option value="MEDIUM">MEDIUM — Needs attention / driving affected</option>
+                        <option value="HIGH">HIGH — Heavy damage / requires towing</option>
+                        <option value="CRITICAL">CRITICAL — Inoperable / severe collision</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" style="font-weight: 600;">
+                    Incident Description & Exact Location <span style="color: var(--danger);">*</span>
+                </label>
+                <textarea th:field="*{description}" class="form-control" rows="5" required
+                          placeholder="Please describe what happened, the approximate road or town location, whether third parties were involved, and any immediate roadside assistance you currently need..."></textarea>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; justify-content: flex-end; padding-top: 1rem; border-top: 1px solid var(--slate-100);">
+                <a th:href="@{/profile#incidents}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="padding: 0.65rem 1.5rem; font-weight: 700;">
+                    Submit Incident Report
+                </button>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

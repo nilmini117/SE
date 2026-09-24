@@ -9,4 +9,5 @@ public interface VehicleService {
     Vehicle registerVehicle(Vehicle vehicle);
     Vehicle updateVehicle(Long id, Vehicle vehicle);
     void removeVehicle(Long id);
+    java.util.Map<String, Long> getVehicleStatusCounts();
 }

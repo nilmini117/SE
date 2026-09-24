@@ -32,6 +32,9 @@ public class ProfileController {
     @Autowired
     private PaymentService paymentService;
 
+    @Autowired
+    private com.driveflow.demo_driveflow.incident.IncidentService incidentService;
+
     @GetMapping
     public String viewProfile(Model model, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
@@ -52,11 +55,13 @@ public class ProfileController {
         List<Booking> customerBookings = bookingService.getBookingsByCustomer(customer);
         List<Invoice> customerInvoices = paymentService.getInvoicesByCustomer(customer);
         List<Payment> customerPayments = paymentService.getPaymentsByCustomer(customer);
+        List<com.driveflow.demo_driveflow.incident.Incident> customerIncidents = incidentService.getIncidentsByCustomer(customer);
 
         model.addAttribute("customer", customer);
         model.addAttribute("bookings", customerBookings);
         model.addAttribute("invoices", customerInvoices);
         model.addAttribute("payments", customerPayments);
+        model.addAttribute("incidents", customerIncidents);
         return "profile/profile";
     }
 

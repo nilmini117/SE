@@ -18,7 +18,7 @@
             Log Incident
         </h2>
         <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
-            Provide incident date, damage assessment, severity level, and current status.
+            Provide incident date, involved customer and vehicle, damage assessment, severity level, and status.
         </p>
 
         <form th:action="${incident.incidentId} != null ? @{/incidents/{id}(id=${incident.incidentId})} : @{/incidents}"
@@ -40,6 +40,33 @@
                 </div>
             </div>
 
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Associated Customer</label>
+                    <select name="customerId" class="form-select">
+                        <option value="">-- No Customer / Unassigned --</option>
+                        <option th:each="c : ${customers}"
+                                th:value="${c.systemId}"
+                                th:selected="${incident.customer != null and incident.customer.systemId == c.systemId}"
+                                th:text="${c.firstName + ' ' + c.lastName + ' (' + c.email + ')'}">
+                            John Customer (customer@driveflow.com)
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Involved Fleet Vehicle</label>
+                    <select name="vehicleId" class="form-select">
+                        <option value="">-- No Vehicle / Unassigned --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.vehicleId}"
+                                th:selected="${incident.vehicle != null and incident.vehicle.vehicleId == v.vehicleId}"
+                                th:text="${v.model + ' (' + v.regNo + ')'}">
+                            Toyota Prius (WP CA-1020)
+                        </option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label">Investigation / Resolution Status</label>
                 <select th:field="*{status}" class="form-select">
@@ -53,6 +80,12 @@
             <div class="form-group">
                 <label class="form-label">Incident Description & Damage Notes</label>
                 <textarea th:field="*{description}" class="form-control" rows="4" placeholder="Detail the circumstances, location, parties involved, and observed damage..." required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Staff Notice / Message to Customer</label>
+                <textarea th:field="*{staffMessage}" class="form-control" rows="3" placeholder="Provide investigation progress or resolution outcome to be shown to the customer..."></textarea>
+                <small style="color: var(--slate-500); font-size: 0.8rem;">This explanation is displayed directly to the customer on their account profile overview.</small>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">

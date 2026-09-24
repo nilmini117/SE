@@ -5,6 +5,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 @Controller
 @RequestMapping("/promotions")
 public class PromotionController {
@@ -25,8 +27,9 @@ public class PromotionController {
     }
 
     @PostMapping
-    public String createPromotion(@ModelAttribute Promotion promotion) {
+    public String createPromotion(@ModelAttribute Promotion promotion, RedirectAttributes redirectAttributes) {
         promotionService.createPromotion(promotion);
+        redirectAttributes.addFlashAttribute("successMessage", "Promotion campaign '" + promotion.getTitle() + "' created successfully.");
         return "redirect:/promotions";
     }
 
@@ -37,14 +40,20 @@ public class PromotionController {
     }
 
     @PostMapping("/{id}")
-    public String updatePromotion(@PathVariable Long id, @ModelAttribute Promotion promotion) {
+    public String updatePromotion(@PathVariable Long id, @ModelAttribute Promotion promotion, RedirectAttributes redirectAttributes) {
         promotionService.updatePromotion(id, promotion);
+        redirectAttributes.addFlashAttribute("successMessage", "Promotion campaign '" + promotion.getTitle() + "' updated successfully.");
         return "redirect:/promotions";
     }
 
     @GetMapping("/{id}/delete")
-    public String deletePromotion(@PathVariable Long id) {
-        promotionService.removePromotion(id);
+    public String deletePromotion(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            promotionService.removePromotion(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Promotion offer #PR-" + id + " removed.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not remove promotion: " + e.getMessage());
+        }
         return "redirect:/promotions";
     }
 }

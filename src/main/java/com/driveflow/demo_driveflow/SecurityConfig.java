@@ -52,10 +52,12 @@ public class SecurityConfig {
                 .requestMatchers("/bookings/*/approve").hasRole("STAFF")
                 // Booking creation strictly requires authenticated user (Customer or Staff)
                 .requestMatchers("/bookings/new", "/bookings", "/bookings/**").authenticated()
+                // Customer incident reporting endpoint
+                .requestMatchers("/incidents/report").authenticated()
                 // Staff-only modules & endpoints
                 .requestMatchers("/incidents/**").hasRole("STAFF")
                 .requestMatchers("/maintenance/**").hasRole("STAFF")
-                .requestMatchers("/payments/new", "/payments/*/refund", "/payments/*/delete", "/payments/invoices/**").hasRole("STAFF")
+                .requestMatchers("/payments/new", "/payments/*/refund", "/payments/*/cancel", "/payments/*/delete", "/payments/invoices/**").hasRole("STAFF")
                 .requestMatchers("/payments").authenticated()
                 .requestMatchers("/vehicles/new", "/vehicles/*/edit", "/vehicles/*/delete").hasRole("STAFF")
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/promotions", "/promotions/**").hasRole("STAFF")

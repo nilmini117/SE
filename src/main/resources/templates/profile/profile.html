@@ -26,7 +26,15 @@
                 <p style="color: var(--slate-500); margin: 0; font-size: 0.95rem;" th:text="${customer.email}">customer@driveflow.com</p>
             </div>
         </div>
-        <div class="df-header-actions" style="display: flex; gap: 0.75rem;">
+        <div class="df-header-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a th:href="@{/incidents/report}" class="btn btn-warning btn-sm" style="background: #f59e0b; color: white; border: none; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Report Incident
+            </a>
             <a th:href="@{/profile/edit}" class="btn btn-primary btn-sm">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -45,7 +53,7 @@
     </div>
 
     <!-- Customer Details Card -->
-    <div style="background: var(--surface); border: 1px solid var(--slate-200); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2.5rem;">
+    <div style="background: var(--surface); border: 1px solid var(--slate-200); border-radius: 12px; padding: 1.5rem 2rem; margin-bottom: 2rem;">
         <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--slate-900);">
             Account & Identity Information
         </h2>
@@ -69,8 +77,24 @@
         </div>
     </div>
 
+    <!-- Quick Navigation Sub-bar -->
+    <div style="display: flex; gap: 0.75rem; margin-bottom: 2rem; border-bottom: 1px solid var(--slate-200); padding-bottom: 1rem; overflow-x: auto;">
+        <a href="#bookings" class="btn btn-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem;">
+            🚗 My Bookings
+        </a>
+        <a href="#invoices" class="btn btn-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem;">
+            📄 Invoices & Bills
+        </a>
+        <a href="#payments" class="btn btn-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem;">
+            💳 Payments & Receipts
+        </a>
+        <a href="#incidents" class="btn btn-secondary btn-sm" style="border-radius: 20px; font-weight: 600; padding: 0.4rem 1rem;">
+            ⚠️ Incident Reports
+        </a>
+    </div>
+
     <!-- Section 1: My Bookings -->
-    <div style="margin-bottom: 2.5rem;">
+    <div id="bookings" style="margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900);">My Rental Bookings</h2>
             <a th:href="@{/bookings/new}" class="btn btn-secondary btn-sm">+ New Rental Booking</a>
@@ -134,7 +158,7 @@
     </div>
 
     <!-- Section 2: My Invoices -->
-    <div style="margin-bottom: 2.5rem;">
+    <div id="invoices" style="margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
         <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin-bottom: 1rem;">My Invoices & Bills</h2>
         <div class="df-table-container">
             <table class="df-table" th:if="${invoices != null and !invoices.empty}">
@@ -183,7 +207,7 @@
     </div>
 
     <!-- Section 3: My Payments -->
-    <div style="margin-bottom: 2.5rem;">
+    <div id="payments" style="margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
         <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin-bottom: 1rem;">Payment Transactions & Receipts</h2>
         <div class="df-table-container">
             <table class="df-table" th:if="${payments != null and !payments.empty}">
@@ -216,6 +240,75 @@
             </table>
             <div class="empty-state" th:if="${payments == null or payments.empty}">
                 <p class="empty-state-desc">No payment transactions found.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Incident & Safety Notices -->
+    <div id="incidents" style="margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin: 0 0 0.25rem;">Incident & Safety Reports</h2>
+                <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0;">Vehicle damage, accidents, mechanical issues, and road assistance logs.</p>
+            </div>
+            <a th:href="@{/incidents/report}" class="btn btn-warning btn-sm" style="background: #f59e0b; color: #ffffff; border: none; font-weight: 600;">
+                + Report New Incident
+            </a>
+        </div>
+        <div class="df-table-container">
+            <table class="df-table" th:if="${incidents != null and !incidents.empty}">
+                <thead>
+                <tr>
+                    <th>Report ID</th>
+                    <th>Date</th>
+                    <th>Vehicle</th>
+                    <th>Description</th>
+                    <th>Severity</th>
+                    <th>Status & Staff Update</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="inc : ${incidents}">
+                    <td><strong th:text="'#INC-' + ${inc.incidentId}">#INC-1</strong></td>
+                    <td th:text="${inc.date}">2026-09-20</td>
+                    <td>
+                        <div th:if="${inc.vehicle != null}">
+                            <div style="font-weight: 600;" th:text="${inc.vehicle.model}">Toyota Prius</div>
+                            <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${inc.vehicle.regNo}">WP CA-1020</div>
+                        </div>
+                        <span th:if="${inc.vehicle == null}">-</span>
+                    </td>
+                    <td style="max-width: 280px; line-height: 1.4;" th:text="${inc.description}">Damage report description</td>
+                    <td>
+                        <span th:if="${inc.severity == 'LOW'}" class="badge badge-info">Low</span>
+                        <span th:if="${inc.severity == 'MEDIUM'}" class="badge badge-warning">Medium</span>
+                        <span th:if="${inc.severity == 'HIGH' or inc.severity == 'CRITICAL'}" class="badge badge-danger" th:text="${inc.severity}">High</span>
+                        <span th:if="${inc.severity != 'LOW' and inc.severity != 'MEDIUM' and inc.severity != 'HIGH' and inc.severity != 'CRITICAL'}" class="badge badge-secondary" th:text="${inc.severity}">Normal</span>
+                    </td>
+                    <td>
+                        <span th:if="${inc.status == 'OPEN'}" class="badge badge-warning">Under Review</span>
+                        <span th:if="${inc.status == 'IN_PROGRESS'}" class="badge badge-info">In Progress</span>
+                        <span th:if="${inc.status == 'RESOLVED' or inc.status == 'CLOSED'}" class="badge badge-success">Resolved</span>
+                        <span th:if="${inc.status != 'OPEN' and inc.status != 'IN_PROGRESS' and inc.status != 'RESOLVED' and inc.status != 'CLOSED'}" class="badge badge-secondary" th:text="${inc.status}">Status</span>
+
+                        <!-- Staff Message to Customer -->
+                        <div th:if="${inc.status == 'IN_PROGRESS' and inc.staffMessage != null and !#strings.isEmpty(inc.staffMessage)}"
+                             style="margin-top: 0.35rem; font-size: 0.78rem; color: #0369a1; display: flex; align-items: flex-start; gap: 0.35rem; max-width: 280px; line-height: 1.3;">
+                            <span style="font-weight: 700; flex-shrink: 0;">ℹ</span>
+                            <span><strong>Staff update:</strong> <span th:text="${inc.staffMessage}">Message</span></span>
+                        </div>
+                        <div th:if="${(inc.status == 'RESOLVED' or inc.status == 'CLOSED') and inc.staffMessage != null and !#strings.isEmpty(inc.staffMessage)}"
+                             style="margin-top: 0.35rem; font-size: 0.78rem; color: #047857; display: flex; align-items: flex-start; gap: 0.35rem; max-width: 280px; line-height: 1.3;">
+                            <span style="font-weight: 700; flex-shrink: 0;">&#10003;</span>
+                            <span><strong>Resolution:</strong> <span th:text="${inc.staffMessage}">Message</span></span>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${incidents == null or incidents.empty}" style="text-align: center; padding: 2.5rem 1rem; background: var(--surface); border: 1px dashed var(--slate-300); border-radius: 8px;">
+                <p class="empty-state-desc" style="color: var(--slate-500); margin-bottom: 1rem;">No incidents or damage reports logged under your account.</p>
+                <a th:href="@{/incidents/report}" class="btn btn-warning btn-sm" style="background: #f59e0b; color: #ffffff; border: none; font-weight: 600;">Report Vehicle Incident</a>
             </div>
         </div>
     </div>

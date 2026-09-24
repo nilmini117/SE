@@ -58,8 +58,13 @@
                 </a>
             </li>
             <li sec:authorize="hasRole('CUSTOMER')">
-                <a th:href="@{/payments}" th:classappend="${activeTab == 'payments'} ? 'active' : ''" class="df-nav-link">
+                <a th:href="@{/profile#invoices}" class="df-nav-link">
                     Invoices & Payments
+                </a>
+            </li>
+            <li sec:authorize="hasRole('CUSTOMER')">
+                <a th:href="@{/incidents/report}" th:classappend="${activeTab == 'incidents'} ? 'active' : ''" class="df-nav-link">
+                    Report Incident
                 </a>
             </li>
             <li>

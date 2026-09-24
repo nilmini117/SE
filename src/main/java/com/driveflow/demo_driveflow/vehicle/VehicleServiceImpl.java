@@ -17,7 +17,9 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public List<Vehicle> searchVehicles(String search, String status) {
-        return vehicleRepository.searchVehicles(search, status);
+        String cleanSearch = (search != null) ? search.trim() : "";
+        String cleanStatus = (status != null && !status.isBlank()) ? status.trim().toUpperCase() : "ALL";
+        return vehicleRepository.searchVehicles(cleanSearch, cleanStatus);
     }
 
     @Override
@@ -28,6 +30,9 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Vehicle registerVehicle(Vehicle vehicle) {
+        if (vehicle.getQuantity() == null || vehicle.getQuantity() < 1) {
+            vehicle.setQuantity(1);
+        }
         if (vehicle.getStatus() == null || vehicle.getStatus().isBlank()) {
             vehicle.setStatus("AVAILABLE");
         }
@@ -42,6 +47,8 @@ public class VehicleServiceImpl implements VehicleService {
         existing.setMileage(updatedVehicle.getMileage());
         existing.setStatus(updatedVehicle.getStatus());
         existing.setRegNo(updatedVehicle.getRegNo());
+        int qty = (updatedVehicle.getQuantity() != null && updatedVehicle.getQuantity() >= 1) ? updatedVehicle.getQuantity() : 1;
+        existing.setQuantity(qty);
         if (updatedVehicle.getBranch() != null) {
             existing.setBranch(updatedVehicle.getBranch());
         }
@@ -50,6 +57,24 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public void removeVehicle(Long id) {
-        vehicleRepository.deleteById(id);
+        Vehicle existing = getVehicleById(id);
+        existing.setStatus("DECOMMISSIONED");
+        vehicleRepository.save(existing);
+    }
+
+    @Override
+    public java.util.Map<String, Long> getVehicleStatusCounts() {
+        java.util.Map<String, Long> counts = new java.util.LinkedHashMap<>();
+        long allActive = vehicleRepository.countByStatusNotIgnoreCase("DECOMMISSIONED");
+        long available = vehicleRepository.countByStatusIgnoreCase("AVAILABLE");
+        long booked = vehicleRepository.countByStatusIgnoreCase("BOOKED");
+        long maintenance = vehicleRepository.countByStatusIgnoreCase("MAINTENANCE");
+        long decommissioned = vehicleRepository.countByStatusIgnoreCase("DECOMMISSIONED");
+        counts.put("ALL", allActive);
+        counts.put("AVAILABLE", available);
+        counts.put("BOOKED", booked);
+        counts.put("MAINTENANCE", maintenance);
+        counts.put("DECOMMISSIONED", decommissioned);
+        return counts;
     }
 }

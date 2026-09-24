@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -91,7 +92,7 @@ public class FeedbackController {
     }
 
     @PostMapping("/{id}")
-    public String updateFeedback(@PathVariable Long id, @ModelAttribute Feedback feedback, Authentication authentication) {
+    public String updateFeedback(@PathVariable Long id, @ModelAttribute Feedback feedback, Authentication authentication, RedirectAttributes redirectAttributes) {
         Feedback existing = feedbackService.getFeedbackById(id);
         if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
             String email = authentication.getName();
@@ -101,18 +102,25 @@ public class FeedbackController {
             }
         }
         feedbackService.updateFeedback(id, feedback);
+        redirectAttributes.addFlashAttribute("successMessage", "Feedback ticket #FB-" + id + " updated successfully.");
         return "redirect:/feedback";
     }
 
     @GetMapping("/{id}/resolve")
-    public String resolveFeedback(@PathVariable Long id) {
+    public String resolveFeedback(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         feedbackService.resolveFeedback(id);
+        redirectAttributes.addFlashAttribute("successMessage", "Feedback ticket #FB-" + id + " has been marked as resolved.");
         return "redirect:/feedback";
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteFeedback(@PathVariable Long id) {
-        feedbackService.deleteFeedback(id);
+    public String deleteFeedback(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            feedbackService.deleteFeedback(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Feedback ticket #FB-" + id + " removed.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not remove feedback ticket: " + e.getMessage());
+        }
         return "redirect:/feedback";
     }
 }

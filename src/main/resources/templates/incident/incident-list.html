@@ -1,15 +1,35 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head('Incidents & Safety')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('incidents')}"></nav>
 
 <main class="df-main">
+    <!-- Success Alert -->
+    <div th:if="${successMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Operation successful!</span>
+    </div>
+
+    <!-- Error Alert -->
+    <div th:if="${errorMessage}" 
+         style="max-width: 1200px; margin: 0 auto 1.5rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); display: flex; align-items: center; gap: 0.75rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">An error occurred.</span>
+    </div>
+
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Incidents & Damage Reports</h1>
-            <p class="df-header-subtitle">Document accidents, vehicle damage claims, severity, and resolution statuses.</p>
+            <p class="df-header-subtitle">Document accidents, vehicle damage claims, track investigations, and update customers.</p>
         </div>
         <div class="df-header-actions">
             <a th:href="@{/incidents/new}" class="btn btn-primary">
@@ -22,15 +42,53 @@
         </div>
     </div>
 
+    <!-- Staff Incident Status Filter Tabs -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <a th:href="@{/incidents(status='ALL')}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${selectedStatus == 'ALL'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            All
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${selectedStatus == 'ALL'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: var(--slate-100); color: var(--slate-600);'"
+                  th:text="${statusCounts != null ? statusCounts['ALL'] : 0}">0</span>
+        </a>
+        <a th:href="@{/incidents(status='OPEN')}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${selectedStatus == 'OPEN'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Open
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${selectedStatus == 'OPEN'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #fef3c7; color: #92400e;'"
+                  th:text="${statusCounts != null ? statusCounts['OPEN'] : 0}">0</span>
+        </a>
+        <a th:href="@{/incidents(status='IN_PROGRESS')}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${selectedStatus == 'IN_PROGRESS'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            In Progress
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${selectedStatus == 'IN_PROGRESS'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #e0f2fe; color: #0369a1;'"
+                  th:text="${statusCounts != null ? statusCounts['IN_PROGRESS'] : 0}">0</span>
+        </a>
+        <a th:href="@{/incidents(status='RESOLVED')}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${selectedStatus == 'RESOLVED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Resolved
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${selectedStatus == 'RESOLVED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #d1fae5; color: #065f46;'"
+                  th:text="${statusCounts != null ? statusCounts['RESOLVED'] : 0}">0</span>
+        </a>
+    </div>
+
     <div class="df-table-container">
         <table class="df-table" th:if="${incidents != null and !incidents.empty}">
             <thead>
             <tr>
                 <th>Incident ID</th>
                 <th>Date</th>
+                <th>Customer</th>
+                <th>Vehicle</th>
                 <th>Description</th>
                 <th>Severity</th>
-                <th>Status</th>
+                <th>Status & Customer Notice</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -38,7 +96,21 @@
             <tr th:each="i : ${incidents}">
                 <td><strong th:text="'#INC-' + ${i.incidentId}">#INC-1</strong></td>
                 <td th:text="${i.date}">2026-09-10</td>
-                <td style="max-width: 320px; line-height: 1.4;" th:text="${i.description}">Minor bumper scratch during parking</td>
+                <td>
+                    <div th:if="${i.customer != null}">
+                        <div style="font-weight: 600;" th:text="${i.customer.firstName + ' ' + i.customer.lastName}">Customer Name</div>
+                        <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${i.customer.email}">customer@driveflow.com</div>
+                    </div>
+                    <span th:if="${i.customer == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
+                </td>
+                <td>
+                    <div th:if="${i.vehicle != null}">
+                        <div style="font-weight: 600;" th:text="${i.vehicle.model}">Toyota Prius</div>
+                        <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${i.vehicle.regNo}">WP CA-1020</div>
+                    </div>
+                    <span th:if="${i.vehicle == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
+                </td>
+                <td style="max-width: 260px; line-height: 1.4;" th:text="${i.description}">Minor bumper scratch during parking</td>
                 <td>
                     <span th:if="${i.severity == 'LOW'}" class="badge badge-info">Low</span>
                     <span th:if="${i.severity == 'MEDIUM'}" class="badge badge-warning">Medium</span>
@@ -47,12 +119,53 @@
                 </td>
                 <td>
                     <span th:if="${i.status == 'OPEN'}" class="badge badge-warning">Open</span>
+                    <span th:if="${i.status == 'IN_PROGRESS'}" class="badge badge-info">In Progress</span>
                     <span th:if="${i.status == 'RESOLVED' or i.status == 'CLOSED'}" class="badge badge-success">Resolved</span>
-                    <span th:if="${i.status != 'OPEN' and i.status != 'RESOLVED' and i.status != 'CLOSED'}" class="badge badge-secondary" th:text="${i.status}">Pending</span>
+                    <span th:if="${i.status != 'OPEN' and i.status != 'IN_PROGRESS' and i.status != 'RESOLVED' and i.status != 'CLOSED'}" class="badge badge-secondary" th:text="${i.status}">Status</span>
+
+                    <!-- Customer Message Banner under Status -->
+                    <div th:if="${i.status == 'IN_PROGRESS' and i.staffMessage != null and !#strings.isEmpty(i.staffMessage)}"
+                         style="margin-top: 0.35rem; font-size: 0.78rem; color: #0369a1; display: flex; align-items: flex-start; gap: 0.35rem; max-width: 250px; line-height: 1.3;">
+                        <span style="font-weight: 700; flex-shrink: 0;">ℹ</span>
+                        <span><strong>Update:</strong> <span th:text="${i.staffMessage}">Message</span></span>
+                    </div>
+                    <div th:if="${(i.status == 'RESOLVED' or i.status == 'CLOSED') and i.staffMessage != null and !#strings.isEmpty(i.staffMessage)}"
+                         style="margin-top: 0.35rem; font-size: 0.78rem; color: #047857; display: flex; align-items: flex-start; gap: 0.35rem; max-width: 250px; line-height: 1.3;">
+                        <span style="font-weight: 700; flex-shrink: 0;">&#10003;</span>
+                        <span><strong>Resolution:</strong> <span th:text="${i.staffMessage}">Message</span></span>
+                    </div>
                 </td>
-                <td style="text-align: right;">
+                <td style="text-align: right; white-space: nowrap;">
+                    <!-- In Progress action button (when OPEN) -->
+                    <button th:if="${i.status == 'OPEN'}"
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            style="margin-right: 0.25rem;"
+                            th:data-id="${i.incidentId}"
+                            th:data-status="'IN_PROGRESS'"
+                            th:data-customer="${i.customer != null ? i.customer.firstName + ' ' + i.customer.lastName : 'Unassigned Customer'}"
+                            th:data-vehicle="${i.vehicle != null ? i.vehicle.model + ' (' + i.vehicle.regNo + ')' : 'Unassigned Vehicle'}"
+                            th:data-message="${i.staffMessage != null ? i.staffMessage : ''}"
+                            onclick="openIncidentModal(this.getAttribute('data-id'), this.getAttribute('data-status'), this.getAttribute('data-customer'), this.getAttribute('data-vehicle'), this.getAttribute('data-message'))">
+                        In Progress
+                    </button>
+
+                    <!-- Resolve action button (when OPEN or IN_PROGRESS) -->
+                    <button th:if="${i.status == 'OPEN' or i.status == 'IN_PROGRESS'}"
+                            type="button"
+                            class="btn btn-success btn-sm"
+                            style="margin-right: 0.25rem;"
+                            th:data-id="${i.incidentId}"
+                            th:data-status="'RESOLVED'"
+                            th:data-customer="${i.customer != null ? i.customer.firstName + ' ' + i.customer.lastName : 'Unassigned Customer'}"
+                            th:data-vehicle="${i.vehicle != null ? i.vehicle.model + ' (' + i.vehicle.regNo + ')' : 'Unassigned Vehicle'}"
+                            th:data-message="${i.staffMessage != null ? i.staffMessage : ''}"
+                            onclick="openIncidentModal(this.getAttribute('data-id'), this.getAttribute('data-status'), this.getAttribute('data-customer'), this.getAttribute('data-vehicle'), this.getAttribute('data-message'))">
+                        Resolve
+                    </button>
+
+                    <!-- Edit button -->
                     <a th:href="@{/incidents/{id}/edit(id=${i.incidentId})}" class="btn btn-secondary btn-sm">Edit</a>
-                    <a th:href="@{/incidents/{id}/delete(id=${i.incidentId})}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this incident report?');">Delete</a>
                 </td>
             </tr>
             </tbody>
@@ -68,11 +181,132 @@
                 </svg>
             </div>
             <h3 class="empty-state-title">No Incidents Logged</h3>
-            <p class="empty-state-desc">Your fleet is running with zero reported safety incidents.</p>
+            <p class="empty-state-desc">Your fleet is running with zero reported safety incidents matching this filter.</p>
             <a th:href="@{/incidents/new}" class="btn btn-primary">Report An Incident</a>
         </div>
     </div>
 </main>
+
+<!-- Incident Status & Customer Message Modal -->
+<div id="incidentModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 500px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div id="modalIconContainer" style="width: 32px; height: 32px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700;">
+                    &#9881;
+                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;" id="incidentModalTitle">Update Incident</h3>
+            </div>
+            <button type="button" onclick="closeIncidentModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        
+        <form id="incidentForm" method="post" action="">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" name="status" id="incidentTargetStatus" value="IN_PROGRESS" />
+            
+            <div style="padding: 1.5rem;">
+                <div id="incidentSummary" style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 1rem; background: var(--slate-50); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-200);">
+                    Incident details
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 600; color: var(--slate-800); display: block; margin-bottom: 0.35rem;">
+                        Target Status
+                    </label>
+                    <div style="display: flex; gap: 1rem;">
+                        <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="modalStatusRadio" id="radioInProgress" value="IN_PROGRESS" onchange="onStatusRadioChange('IN_PROGRESS')">
+                            <span class="badge badge-info">IN_PROGRESS</span>
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.9rem;">
+                            <input type="radio" name="modalStatusRadio" id="radioResolved" value="RESOLVED" onchange="onStatusRadioChange('RESOLVED')">
+                            <span class="badge badge-success">RESOLVED</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 600; color: var(--slate-800); display: block; margin-bottom: 0.35rem;">
+                        Message to Customer <span style="color: var(--danger);">*</span>
+                    </label>
+                    <p style="font-size: 0.8rem; color: var(--slate-500); margin-bottom: 0.5rem;" id="messageHelpText">
+                        This update will be sent directly to the customer and displayed on their account overview.
+                    </p>
+                    <textarea name="staffMessage" id="incidentStaffMessageInput" class="form-control" rows="3" required
+                              placeholder="Detail the investigation progress or resolution outcome..."
+                              style="width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); padding: 0.65rem 0.75rem; font-family: inherit; font-size: 0.9rem; resize: vertical;"></textarea>
+                </div>
+            </div>
+            
+            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeIncidentModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" id="incidentSubmitBtn" class="btn btn-primary" style="font-weight: 600;">Update & Send Message</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openIncidentModal(incidentId, targetStatus, customerInfo, vehicleInfo, currentMessage) {
+        var modal = document.getElementById('incidentModal');
+        var form = document.getElementById('incidentForm');
+        var title = document.getElementById('incidentModalTitle');
+        var summary = document.getElementById('incidentSummary');
+        var targetInput = document.getElementById('incidentTargetStatus');
+        var messageInput = document.getElementById('incidentStaffMessageInput');
+        var submitBtn = document.getElementById('incidentSubmitBtn');
+        var radioInProgress = document.getElementById('radioInProgress');
+        var radioResolved = document.getElementById('radioResolved');
+
+        form.action = '/incidents/' + incidentId + '/status';
+        summary.innerHTML = '<strong>Customer:</strong> ' + customerInfo + '<br><strong>Vehicle:</strong> ' + vehicleInfo;
+        
+        targetInput.value = targetStatus;
+        if (targetStatus === 'RESOLVED') {
+            title.textContent = 'Resolve Incident #INC-' + incidentId;
+            radioResolved.checked = true;
+            submitBtn.className = 'btn btn-success';
+            submitBtn.textContent = 'Resolve & Notify Customer';
+            messageInput.placeholder = 'e.g. Repair inspection completed. Insurance claim settled and vehicle returned to fleet.';
+        } else {
+            title.textContent = 'Set Incident #INC-' + incidentId + ' to In Progress';
+            radioInProgress.checked = true;
+            submitBtn.className = 'btn btn-primary';
+            submitBtn.textContent = 'Set In Progress & Notify Customer';
+            messageInput.placeholder = 'e.g. Safety investigation initiated. Technician is inspecting vehicle damage at the workshop.';
+        }
+        messageInput.value = currentMessage || '';
+
+        modal.style.display = 'flex';
+        setTimeout(function() { messageInput.focus(); }, 50);
+    }
+
+    function onStatusRadioChange(status) {
+        var targetInput = document.getElementById('incidentTargetStatus');
+        var submitBtn = document.getElementById('incidentSubmitBtn');
+        var messageInput = document.getElementById('incidentStaffMessageInput');
+        targetInput.value = status;
+        if (status === 'RESOLVED') {
+            submitBtn.className = 'btn btn-success';
+            submitBtn.textContent = 'Resolve & Notify Customer';
+            if (!messageInput.value) messageInput.placeholder = 'e.g. Repair inspection completed. Insurance claim settled and vehicle returned to fleet.';
+        } else {
+            submitBtn.className = 'btn btn-primary';
+            submitBtn.textContent = 'Set In Progress & Notify Customer';
+            if (!messageInput.value) messageInput.placeholder = 'e.g. Safety investigation initiated. Technician is inspecting vehicle damage at the workshop.';
+        }
+    }
+
+    function closeIncidentModal() {
+        var modal = document.getElementById('incidentModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    window.addEventListener('click', function(e) {
+        var modal = document.getElementById('incidentModal');
+        if (e.target === modal) closeIncidentModal();
+    });
+</script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 

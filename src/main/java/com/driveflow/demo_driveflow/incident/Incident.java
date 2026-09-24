@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.incident;
 
+import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -8,9 +9,6 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 
-// NOTE: this class assumes the team decides Incident is SEPARATE from
-// the "Inspection" entity in maintenance/. Confirm this with
-// IT25103933 and IT25103906 before finalizing (see team overview doc).
 @Entity
 @Table(name = "incident")
 @Getter
@@ -27,16 +25,23 @@ public class Incident {
     @Column(name = "date")
     private LocalDate date;
 
-    @Column(name = "description")
+    @Column(name = "description", length = 1000)
     private String description;
 
     @Column(name = "severity")
-    private String severity;
+    private String severity; // LOW, MEDIUM, HIGH, CRITICAL
 
     @Column(name = "status")
-    private String status; // OPEN, RESOLVED
+    private String status; // OPEN, IN_PROGRESS, RESOLVED, CLOSED
 
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
+
+    @ManyToOne
+    @JoinColumn(name = "customer_id")
+    private Customer customer;
+
+    @Column(name = "staff_message", length = 1000)
+    private String staffMessage;
 }
