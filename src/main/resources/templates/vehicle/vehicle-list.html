@@ -118,7 +118,6 @@
                 <th>Vehicle ID</th>
                 <th>Reg Number</th>
                 <th>Model</th>
-                <th>Quantity</th>
                 <th>Branch</th>
                 <th>Color</th>
                 <th>Mileage</th>
@@ -131,9 +130,6 @@
                 <td><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
                 <td><strong th:text="${v.regNo}">ABC-1234</strong></td>
                 <td th:text="${v.model}">Toyota Prius</td>
-                <td>
-                    <span class="badge badge-info" style="font-weight: 700; font-size: 0.85rem; padding: 0.2rem 0.55rem;" th:text="${v.quantity != null ? v.quantity : 1}">1</span>
-                </td>
                 <td>
                     <span th:if="${v.branch != null}" th:text="${v.branch.branchName}">Colombo Central</span>
                     <span th:if="${v.branch == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
@@ -155,6 +151,11 @@
                 <td style="text-align: right; white-space: nowrap;">
                     <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" sec:authorize="hasRole('CUSTOMER')" th:if="${v.status == 'AVAILABLE'}">Book</a>
                     <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
+                    <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}"
+                       class="btn btn-danger btn-sm"
+                       sec:authorize="hasRole('STAFF')"
+                       style="margin-left: 0.35rem;"
+                       th:onclick="'return confirm(\'Are you sure you want to delete vehicle ' + ${v.model} + ' (' + ${v.regNo} + ')?\');'">Delete</a>
                 </td>
             </tr>
             </tbody>

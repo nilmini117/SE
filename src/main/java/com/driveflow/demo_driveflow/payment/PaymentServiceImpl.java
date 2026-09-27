@@ -83,6 +83,14 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Payment processPayment(Payment payment) {
+        if (payment.getInvoice() != null && payment.getInvoice().getBooking() != null) {
+            String bookingStatus = payment.getInvoice().getBooking().getStatus();
+            if (bookingStatus == null || !bookingStatus.equalsIgnoreCase("CONFIRMED")) {
+                throw new IllegalStateException("Payment cannot be processed because booking #"
+                        + payment.getInvoice().getBooking().getBookingId()
+                        + " has not been confirmed by staff (status: " + bookingStatus + ").");
+            }
+        }
         if (payment.getStatus() == null || payment.getStatus().isBlank()) {
             payment.setStatus("COMPLETED");
         }

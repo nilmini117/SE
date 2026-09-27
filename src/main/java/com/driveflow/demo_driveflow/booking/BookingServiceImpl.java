@@ -90,9 +90,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking createBooking(Booking booking) {
         booking.setStatus("PENDING");
-        Booking saved = bookingRepository.save(booking);
-        ensureInvoiceForBooking(saved);
-        return saved;
+        return bookingRepository.save(booking);
     }
 
     @Override
@@ -112,6 +110,9 @@ public class BookingServiceImpl implements BookingService {
         }
         if (updatedBooking.getStatus() != null) {
             existing.setStatus(updatedBooking.getStatus());
+            if ("CONFIRMED".equalsIgnoreCase(updatedBooking.getStatus())) {
+                ensureInvoiceForBooking(existing);
+            }
         }
         if (updatedBooking.getDuration() != null) {
             existing.setDuration(updatedBooking.getDuration());
@@ -129,7 +130,7 @@ public class BookingServiceImpl implements BookingService {
     public void approveBooking(Long id) {
         Booking booking = getBookingById(id);
         booking.setStatus("CONFIRMED");
-        booking.setStaffMessage("Your booking has been confirmed by our team.");
+        booking.setStaffMessage("Your booking has been confirmed by our team. You can now proceed to payment.");
         Booking saved = bookingRepository.save(booking);
         ensureInvoiceForBooking(saved);
     }

@@ -41,8 +41,9 @@
                           th:text="${invoice.booking != null ? invoice.booking.bookingDate + ' to ' + invoice.booking.endDate : '-'}">2026-09-10 to 2026-09-15</span>
                 </div>
                 <div>
-                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Invoice Date</span>
-                    <span style="color: var(--slate-700); font-size: 0.9rem;" th:text="${invoice.invoiceDate}">2026-09-15</span>
+                    <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block;">Booking Status</span>
+                    <span class="badge badge-success" th:if="${invoice.booking != null and invoice.booking.status == 'CONFIRMED'}">&#10003; Staff Confirmed</span>
+                    <span class="badge badge-warning" th:if="${invoice.booking != null and invoice.booking.status != 'CONFIRMED'}" th:text="${invoice.booking.status}">PENDING</span>
                 </div>
             </div>
 

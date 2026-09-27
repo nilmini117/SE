@@ -145,13 +145,33 @@
                     <div th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId)}">
                         <span th:if="${bookingInvoices.get(b.bookingId).status == 'PAID'}" class="badge badge-success">Paid</span>
                         <div th:if="${bookingInvoices.get(b.bookingId).status != 'PAID'}">
-                            <span class="badge badge-warning" th:text="${bookingInvoices.get(b.bookingId).status}">UNPAID</span>
-                            <a th:if="${isStaff == null or !isStaff}"
-                               th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
-                               class="btn btn-primary btn-sm"
-                               style="display: inline-block; margin-top: 0.25rem; font-size: 0.75rem; padding: 0.2rem 0.55rem; font-weight: 700;">
-                                Pay Now
-                            </a>
+                            <!-- Only allow payment when booking is CONFIRMED -->
+                            <div th:if="${b.status == 'CONFIRMED'}">
+                                <span class="badge badge-warning" th:text="${bookingInvoices.get(b.bookingId).status}">UNPAID</span>
+                                <a th:if="${isStaff == null or !isStaff}"
+                                   th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
+                                   class="btn btn-primary btn-sm"
+                                   style="display: inline-block; margin-top: 0.25rem; font-size: 0.75rem; padding: 0.2rem 0.55rem; font-weight: 700;">
+                                    Pay Now &rarr;
+                                </a>
+                            </div>
+                            <!-- If booking is PENDING, customer cannot pay yet -->
+                            <div th:if="${b.status == 'PENDING'}">
+                                <span class="badge badge-secondary" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 0.72rem; padding: 0.2rem 0.45rem;">
+                                    Awaiting Staff Confirmation
+                                </span>
+                                <div style="font-size: 0.7rem; color: var(--slate-500); margin-top: 0.2rem; font-style: italic;">
+                                    Payable upon approval
+                                </div>
+                            </div>
+                            <!-- If booking is CANCELLED -->
+                            <div th:if="${b.status == 'CANCELLED'}">
+                                <span class="badge badge-danger">Cancelled</span>
+                            </div>
+                            <!-- Any other status -->
+                            <div th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED'}">
+                                <span class="badge badge-secondary" th:text="${bookingInvoices.get(b.bookingId).status}">UNPAID</span>
+                            </div>
                         </div>
                     </div>
                     <div th:if="${bookingInvoices == null or !bookingInvoices.containsKey(b.bookingId)}">
@@ -177,10 +197,10 @@
                     </span>
                     <!-- Customer Actions -->
                     <span th:if="${isStaff == null or !isStaff}">
-                        <a th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId) and bookingInvoices.get(b.bookingId).status != 'PAID' and b.status != 'CANCELLED'}"
+                        <a th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId) and bookingInvoices.get(b.bookingId).status != 'PAID' and b.status == 'CONFIRMED'}"
                            th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
                            class="btn btn-primary btn-sm"
-                           style="font-weight: 700; margin-right: 0.25rem;">Pay Now</a>
+                           style="font-weight: 700; margin-right: 0.25rem;">Pay Now &rarr;</a>
                         <a th:if="${b.status == 'PENDING'}"
                            th:href="@{/bookings/{id}/edit(id=${b.bookingId})}"
                            class="btn btn-secondary btn-sm">Edit</a>

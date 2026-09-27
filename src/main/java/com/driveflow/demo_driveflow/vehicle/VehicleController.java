@@ -119,10 +119,15 @@ public class VehicleController {
     public String deleteVehicle(@PathVariable Long id, RedirectAttributes redirectAttributes) {
         try {
             vehicleService.removeVehicle(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Vehicle #VH-" + id + " has been decommissioned successfully.");
+            redirectAttributes.addFlashAttribute("successMessage", "Vehicle #VH-" + id + " has been deleted successfully.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to decommission vehicle: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to delete vehicle: " + e.getMessage());
         }
         return "redirect:/vehicles";
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteVehiclePost(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        return deleteVehicle(id, redirectAttributes);
     }
 }

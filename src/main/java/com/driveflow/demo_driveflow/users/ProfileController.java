@@ -141,7 +141,7 @@ public class ProfileController {
     }
 
     @GetMapping("/invoices/{id}/pay")
-    public String showPayInvoiceForm(@PathVariable Long id, Model model, Authentication authentication) {
+    public String showPayInvoiceForm(@PathVariable Long id, Model model, Authentication authentication, RedirectAttributes redirectAttributes) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
@@ -155,11 +155,22 @@ public class ProfileController {
         if (invoice == null || invoice.getBooking() == null || invoice.getBooking().getCustomer() == null
                 || invoice.getBooking().getCustomer().getEmail() == null
                 || !invoice.getBooking().getCustomer().getEmail().trim().equalsIgnoreCase(email.trim())) {
-            return "redirect:/profile?error=unauthorized";
+            redirectAttributes.addFlashAttribute("errorMessage", "Invoice not found or you are not authorized to view it.");
+            return "redirect:/profile";
         }
 
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
-            return "redirect:/profile?info=already-paid";
+            redirectAttributes.addFlashAttribute("infoMessage", "Invoice #INV-" + id + " has already been paid.");
+            return "redirect:/profile";
+        }
+
+        // Customer cannot pay for the booking until staff has confirmed the booking
+        Booking booking = invoice.getBooking();
+        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Payment cannot be processed yet. Booking #BK-" + booking.getBookingId()
+                    + " is currently " + booking.getStatus() + " and must be confirmed by staff before payment can be accepted.");
+            return "redirect:/profile";
         }
 
         Customer customer = invoice.getBooking().getCustomer();
@@ -189,11 +200,21 @@ public class ProfileController {
         if (invoice == null || invoice.getBooking() == null || invoice.getBooking().getCustomer() == null
                 || invoice.getBooking().getCustomer().getEmail() == null
                 || !invoice.getBooking().getCustomer().getEmail().trim().equalsIgnoreCase(email.trim())) {
-            return "redirect:/profile?error=unauthorized";
+            redirectAttributes.addFlashAttribute("errorMessage", "Invoice not found or you are not authorized to pay it.");
+            return "redirect:/profile";
         }
 
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
             redirectAttributes.addFlashAttribute("errorMessage", "This invoice has already been paid.");
+            return "redirect:/profile";
+        }
+
+        // Customer cannot pay for the booking until staff has confirmed the booking
+        Booking booking = invoice.getBooking();
+        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Payment rejected. Booking #BK-" + booking.getBookingId()
+                    + " is not confirmed by staff (current status: " + booking.getStatus() + ").");
             return "redirect:/profile";
         }
 

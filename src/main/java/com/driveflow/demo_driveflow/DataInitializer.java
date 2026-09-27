@@ -68,25 +68,31 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println(">> Seeded default Staff account: staff@driveflow.com / Staff123!");
         }
 
-        // Seed default Customer account if not present
-        if (userRepository.findByEmail("customer@driveflow.com").isEmpty()) {
-            Customer customer = new Customer();
-            customer.setFirstName("John");
-            customer.setLastName("Customer");
-            customer.setNic("NIC2002");
-            customer.setEmail("customer@driveflow.com");
-            customer.setContactNumber("0719876543");
-            customer.setDob(LocalDate.of(1995, 5, 15));
-            customer.setDrivingLicense("B11112222");
-            customer.setPassword(passwordEncoder.encode("Customer123!"));
-            customerRepository.save(customer);
-            System.out.println(">> Seeded default Customer account: customer@driveflow.com / Customer123!");
-        }
+        // Seed or sync default Customer account
+        userRepository.findByEmail("customer@driveflow.com").ifPresentOrElse(
+            existingCustomer -> {
+                existingCustomer.setPassword(passwordEncoder.encode("Customer123!"));
+                userRepository.save(existingCustomer);
+            },
+            () -> {
+                Customer customer = new Customer();
+                customer.setFirstName("John");
+                customer.setLastName("Customer");
+                customer.setNic("NIC2002");
+                customer.setEmail("customer@driveflow.com");
+                customer.setContactNumber("0719876543");
+                customer.setDob(LocalDate.of(1995, 5, 15));
+                customer.setDrivingLicense("B11112222");
+                customer.setPassword(passwordEncoder.encode("Customer123!"));
+                customerRepository.save(customer);
+                System.out.println(">> Seeded default Customer account: customer@driveflow.com / Customer123!");
+            }
+        );
 
-        // Ensure active bookings have invoices available for payment
+        // Ensure confirmed bookings have invoices available for payment
         for (com.driveflow.demo_driveflow.booking.Booking b : bookingRepository.findAll()) {
             if (b.getBookingId() != null && invoiceRepository.findByBooking(b).isEmpty()
-                    && !"CANCELLED".equalsIgnoreCase(b.getStatus())) {
+                    && "CONFIRMED".equalsIgnoreCase(b.getStatus())) {
                 try {
                     com.driveflow.demo_driveflow.payment.Invoice inv = new com.driveflow.demo_driveflow.payment.Invoice();
                     inv.setBooking(b);

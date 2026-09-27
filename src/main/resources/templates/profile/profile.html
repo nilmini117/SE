@@ -13,6 +13,14 @@
     <div th:if="${errorMessage}" class="alert alert-danger" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #991b1b; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600;">
         <span th:text="${errorMessage}">Error message</span>
     </div>
+    <div th:if="${infoMessage}" class="alert alert-info" style="background: rgba(59, 130, 246, 0.15); border: 1px solid var(--info); color: #1e40af; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600;">
+        <span th:text="${infoMessage}">Info message</span>
+    </div>
+    <div th:if="${param.error != null and errorMessage == null}" class="alert alert-danger" style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--danger); color: #991b1b; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600;">
+        <span th:if="${param.error[0] == 'not-confirmed'}">Payment is unavailable: this reservation must be confirmed by staff first.</span>
+        <span th:if="${param.error[0] == 'unauthorized'}">You are not authorized to view or pay this invoice.</span>
+        <span th:if="${param.error[0] != 'not-confirmed' and param.error[0] != 'unauthorized'}">An error occurred while processing your invoice request.</span>
+    </div>
 
     <!-- Profile Header Card -->
     <div class="df-header" style="background: var(--surface); border: 1px solid var(--slate-200); border-radius: 12px; padding: 1.75rem 2rem; margin-bottom: 2rem;">
@@ -187,15 +195,28 @@
                     <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(inv.totalAmt != null ? inv.totalAmt : 0, 1, 2)}">$0.00</strong></td>
                     <td>
                         <span th:if="${inv.status == 'PAID'}" class="badge badge-success">Paid</span>
-                        <span th:if="${inv.status == 'UNPAID' or inv.status == 'PENDING'}" class="badge badge-warning">Unpaid</span>
                         <span th:if="${inv.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
-                        <span th:if="${inv.status != 'PAID' and inv.status != 'UNPAID' and inv.status != 'PENDING' and inv.status != 'CANCELLED'}" class="badge badge-secondary" th:text="${inv.status}">Pending</span>
+                        <span th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and inv.booking != null and inv.booking.status == 'CONFIRMED'}" class="badge badge-warning">Unpaid (Confirmed)</span>
+                        <span th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and inv.booking != null and inv.booking.status == 'PENDING'}" class="badge badge-secondary" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">Pending Confirmation</span>
+                        <span th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and inv.booking != null and inv.booking.status == 'CANCELLED'}" class="badge badge-danger">Booking Cancelled</span>
+                        <span th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and (inv.booking == null or (inv.booking.status != 'CONFIRMED' and inv.booking.status != 'PENDING' and inv.booking.status != 'CANCELLED'))}" class="badge badge-secondary" th:text="${inv.status}">Pending</span>
                     </td>
                     <td style="text-align: right;">
-                        <a th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED'}"
+                        <a th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and inv.booking != null and inv.booking.status == 'CONFIRMED'}"
                            th:href="@{/profile/invoices/{id}/pay(id=${inv.invoiceId})}"
-                           class="btn btn-primary btn-sm">Pay Now</a>
+                           class="btn btn-primary btn-sm"
+                           style="font-weight: 700;">Pay Now &rarr;</a>
+                        <span th:if="${inv.status != 'PAID' and inv.status != 'CANCELLED' and (inv.booking == null or inv.booking.status == 'PENDING')}"
+                              class="badge badge-secondary"
+                              title="Payment will be unlocked once staff confirms your booking"
+                              style="font-size: 0.78rem; padding: 0.35rem 0.65rem; background: var(--slate-100); color: var(--slate-600); border: 1px solid var(--slate-300);">
+                            &#128274; Awaiting Staff Confirmation
+                        </span>
                         <span th:if="${inv.status == 'PAID'}" class="badge badge-success">Paid</span>
+                        <span th:if="${inv.status == 'CANCELLED' or (inv.booking != null and inv.booking.status == 'CANCELLED')}"
+                              style="color: var(--slate-400); font-size: 0.82rem; font-style: italic;">
+                            Not Payable
+                        </span>
                     </td>
                 </tr>
                 </tbody>
