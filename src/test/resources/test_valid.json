@@ -1,0 +1,11 @@
+{
+  "firstName": "Verified",
+  "lastName": "Customer",
+  "email": "autouser@driveflow.com",
+  "nic_number": "199987654321",
+  "mobile_number": "0789876543",
+  "dob": "1998-05-15",
+  "drivingLicense": "B123456",
+  "password": "DriveFlowPass2026",
+  "confirmPassword": "DriveFlowPass2026"
+}

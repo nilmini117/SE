@@ -75,6 +75,11 @@ public class DataInitializer implements CommandLineRunner {
         userRepository.findByEmail("customer@driveflow.com").ifPresentOrElse(
             existingCustomer -> {
                 existingCustomer.setPassword(passwordEncoder.encode("Customer123!"));
+                if (existingCustomer instanceof Customer c) {
+                    if (c.getDrivingLicense() == null || !c.getDrivingLicense().matches("^[A-Za-z]\\d{6}$")) {
+                        c.setDrivingLicense("B111122");
+                    }
+                }
                 userRepository.save(existingCustomer);
             },
             () -> {
@@ -85,7 +90,7 @@ public class DataInitializer implements CommandLineRunner {
                 customer.setEmail("customer@driveflow.com");
                 customer.setContactNumber("0719876543");
                 customer.setDob(LocalDate.of(1995, 5, 15));
-                customer.setDrivingLicense("B11112222");
+                customer.setDrivingLicense("B111122");
                 customer.setPassword(passwordEncoder.encode("Customer123!"));
                 customerRepository.save(customer);
                 System.out.println(">> Seeded default Customer account: customer@driveflow.com / Customer123!");

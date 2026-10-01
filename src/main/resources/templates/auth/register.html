@@ -32,47 +32,55 @@
                 </div>
                 <h1 style="font-size: 1.65rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.35rem;">Register to Book a Vehicle</h1>
                 <p style="color: var(--slate-500); font-size: 0.9rem;">
-                    Create your customer profile with valid driving credentials to start making vehicle reservations.
+                    Create your customer profile with verified credentials to start making vehicle reservations.
                 </p>
             </div>
 
-            <form th:action="@{/register}" th:object="${customerDto}" method="post">
+            <form th:action="@{/register}" th:object="${customerDto}" method="post" id="registrationForm" novalidate>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="firstName">First Name</label>
+                        <label class="form-label" for="firstName">First Name <span style="color: #dc2626;">*</span></label>
                         <input type="text" id="firstName" th:field="*{firstName}" class="form-control" placeholder="e.g. Jane" required>
+                        <div id="firstNameError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                         <div th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="lastName">Last Name</label>
+                        <label class="form-label" for="lastName">Last Name <span style="color: #dc2626;">*</span></label>
                         <input type="text" id="lastName" th:field="*{lastName}" class="form-control" placeholder="e.g. Smith" required>
+                        <div id="lastNameError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                         <div th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address</label>
+                        <label class="form-label" for="email">Email Address <span style="color: #dc2626;">*</span></label>
                         <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="jane.smith@example.com" required>
+                        <div id="emailError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                         <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="contactNumber">Contact Phone Number</label>
-                        <input type="text" id="contactNumber" th:field="*{contactNumber}" class="form-control" placeholder="e.g. 0771234567" required>
-                        <div th:if="${#fields.hasErrors('contactNumber')}" th:errors="*{contactNumber}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                        <label class="form-label" for="mobileNumber">Mobile Number <span style="color: #dc2626;">*</span></label>
+                        <input type="tel" id="mobileNumber" th:field="*{mobileNumber}" class="form-control" 
+                               placeholder="e.g. 0771234567" maxlength="10" inputmode="numeric" required>
+                        <div id="mobileError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
+                        <div th:if="${#fields.hasErrors('mobileNumber')}" th:errors="*{mobileNumber}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="nic">National Identity Card (NIC)</label>
-                        <input type="text" id="nic" th:field="*{nic}" class="form-control" placeholder="e.g. 199512345678" required>
-                        <div th:if="${#fields.hasErrors('nic')}" th:errors="*{nic}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
+                        <label class="form-label" for="nicNumber">NIC Number <span style="color: #dc2626;">*</span></label>
+                        <input type="text" id="nicNumber" th:field="*{nicNumber}" class="form-control" 
+                               placeholder="e.g. 199512345678" maxlength="12" inputmode="numeric" required>
+                        <div id="nicError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
+                        <div th:if="${#fields.hasErrors('nicNumber')}" th:errors="*{nicNumber}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="drivingLicense">Driving License Number</label>
-                        <input type="text" id="drivingLicense" th:field="*{drivingLicense}" class="form-control" placeholder="e.g. B1234567" required>
+                        <label class="form-label" for="drivingLicense">Driving License Number <span style="color: #dc2626;">*</span></label>
+                        <input type="text" id="drivingLicense" th:field="*{drivingLicense}" class="form-control" placeholder="e.g. B123456" maxlength="7" required>
+                        <div id="drivingLicenseError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                         <div th:if="${#fields.hasErrors('drivingLicense')}" th:errors="*{drivingLicense}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                 </div>
@@ -80,25 +88,31 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="dob">Date of Birth</label>
-                        <input type="date" id="dob" th:field="*{dob}" class="form-control" required>
+                        <input type="date" id="dob" th:field="*{dob}" class="form-control">
                         <div th:if="${#fields.hasErrors('dob')}" th:errors="*{dob}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
-                        <input type="password" id="password" th:field="*{password}" class="form-control" placeholder="Minimum 6 characters" required>
+                        <label class="form-label" for="password">
+                            Password <span style="color: #dc2626;">*</span>
+                            <span style="font-size: 0.78rem; color: var(--slate-500); font-weight: normal;">(Min 8 chars, letters &amp; numbers)</span>
+                        </label>
+                        <input type="password" id="password" th:field="*{password}" class="form-control" 
+                               placeholder="Combination of letters and numbers" required>
+                        <div id="passwordError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                         <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem;"></div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="confirmPassword">Confirm Password</label>
+                        <label class="form-label" for="confirmPassword">Confirm Password <span style="color: #dc2626;">*</span></label>
                         <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" placeholder="Re-type your password" required>
+                        <div id="confirmPasswordError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                     </div>
                 </div>
 
                 <div style="margin-top: 1.75rem;">
-                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; font-weight: 600;">
+                    <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; font-weight: 600;">
                         Complete Customer Registration &rarr;
                     </button>
                 </div>
@@ -116,6 +130,198 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Frontend Inline Validation Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('registrationForm');
+    const nicInput = document.getElementById('nicNumber');
+    const mobileInput = document.getElementById('mobileNumber');
+    const drivingLicenseInput = document.getElementById('drivingLicense');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    const nicError = document.getElementById('nicError');
+    const mobileError = document.getElementById('mobileError');
+    const drivingLicenseError = document.getElementById('drivingLicenseError');
+    const passwordError = document.getElementById('passwordError');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+    // Strict Validation Rules:
+    // 1. nic_number: exactly 12 characters long and contain only integers. Block any alphabetic or special characters.
+    function validateNic() {
+        const val = nicInput.value.trim();
+        if (!val) {
+            showError(nicInput, nicError, 'NIC number is required.');
+            return false;
+        }
+        if (!/^\d+$/.test(val)) {
+            showError(nicInput, nicError, 'NIC number must contain only integers (no alphabetic or special characters allowed).');
+            return false;
+        }
+        if (val.length !== 12) {
+            showError(nicInput, nicError, 'NIC number must be exactly 12 characters long (currently ' + val.length + ').');
+            return false;
+        }
+        clearError(nicInput, nicError);
+        return true;
+    }
+
+    // 2. mobile_number: exactly 10 characters long and contain only integers.
+    function validateMobile() {
+        const val = mobileInput.value.trim();
+        if (!val) {
+            showError(mobileInput, mobileError, 'Mobile number is required.');
+            return false;
+        }
+        if (!/^\d+$/.test(val)) {
+            showError(mobileInput, mobileError, 'Mobile number must contain only integers.');
+            return false;
+        }
+        if (val.length !== 10) {
+            showError(mobileInput, mobileError, 'Mobile number must be exactly 10 characters long (currently ' + val.length + ').');
+            return false;
+        }
+        clearError(mobileInput, mobileError);
+        return true;
+    }
+
+    // 3. drivingLicense: Exactly 7 characters long. First character must be an English letter (A-Z or a-z), remaining 6 characters numeric digits (0-9).
+    const DL_REGEX = /^[A-Za-z]\d{6}$/;
+    function validateDrivingLicense() {
+        if (!drivingLicenseInput) return true;
+        const val = drivingLicenseInput.value.trim();
+        if (!val) {
+            showError(drivingLicenseInput, drivingLicenseError, 'Driving license number is required.');
+            return false;
+        }
+        if (!DL_REGEX.test(val)) {
+            if (val.length !== 7) {
+                showError(drivingLicenseInput, drivingLicenseError, 'Driving license must be exactly 7 characters long (currently ' + val.length + ').');
+            } else if (!/^[A-Za-z]/.test(val)) {
+                showError(drivingLicenseInput, drivingLicenseError, 'Driving license must start with an English letter (A-Z or a-z).');
+            } else {
+                showError(drivingLicenseInput, drivingLicenseError, 'The remaining six characters of the driving license must be numeric digits (0-9).');
+            }
+            return false;
+        }
+        clearError(drivingLicenseInput, drivingLicenseError);
+        return true;
+    }
+
+    // 4. password: Minimum length of 8 characters. Must contain a combination of both letters and numbers.
+    function validatePassword() {
+        const val = passwordInput.value;
+        if (!val) {
+            showError(passwordInput, passwordError, 'Password is required.');
+            return false;
+        }
+        if (val.length < 8) {
+            showError(passwordInput, passwordError, 'Password must be at least 8 characters long (currently ' + val.length + ').');
+            return false;
+        }
+        const hasLetter = /[a-zA-Z]/.test(val);
+        const hasNumber = /[0-9]/.test(val);
+        if (!hasLetter || !hasNumber) {
+            showError(passwordInput, passwordError, 'Password must contain a combination of both letters and numbers.');
+            return false;
+        }
+        clearError(passwordInput, passwordError);
+        return true;
+    }
+
+    function validateConfirmPassword() {
+        if (confirmPasswordInput.value !== passwordInput.value) {
+            showError(confirmPasswordInput, confirmPasswordError, 'Passwords do not match.');
+            return false;
+        }
+        clearError(confirmPasswordInput, confirmPasswordError);
+        return true;
+    }
+
+    function showError(inputEl, errorEl, message) {
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        if (inputEl) {
+            inputEl.style.borderColor = '#dc2626';
+            inputEl.style.backgroundColor = '#fef2f2';
+        }
+    }
+
+    function clearError(inputEl, errorEl) {
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.style.display = 'none';
+        }
+        if (inputEl) {
+            inputEl.style.borderColor = '';
+            inputEl.style.backgroundColor = '';
+        }
+    }
+
+    // Real-time input blocking and inline feedback
+    nicInput.addEventListener('input', function () {
+        // Block non-digit characters on input
+        if (/[^\d]/.test(this.value)) {
+            showError(nicInput, nicError, 'Alphabetic and special characters are blocked. Only integers are allowed.');
+            this.value = this.value.replace(/[^\d]/g, '');
+        } else {
+            validateNic();
+        }
+    });
+    nicInput.addEventListener('blur', validateNic);
+
+    mobileInput.addEventListener('input', function () {
+        if (/[^\d]/.test(this.value)) {
+            showError(mobileInput, mobileError, 'Only integers are allowed.');
+            this.value = this.value.replace(/[^\d]/g, '');
+        } else {
+            validateMobile();
+        }
+    });
+    mobileInput.addEventListener('blur', validateMobile);
+
+    if (drivingLicenseInput) {
+        drivingLicenseInput.addEventListener('input', validateDrivingLicense);
+        drivingLicenseInput.addEventListener('blur', validateDrivingLicense);
+    }
+
+    passwordInput.addEventListener('input', validatePassword);
+    passwordInput.addEventListener('blur', validatePassword);
+
+    confirmPasswordInput.addEventListener('input', validateConfirmPassword);
+    confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
+
+    // Form submission gatekeeper
+    form.addEventListener('submit', function (e) {
+        const isNicValid = validateNic();
+        const isMobileValid = validateMobile();
+        const isDrivingLicenseValid = validateDrivingLicense();
+        const isPasswordValid = validatePassword();
+        const isConfirmValid = validateConfirmPassword();
+
+        if (!isNicValid || !isMobileValid || !isDrivingLicenseValid || !isPasswordValid || !isConfirmValid) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Focus on first invalid input
+            if (!isNicValid) {
+                nicInput.focus();
+            } else if (!isMobileValid) {
+                mobileInput.focus();
+            } else if (!isDrivingLicenseValid) {
+                drivingLicenseInput.focus();
+            } else if (!isPasswordValid) {
+                passwordInput.focus();
+            } else if (!isConfirmValid) {
+                confirmPasswordInput.focus();
+            }
+        }
+    });
+});
+</script>
 
 </body>
 </html>

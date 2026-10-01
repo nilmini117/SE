@@ -64,7 +64,7 @@ public class BookingServiceTest {
         customer.setFirstName("Kasun");
         customer.setLastName("Silva");
         customer.setEmail("kasun.silva@driveflow.com");
-        customer.setDrivingLicense("B12345678");
+        customer.setDrivingLicense("B123456");
 
         branch = new Branch();
         branch.setBranchId(1L);

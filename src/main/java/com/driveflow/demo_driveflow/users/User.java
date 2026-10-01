@@ -27,13 +27,13 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "nic", unique = true)
+    @Column(name = "nic", unique = true, length = 12)
     private String nic;
 
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "contact_number")
+    @Column(name = "contact_number", length = 10)
     private String contactNumber;
 
     @Column(name = "dob")
@@ -41,6 +41,22 @@ public class User {
 
     @Column(name = "password")
     private String password;
+
+    public String getNicNumber() {
+        return nic;
+    }
+
+    public void setNicNumber(String nicNumber) {
+        this.nic = nicNumber;
+    }
+
+    public String getMobileNumber() {
+        return contactNumber;
+    }
+
+    public void setMobileNumber(String mobileNumber) {
+        this.contactNumber = mobileNumber;
+    }
 
     public String getEmail() {
         return email != null ? email.trim() : null;

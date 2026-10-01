@@ -1,0 +1,9 @@
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "testpass@driveflow.com",
+  "nic_number": "123456789012",
+  "mobile_number": "0771234567",
+  "password": "PasswordOnly",
+  "confirmPassword": "PasswordOnly"
+}

@@ -74,23 +74,8 @@
                 </button>
             </form>
 
-            <!-- Quick Demo Fill Helpers -->
-            <div style="margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px dashed var(--slate-200);">
-                <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-400); margin-bottom: 0.75rem; text-align: center;">
-                    Quick Demo Logins
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('staff@driveflow.com', 'Staff123!')" style="justify-content: center; font-size: 0.82rem;">
-                        Staff Demo
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="fillDemo('customer@driveflow.com', 'Customer123!')" style="justify-content: center; font-size: 0.82rem;">
-                        Customer Demo
-                    </button>
-                </div>
-            </div>
-
             <!-- Registration Footer -->
-            <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--slate-500);">
+            <div style="text-align: center; margin-top: 1.75rem; font-size: 0.9rem; color: var(--slate-500); border-top: 1px solid var(--slate-200); padding-top: 1.25rem;">
                 Don't have an account? 
                 <a th:href="@{/register}" style="color: var(--primary); font-weight: 600; text-decoration: none;">
                     Register as Customer &rarr;
@@ -102,13 +87,6 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
-
-<script>
-function fillDemo(email, pass) {
-    document.getElementById('email').value = email;
-    document.getElementById('password').value = pass;
-}
-</script>
 
 </body>
 </html>
