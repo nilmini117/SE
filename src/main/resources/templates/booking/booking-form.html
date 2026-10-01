@@ -1,121 +1,226 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<head th:replace="~{fragments/layout :: head('Booking Details')}"></head>
+<head th:replace="~{fragments/layout :: head('Pick your choice in our park')}"></head>
 
 <body>
 
     <nav th:replace="~{fragments/layout :: navbar('bookings')}"></nav>
 
     <main class="df-main">
-        <div style="max-width: 680px; margin: 0 auto 1.5rem;">
+        <div style="max-width: 780px; margin: 0 auto 1.5rem;">
             <a th:href="@{/bookings}" class="btn btn-secondary btn-sm"
                 style="display: inline-flex; align-items: center; gap: 0.35rem;">
-                &larr; Back to Bookings
+                &larr; Back to Park Bookings
             </a>
         </div>
 
-        <div class="df-form-card">
-            <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem;"
-                th:text="${booking.bookingId} != null ? 'Edit Booking #' + ${booking.bookingId} : 'Reserve a Vehicle'">
-                Reserve a Vehicle
-            </h2>
-            <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 1.5rem;">
-                Select your preferred rental car, dates, and confirm your booking.
-            </p>
+        <div class="df-form-card" style="max-width: 780px; margin: 0 auto;">
+            <!-- Brand Badge -->
+            <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.8rem; background: #ede9fe; color: #6d28d9; border-radius: 9999px; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
+                    <circle cx="7" cy="17" r="2"></circle>
+                    <path d="M9 17h6"></path>
+                    <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+                Customer Booking Engine
+            </div>
+
+            <!-- Header Strictly Renamed -->
+            <h1 style="font-size: 1.85rem; font-weight: 800; margin-bottom: 1.25rem; color: var(--slate-900);">
+                Pick your choice in our park
+            </h1>
+
+            <!-- Error Alert -->
+            <div th:if="${errorMessage}" 
+                 style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <span th:text="${errorMessage}">An error occurred.</span>
+            </div>
 
             <!-- Customer Identity Banner for Logged-In Customer -->
             <div th:if="${currentCustomer != null}"
-                style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-                <div
-                    style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">
-                    <span th:text="${#strings.substring(currentCustomer.firstName, 0, 1)}">C</span>
-                </div>
-                <div>
-                    <div
-                        style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--primary);">
-                        Verified Customer</div>
-                    <div style="font-weight: 700; color: var(--slate-900);"
-                        th:text="${currentCustomer.firstName + ' ' + currentCustomer.lastName}">Customer Name</div>
-                    <div style="font-size: 0.82rem; color: var(--slate-600);">
-                        License: <strong th:text="${currentCustomer.drivingLicense}">DL-0000</strong> &bull;
-                        Email: <span th:text="${currentCustomer.email}">customer@mail.com</span>
+                style="background: #eef2ff; border: 1px solid #c7d2fe; border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; flex-shrink: 0;">
+                        <span th:text="${#strings.substring(currentCustomer.firstName, 0, 1)}">C</span>
                     </div>
+                    <div>
+                        <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--primary);">
+                            Verified Customer Account
+                        </div>
+                        <div style="font-weight: 700; color: var(--slate-900); font-size: 1.05rem;"
+                            th:text="${currentCustomer.firstName + ' ' + currentCustomer.lastName}">Customer Name</div>
+                        <div style="font-size: 0.82rem; color: var(--slate-600);">
+                            License: <strong th:text="${currentCustomer.drivingLicense}">DL-0000</strong> &bull;
+                            Email: <span th:text="${currentCustomer.email}">customer@mail.com</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="background: white; border: 1px solid #c7d2fe; padding: 0.4rem 0.75rem; border-radius: var(--radius-sm); font-size: 0.78rem; color: #4338ca; font-weight: 600;">
+                    Concurrency Policy: 0 Active Bookings Required
                 </div>
             </div>
 
-            <form th:action="${booking.bookingId} != null ? @{/bookings/{id}(id=${booking.bookingId})} : @{/bookings}"
-                th:object="${booking}" method="post">
+            <form th:action="@{/bookings}" method="post" id="bookingForm">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-                <!-- Customer info display for staff editing an existing booking -->
-                <div th:if="${isStaff != null and isStaff and booking.bookingId != null}" class="form-group"
-                    style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Customer</label>
-                    <input type="text" class="form-control"
-                        th:value="${booking.customer != null ? booking.customer.firstName + ' ' + booking.customer.lastName + ' (' + booking.customer.drivingLicense + ') - ' + booking.customer.email : 'Unassigned'}"
-                        readonly style="background: var(--slate-100); color: var(--slate-700);">
-                </div>
-
-                <!-- Vehicle Selection -->
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Select Rental Vehicle</label>
-                    <select name="vehicleId" class="form-select" required>
-                        <option value="">-- Choose a Vehicle --</option>
-                        <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
-                            th:selected="${booking.vehicle != null and booking.vehicle.vehicleId == v.vehicleId or (selectedVehicle != null and selectedVehicle.vehicleId == v.vehicleId)}"
-                            th:text="${v.model + ' [' + v.regNo + '] - ' + v.color + ' (' + v.status + ')'}">
-                            Mercedes-Benz C200 [WP-CAR-8821]
-                        </option>
-                    </select>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Booking Start Date</label>
-                        <input type="date" th:field="*{bookingDate}" id="bookingDate" class="form-control" required>
+                <!-- SECTION 1: BRANCH SELECTION -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">1</span>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+                            Branch Selection <span style="color: #dc2626;">*</span>
+                        </h3>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Booking End Date</label>
-                        <input type="date" th:field="*{endDate}" id="endDate" class="form-control" required>
-                    </div>
-                </div>
 
-                <!-- Hidden vehicle quantity: strictly 1 vehicle per reservation -->
-                <input type="hidden" th:field="*{quantity}" id="quantity" value="1">
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Duration (Days)</label>
-                        <input type="number" th:field="*{duration}" id="duration" class="form-control" placeholder="1" min="1"
-                            readonly style="background: var(--slate-100); color: var(--slate-700); font-weight: 600;" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Charged Rate (Rs.) <small style="color: var(--slate-500); font-weight: 400;">(Rs. 3,000.00 / day)</small></label>
-                        <input type="number" step="0.01" th:field="*{chargedRate}" id="chargedRate" class="form-control"
-                            placeholder="3000.00" readonly style="background: var(--slate-100); color: var(--slate-800); font-weight: 700;" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Pickup Branch <span style="color: #dc2626;">*</span></label>
+                            <select name="pickupBranchId" id="pickupBranchId" class="form-select" required>
+                                <option value="">-- Choose Pickup Branch --</option>
+                                <option th:each="b : ${branches}" 
+                                        th:value="${b.branchId}" 
+                                        th:selected="${selectedBranch != null and selectedBranch.branchId == b.branchId}"
+                                        th:text="${b.branchName + ' — ' + b.city + ' (' + b.street + ')'}">
+                                    Colombo Central — Colombo
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Return Branch</label>
+                            <select name="returnBranchId" id="returnBranchId" class="form-select">
+                                <option value="">-- Same as Pickup Branch --</option>
+                                <option th:each="b : ${branches}" 
+                                        th:value="${b.branchId}" 
+                                        th:selected="${booking.returnBranch != null and booking.returnBranch.branchId == b.branchId}"
+                                        th:text="${b.branchName + ' — ' + b.city}">
+                                    Colombo Central
+                                </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row" th:if="${isStaff}">
-                    <div class="form-group" style="flex: 1 1 100%;">
-                        <label class="form-label">Reservation Status</label>
-                        <select th:field="*{status}" class="form-select">
-                            <option value="PENDING">PENDING</option>
-                            <option value="CONFIRMED">CONFIRMED</option>
-                            <option value="COMPLETED">COMPLETED</option>
-                            <option value="CANCELLED">CANCELLED</option>
+                <!-- SECTION 2: PARK VEHICLE SELECTION -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">2</span>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+                            Pick your choice from our park <span style="color: #dc2626;">*</span>
+                        </h3>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1rem;">
+                        Vehicles currently stationed and available at your chosen pickup branch.
+                    </p>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">Available Vehicles <span style="color: #dc2626;">*</span></label>
+                        <select name="vehicleId" id="vehicleId" class="form-select" required disabled>
+                            <option value="">-- Please select a pickup branch above first --</option>
                         </select>
+                        <small id="branchNotice" style="display: block; margin-top: 0.35rem; font-size: 0.8rem; color: #d97706; font-weight: 500;">
+                            ⚠️ Branch selection is required to unlock park inventory.
+                        </small>
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
-                    <button type="submit" class="btn btn-primary" style="flex: 1;">Confirm & Save Booking</button>
-                    <a th:if="${isStaff and booking.bookingId != null and booking.status != 'CANCELLED' and booking.status != 'COMPLETED'}"
-                        th:href="@{/bookings/{id}/cancel(id=${booking.bookingId})}" class="btn btn-danger"
-                        onclick="return confirm('Are you sure you want to cancel this booking?');">
-                        Cancel Reservation
+                <!-- SECTION 3: RENTAL DATES & SCHEDULE -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">3</span>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+                            Rental Schedule <span style="color: #dc2626;">*</span>
+                        </h3>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Pickup Date <span style="color: #dc2626;">*</span></label>
+                            <input type="date" name="bookingDate" id="bookingDate" class="form-control"
+                                   th:value="${booking.bookingDate}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">Return Date <span style="color: #dc2626;">*</span></label>
+                            <input type="date" name="endDate" id="endDate" class="form-control"
+                                   th:value="${booking.endDate}" required>
+                        </div>
+                    </div>
+
+                    <!-- Hidden duration and rate for form binding -->
+                    <input type="hidden" name="duration" id="duration" th:value="${booking.duration != null ? booking.duration : 3}">
+                    <input type="hidden" name="quantity" id="quantity" value="1">
+                    <input type="hidden" name="chargedRate" id="chargedRate" th:value="${booking.chargedRate != null ? booking.chargedRate : 9000.00}">
+                </div>
+
+                <!-- SECTION 4: PRICING ENGINE & SEASONAL DISCOUNTS -->
+                <div id="step4Container" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">4</span>
+                            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+                                Pricing Engine & Seasonal Discounts
+                            </h3>
+                        </div>
+                        <span style="font-size: 0.78rem; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;">
+                            Automatic Seasonal Promo Check Active
+                        </span>
+                    </div>
+
+                    <!-- Available Promotions Chips -->
+                    <div th:if="${activePromotions != null and !activePromotions.empty}" style="margin-bottom: 1rem;">
+                        <div style="font-size: 0.8rem; color: var(--slate-600); margin-bottom: 0.4rem; font-weight: 600;">
+                            Active Park Promotions Available Today:
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <span th:each="p : ${activePromotions}" 
+                                  class="promo-chip"
+                                  th:data-code="${p.couponCode != null ? p.couponCode : ''}"
+                                  onclick="if(window.setCouponCode) window.setCouponCode(this.getAttribute('data-code'))"
+                                  style="display: inline-flex; align-items: center; gap: 0.35rem; background: white; border: 1px solid #cbd5e1; border-radius: 9999px; padding: 0.25rem 0.7rem; font-size: 0.78rem; color: var(--slate-800); cursor: pointer; transition: all 0.2s;">
+                                <span style="color: #d97706; font-weight: 800;">🏷️</span>
+                                <strong th:text="${p.title}">Promo Title</strong>
+                                <span style="background: #fef3c7; color: #92400e; padding: 0.1rem 0.4rem; border-radius: 9999px; font-weight: 700;"
+                                      th:text="'-' + ${p.discountRate} + '%'">-15%</span>
+                                <span th:if="${p.couponCode != null}" style="color: #64748b; font-family: monospace;" th:text="'[' + ${p.couponCode} + ']'">[CODE]</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Coupon Code Input -->
+                    <div style="display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 1.25rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 220px;">
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Coupon ID or Promotion Code (Optional)</label>
+                            <input type="text" name="couponCode" id="couponCode" class="form-control" placeholder="e.g. SUMMER15, ESCAPE10, DRIVEFLOW20">
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="applyCouponBtn" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; font-weight: 600;">
+                            Apply Coupon
+                        </button>
+                    </div>
+
+                    <!-- Itemized Numeric Breakdown Container -->
+                    <div id="pricingBreakdownContainer" style="background: white; border: 1px solid #cbd5e1; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm);">
+                        <!-- Populated reactively via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- PRIMARY SUBMIT ACTION BUTTON (Directly below Step 4 container) -->
+                <div style="display: flex; gap: 1rem; margin-top: 1.25rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button type="submit" class="btn btn-primary" id="confirmBookingBtn" 
+                            style="flex: 1; padding: 0.85rem 1.75rem; font-size: 1.05rem; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.25); border-radius: var(--radius-md);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        Confirm Booking
+                    </button>
+                    <a th:href="@{/bookings}" class="btn btn-secondary" style="padding: 0.85rem 1.5rem; font-weight: 600;">
+                        Cancel
                     </a>
-                    <a th:href="@{/bookings}" class="btn btn-secondary">Back to Bookings</a>
                 </div>
             </form>
         </div>
@@ -123,53 +228,340 @@
 
     <footer th:replace="~{fragments/layout :: footer}"></footer>
 
-    <script>
-        function calculateBookingDetails() {
-            const startDateInput = document.getElementById('bookingDate');
-            const endDateInput = document.getElementById('endDate');
-            const durationInput = document.getElementById('duration');
-            const chargedRateInput = document.getElementById('chargedRate');
-
-            if (!startDateInput || !endDateInput) return;
-
-            if (startDateInput.value) {
-                endDateInput.min = startDateInput.value;
-                if (endDateInput.value && endDateInput.value < startDateInput.value) {
-                    endDateInput.value = startDateInput.value;
-                }
-            }
-
-            if (startDateInput.value && endDateInput.value) {
-                const start = new Date(startDateInput.value + 'T00:00:00');
-                const end = new Date(endDateInput.value + 'T00:00:00');
-                const diffTime = end.getTime() - start.getTime();
-                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-                const duration = diffDays > 0 ? diffDays : 1;
-
-                if (durationInput) {
-                    durationInput.value = duration;
-                }
-                if (chargedRateInput) {
-                    chargedRateInput.value = (duration * 3000).toFixed(2);
-                }
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function () {
-            const startDateInput = document.getElementById('bookingDate');
-            const endDateInput = document.getElementById('endDate');
-            if (startDateInput) {
-                startDateInput.addEventListener('change', calculateBookingDetails);
-                startDateInput.addEventListener('input', calculateBookingDetails);
-            }
-            if (endDateInput) {
-                endDateInput.addEventListener('change', calculateBookingDetails);
-                endDateInput.addEventListener('input', calculateBookingDetails);
-            }
-            calculateBookingDetails();
-        });
+    <!-- Preloaded Fleet & Promotions Data for Immediate Reactive Client State -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        window.DRIVEFLOW_FLEET = [
+            /*[# th:each="v : ${allAvailableVehicles}"]*/
+            {
+                vehicleId: /*[[${v.vehicleId}]]*/ 1,
+                model: /*[[${v.model}]]*/ 'Toyota Prius',
+                regNo: /*[[${v.regNo}]]*/ 'WP CA-1020',
+                color: /*[[${v.color}]]*/ 'Silver',
+                status: /*[[${v.status}]]*/ 'AVAILABLE',
+                branchId: /*[[${v.branch != null ? v.branch.branchId : null}]]*/ 1,
+                branchName: /*[[${v.branch != null ? v.branch.branchName : ''}]]*/ 'Colombo Central'
+            },
+            /*[/]*/
+        ];
+        window.ACTIVE_PROMOTIONS = [
+            /*[# th:each="p : ${activePromotions}"]*/
+            {
+                title: /*[[${p.title}]]*/ '',
+                couponCode: /*[[${p.couponCode}]]*/ '',
+                discountRate: /*[[${p.discountRate}]]*/ 0
+            },
+            /*[/]*/
+        ];
+        /*]]>*/
     </script>
 
+    <!-- Reactive State Management & Pricing Engine Script -->
+    <script>
+        (function () {
+            // DOM Elements
+            const branchSelect = document.getElementById('pickupBranchId');
+            const returnBranchSelect = document.getElementById('returnBranchId');
+            const vehicleSelect = document.getElementById('vehicleId');
+            const branchNotice = document.getElementById('branchNotice');
+            const startInput = document.getElementById('bookingDate');
+            const endInput = document.getElementById('endDate');
+            const couponInput = document.getElementById('couponCode');
+            const applyCouponBtn = document.getElementById('applyCouponBtn');
+            const durationHidden = document.getElementById('duration');
+            const chargedRateHidden = document.getElementById('chargedRate');
+            const pricingContainer = document.getElementById('pricingBreakdownContainer');
+
+            // Set min dates to today
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (startInput) {
+                if (!startInput.value) startInput.value = todayStr;
+                startInput.min = todayStr;
+            }
+            if (endInput) {
+                if (!endInput.value) {
+                    const defaultEnd = new Date();
+                    defaultEnd.setDate(defaultEnd.getDate() + 3);
+                    endInput.value = defaultEnd.toISOString().split('T')[0];
+                }
+                endInput.min = todayStr;
+            }
+
+            // Central Reactive State Store
+            const state = {
+                branchId: branchSelect ? branchSelect.value : '',
+                vehicleId: vehicleSelect ? vehicleSelect.value : '',
+                startDate: startInput ? startInput.value : todayStr,
+                endDate: endInput ? endInput.value : '',
+                couponCode: couponInput ? couponInput.value : '',
+                availableVehicles: []
+            };
+
+            // Reactivity Block 1: Watch Step 1 (Branch Selection) -> Update Step 2 (Vehicles)
+            function onBranchChanged() {
+                state.branchId = branchSelect.value;
+                const branchId = state.branchId ? parseInt(state.branchId, 10) : null;
+
+                if (!branchId) {
+                    // Locked state
+                    vehicleSelect.disabled = true;
+                    vehicleSelect.innerHTML = '<option value="">-- Please select a pickup branch above first --</option>';
+                    branchNotice.innerHTML = '⚠️ Branch selection is required to unlock park inventory.';
+                    branchNotice.style.color = '#d97706';
+                    state.vehicleId = '';
+                    state.availableVehicles = [];
+                    renderPricingBreakdown();
+                    return;
+                }
+
+                // Unlock dropdown and query vehicles
+                vehicleSelect.disabled = false;
+                branchNotice.innerHTML = '⏳ Querying park inventory for branch...';
+                branchNotice.style.color = 'var(--slate-500)';
+
+                // Immediate population from preloaded fleet
+                const localFleet = (window.DRIVEFLOW_FLEET || []).filter(v => v.branchId === branchId);
+                populateVehicleDropdown(localFleet);
+
+                // Asynchronous fetch to guarantee real-time parity with database
+                fetch('/bookings/vehicles-by-branch?branchId=' + branchId)
+                    .then(res => res.ok ? res.json() : [])
+                    .then(apiVehicles => {
+                        if (apiVehicles && apiVehicles.length > 0) {
+                            populateVehicleDropdown(apiVehicles);
+                        } else if (localFleet.length === 0) {
+                            showNoVehiclesNotice();
+                        }
+                    })
+                    .catch(() => {
+                        if (localFleet.length === 0) {
+                            showNoVehiclesNotice();
+                        }
+                    });
+            }
+
+            function populateVehicleDropdown(vehicles) {
+                state.availableVehicles = vehicles;
+                vehicleSelect.innerHTML = '';
+                if (!vehicles || vehicles.length === 0) {
+                    showNoVehiclesNotice();
+                    return;
+                }
+
+                const promptOpt = document.createElement('option');
+                promptOpt.value = '';
+                promptOpt.textContent = '-- Choose an Available Vehicle from Park (' + vehicles.length + ' available) --';
+                vehicleSelect.appendChild(promptOpt);
+
+                vehicles.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.vehicleId;
+                    opt.textContent = v.model + ' [' + v.regNo + '] — ' + v.color + ' (Status: ' + v.status + ')';
+                    if (state.vehicleId && String(state.vehicleId) === String(v.vehicleId)) {
+                        opt.selected = true;
+                    }
+                    vehicleSelect.appendChild(opt);
+                });
+
+                vehicleSelect.disabled = false;
+                branchNotice.innerHTML = '✅ Found ' + vehicles.length + ' available vehicle(s) stationed at this branch.';
+                branchNotice.style.color = '#059669';
+
+                // Automatically select first vehicle if only 1 vehicle or none currently selected
+                if (vehicles.length === 1 && !state.vehicleId) {
+                    vehicleSelect.selectedIndex = 1;
+                    state.vehicleId = vehicles[0].vehicleId;
+                }
+
+                renderPricingBreakdown();
+            }
+
+            function showNoVehiclesNotice() {
+                vehicleSelect.innerHTML = '<option value="">-- No available vehicles at this branch right now --</option>';
+                vehicleSelect.disabled = false;
+                branchNotice.innerHTML = '⚠️ No vehicles currently available at this pickup branch. Please choose another branch.';
+                branchNotice.style.color = '#dc2626';
+                state.vehicleId = '';
+                renderPricingBreakdown();
+            }
+
+            // Reactivity Block 2: Watch Step 2 (Vehicle), Step 3 (Dates) & Coupon -> Render Step 4
+            function renderPricingBreakdown() {
+                state.vehicleId = vehicleSelect.value;
+                state.startDate = startInput.value;
+                state.endDate = endInput.value;
+                state.couponCode = couponInput ? couponInput.value.trim() : '';
+
+                // Date logic
+                if (startInput.value && endInput.value && endInput.value < startInput.value) {
+                    endInput.value = startInput.value;
+                    state.endDate = startInput.value;
+                }
+
+                const start = new Date(state.startDate);
+                const end = new Date(state.endDate);
+                let durationDays = 1;
+                if (!isNaN(start) && !isNaN(end)) {
+                    const diffTime = end.getTime() - start.getTime();
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    durationDays = diffDays > 0 ? diffDays : 1;
+                }
+
+                // If vehicle is NOT selected: Render friendly prompt
+                if (!state.vehicleId) {
+                    pricingContainer.innerHTML = `
+                        <div style="padding: 1.5rem; text-align: center; color: var(--slate-500); background: #f8fafc;">
+                            <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🚗</div>
+                            <div style="font-weight: 600; color: var(--slate-700); font-size: 0.95rem;">Select Vehicle to Calculate Rate</div>
+                            <div style="font-size: 0.82rem; margin-top: 0.25rem;">
+                                Choose a pickup branch in Step 1 and an available vehicle in Step 2 to render the live calculated payment breakdown.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // If vehicle IS selected: Dynamically calculate
+                const baseDailyRate = 3000.00;
+                const baseCost = baseDailyRate * durationDays;
+
+                // Match active promotional discount
+                let discountRate = 0;
+                let promoTitle = '';
+                const code = state.couponCode.toUpperCase();
+                if (code === 'SUMMER15') {
+                    discountRate = 15;
+                    promoTitle = 'Summer Park Super Saver';
+                } else if (code === 'ESCAPE10') {
+                    discountRate = 10;
+                    promoTitle = 'Weekend Escape Discount';
+                } else if (code === 'DRIVEFLOW20') {
+                    discountRate = 20;
+                    promoTitle = 'DriveFlow VIP Promo';
+                } else if (window.ACTIVE_PROMOTIONS) {
+                    const match = window.ACTIVE_PROMOTIONS.find(p => p.couponCode && p.couponCode.toUpperCase() === code);
+                    if (match) {
+                        discountRate = match.discountRate;
+                        promoTitle = match.title;
+                    }
+                }
+
+                const discountAmount = discountRate > 0 ? (baseCost * (discountRate / 100)) : 0;
+                const finalTotal = baseCost - discountAmount;
+
+                // Update hidden form inputs for clean submission
+                if (durationHidden) durationHidden.value = durationDays;
+                if (chargedRateHidden) chargedRateHidden.value = finalTotal.toFixed(2);
+
+                // Render itemized numeric breakdown
+                pricingContainer.innerHTML = `
+                    <div style="background: var(--slate-100); padding: 0.65rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 700; color: var(--slate-800); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Calculated Payment Array & Cost Structure</span>
+                        <span style="font-size: 0.75rem; color: #059669; font-weight: 700; background: #ecfdf5; padding: 0.15rem 0.5rem; border-radius: 9999px;">
+                            ${discountRate > 0 ? '🎉 Promo Applied: -' + discountRate + '%' : 'Standard Fleet Rate'}
+                        </span>
+                    </div>
+                    <div style="padding: 1.15rem;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tbody>
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: var(--slate-700);">
+                                        Base Rental Rate (Rs. ${baseDailyRate.toLocaleString('en-US', {minimumFractionDigits: 2})} &times; ${durationDays} ${durationDays === 1 ? 'Day' : 'Days'})
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 600; color: var(--slate-900);">
+                                        Rs. ${baseCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ${discountRate > 0 ? `
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: #059669;">
+                                        🏷️ Seasonal Promo: <strong>${promoTitle}</strong> (-${discountRate}%)
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 700; color: #059669;">
+                                        - Rs. ${discountAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ` : ''}
+                                <tr>
+                                    <td style="padding: 0.55rem 0; color: #d97706; font-size: 0.82rem;">
+                                        🔒 Payment Gate Policy
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 600; color: #d97706; font-size: 0.82rem;">
+                                        Payable After Staff Approval
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">Final Calculated Cost</div>
+                                <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
+                                    ${discountRate > 0 ? 'Discount Active: ' + promoTitle + ' (-' + discountRate + '%)' : 'Pre-submission total'}
+                                </div>
+                            </div>
+                            <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">
+                                Rs. ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Asynchronously sync with backend calculate-pricing API
+                const params = new URLSearchParams();
+                if (state.branchId) params.append('pickupBranchId', state.branchId);
+                if (state.vehicleId) params.append('vehicleId', state.vehicleId);
+                if (state.startDate) params.append('startDate', state.startDate);
+                if (state.endDate) params.append('endDate', state.endDate);
+                if (state.couponCode) params.append('couponCode', state.couponCode);
+
+                fetch('/bookings/calculate-pricing?' + params.toString())
+                    .then(res => res.ok ? res.json() : null)
+                    .then(serverBreakdown => {
+                        if (serverBreakdown && serverBreakdown.finalTotalCost) {
+                            if (chargedRateHidden) chargedRateHidden.value = serverBreakdown.finalTotalCost;
+                            if (durationHidden) durationHidden.value = serverBreakdown.durationDays;
+                        }
+                    })
+                    .catch(() => {});
+            }
+
+            // Expose helper for clicking coupon chips
+            window.setCouponCode = function(code) {
+                if (couponInput) {
+                    couponInput.value = code;
+                    renderPricingBreakdown();
+                }
+            };
+
+            // Event Listeners (React-style Hooks / watchers)
+            if (branchSelect) {
+                branchSelect.addEventListener('change', onBranchChanged);
+            }
+            if (vehicleSelect) {
+                vehicleSelect.addEventListener('change', renderPricingBreakdown);
+            }
+            if (startInput) {
+                startInput.addEventListener('change', renderPricingBreakdown);
+            }
+            if (endInput) {
+                endInput.addEventListener('change', renderPricingBreakdown);
+            }
+            if (couponInput) {
+                couponInput.addEventListener('input', renderPricingBreakdown);
+            }
+            if (applyCouponBtn) {
+                applyCouponBtn.addEventListener('click', renderPricingBreakdown);
+            }
+
+            // Initial execution on mount
+            if (branchSelect && branchSelect.value) {
+                onBranchChanged();
+            } else {
+                renderPricingBreakdown();
+            }
+        })();
+    </script>
 </body>
 
 </html>

@@ -152,15 +152,23 @@
                         </div>
                     </td>
                     <td style="text-align: right; white-space: nowrap;">
-                        <a th:if="${b.status == 'PENDING'}" th:href="@{/bookings/{id}/edit(id=${b.bookingId})}" class="btn btn-secondary btn-sm">Edit</a>
+                        <!-- Immutability: Customer edits locked -->
                         <a th:if="${b.status == 'PENDING'}" th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to cancel your pending reservation?');">Cancel</a>
+                        <button th:if="${b.status == 'CONFIRMED' or b.status == 'APPROVED'}"
+                                type="button"
+                                class="btn btn-secondary btn-sm"
+                                disabled
+                                style="opacity: 0.55; cursor: not-allowed;"
+                                title="Approved bookings cannot be cancelled by customers">
+                            Cancel Locked
+                        </button>
                     </td>
                 </tr>
                 </tbody>
             </table>
             <div class="empty-state" th:if="${bookings == null or bookings.empty}">
                 <p class="empty-state-desc">You have no active or previous bookings.</p>
-                <a th:href="@{/bookings/new}" class="btn btn-primary btn-sm">Reserve a Vehicle</a>
+                <a th:href="@{/bookings/new}" class="btn btn-primary btn-sm">Pick your choice in our park</a>
             </div>
         </div>
     </div>

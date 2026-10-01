@@ -149,7 +149,10 @@
                     <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
                 </td>
                 <td style="text-align: right; white-space: nowrap;">
-                    <a th:href="@{/bookings/new(vehicleId=${v.vehicleId})}" class="btn btn-primary btn-sm" sec:authorize="hasRole('CUSTOMER')" th:if="${v.status == 'AVAILABLE'}">Book</a>
+                    <a th:href="@{/bookings/new(vehicleId=${v.vehicleId}, branchId=${v.branch != null ? v.branch.branchId : ''})}" 
+                       class="btn btn-primary btn-sm" 
+                       sec:authorize="hasRole('CUSTOMER')" 
+                       th:if="${v.status == 'AVAILABLE'}">Pick this Car</a>
                     <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
                     <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}"
                        class="btn btn-danger btn-sm"

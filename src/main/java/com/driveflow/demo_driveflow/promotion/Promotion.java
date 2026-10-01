@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.promotion;
 
+import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +25,9 @@ public class Promotion {
     @Column(name = "title")
     private String title;
 
+    @Column(name = "coupon_code", length = 50)
+    private String couponCode;
+
     @Column(name = "discount_rate")
     private BigDecimal discountRate;
 
@@ -35,4 +39,8 @@ public class Promotion {
 
     @Column(name = "status")
     private String status; // ACTIVE, EXPIRED
+
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 }

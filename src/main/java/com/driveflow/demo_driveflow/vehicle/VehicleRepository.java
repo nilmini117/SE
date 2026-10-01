@@ -11,6 +11,13 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     long countByStatusIgnoreCase(String status);
     long countByStatusNotIgnoreCase(String status);
 
+    List<Vehicle> findByBranch_BranchId(Long branchId);
+
+    List<Vehicle> findByBranch_BranchIdAndStatusIgnoreCase(Long branchId, String status);
+
+    @Query("SELECT v FROM Vehicle v WHERE v.branch.branchId = :branchId AND UPPER(v.status) = 'AVAILABLE'")
+    List<Vehicle> findAvailableByBranchId(@Param("branchId") Long branchId);
+
     @Query("SELECT v FROM Vehicle v WHERE " +
            "(:search IS NULL OR :search = '' OR LOWER(v.model) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(v.regNo) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "( ((:status IS NULL OR :status = '' OR :status = 'ALL') AND (v.status IS NULL OR UPPER(v.status) != 'DECOMMISSIONED')) OR " +

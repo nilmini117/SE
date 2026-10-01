@@ -37,6 +37,9 @@ public class DataInitializer implements CommandLineRunner {
     private com.driveflow.demo_driveflow.payment.InvoiceRepository invoiceRepository;
 
     @Autowired
+    private com.driveflow.demo_driveflow.promotion.PromotionRepository promotionRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Override
@@ -105,6 +108,40 @@ public class DataInitializer implements CommandLineRunner {
                     invoiceRepository.save(inv);
                 } catch (Exception ignored) {}
             }
+        }
+
+        // Seed Active Seasonal Promotions if empty
+        if (promotionRepository.count() == 0) {
+            LocalDate now = LocalDate.now();
+
+            com.driveflow.demo_driveflow.promotion.Promotion p1 = new com.driveflow.demo_driveflow.promotion.Promotion();
+            p1.setTitle("Summer Park Super Saver");
+            p1.setCouponCode("SUMMER15");
+            p1.setDiscountRate(new BigDecimal("15.00"));
+            p1.setStartDate(now.minusDays(15));
+            p1.setEndDate(now.plusDays(90));
+            p1.setStatus("ACTIVE");
+            promotionRepository.save(p1);
+
+            com.driveflow.demo_driveflow.promotion.Promotion p2 = new com.driveflow.demo_driveflow.promotion.Promotion();
+            p2.setTitle("Weekend Escape Discount");
+            p2.setCouponCode("ESCAPE10");
+            p2.setDiscountRate(new BigDecimal("10.00"));
+            p2.setStartDate(now.minusDays(10));
+            p2.setEndDate(now.plusDays(60));
+            p2.setStatus("ACTIVE");
+            promotionRepository.save(p2);
+
+            com.driveflow.demo_driveflow.promotion.Promotion p3 = new com.driveflow.demo_driveflow.promotion.Promotion();
+            p3.setTitle("DriveFlow VIP Promo");
+            p3.setCouponCode("DRIVEFLOW20");
+            p3.setDiscountRate(new BigDecimal("20.00"));
+            p3.setStartDate(now.minusDays(5));
+            p3.setEndDate(now.plusDays(120));
+            p3.setStatus("ACTIVE");
+            promotionRepository.save(p3);
+
+            System.out.println(">> Seeded active seasonal promotions with coupons: SUMMER15 (15%), ESCAPE10 (10%), DRIVEFLOW20 (20%)");
         }
     }
 }

@@ -164,12 +164,12 @@ public class ProfileController {
             return "redirect:/profile";
         }
 
-        // Customer cannot pay for the booking until staff has confirmed the booking
+        // Customer cannot pay for the booking until staff has confirmed/approved the booking
         Booking booking = invoice.getBooking();
-        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus()) && !"APPROVED".equalsIgnoreCase(booking.getStatus())) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Payment cannot be processed yet. Booking #BK-" + booking.getBookingId()
-                    + " is currently " + booking.getStatus() + " and must be confirmed by staff before payment can be accepted.");
+                    + " is currently " + booking.getStatus() + " and must be approved by staff before payment can be accepted.");
             return "redirect:/profile";
         }
 
@@ -209,12 +209,12 @@ public class ProfileController {
             return "redirect:/profile";
         }
 
-        // Customer cannot pay for the booking until staff has confirmed the booking
+        // Customer cannot pay for the booking until staff has confirmed/approved the booking
         Booking booking = invoice.getBooking();
-        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus())) {
+        if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus()) && !"APPROVED".equalsIgnoreCase(booking.getStatus())) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Payment rejected. Booking #BK-" + booking.getBookingId()
-                    + " is not confirmed by staff (current status: " + booking.getStatus() + ").");
+                    + " has not been approved by staff (current status: " + booking.getStatus() + ").");
             return "redirect:/profile";
         }
 
