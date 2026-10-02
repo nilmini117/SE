@@ -25,4 +25,7 @@ public interface PaymentService {
     Refund getRefundById(Long id);
     Refund approveRefund(Long id);
     Refund rejectRefund(Long id);
+
+    // Company Sales & Financial Summary
+    CompanySalesSummaryDto getCompanySalesSummary();
 }

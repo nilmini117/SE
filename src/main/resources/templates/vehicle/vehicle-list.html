@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="~{fragments/layout :: head('Vehicles & Fleet')}"></head>
+<head th:replace="~{fragments/layout :: head('Find your choice in our park — Fleet Catalog')}"></head>
 <body>
 
 <nav th:replace="~{fragments/layout :: navbar('vehicles')}"></nav>
@@ -26,11 +26,25 @@
         <span th:text="${errorMessage}">An error occurred.</span>
     </div>
 
+    <!-- Main Header -->
     <div class="df-header">
         <div>
-            <h1 class="df-header-title">Vehicle & Fleet Management</h1>
-            <p class="df-header-subtitle">Oversee inventory, vehicle models, mileage records, and live operational status.</p>
+            <!-- Customer Title vs Staff Title -->
+            <div th:if="${isStaff == null or !isStaff}">
+                <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.75rem; background: #ede9fe; color: #6d28d9; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; margin-bottom: 0.5rem; text-transform: uppercase;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+                    DriveFlow Park Fleet
+                </div>
+                <h1 class="df-header-title">Find your choice in our park</h1>
+                <p class="df-header-subtitle">Select a manufacturer brand below to browse our certified park inventory and reserve your drive.</p>
+            </div>
+
+            <div th:if="${isStaff != null and isStaff}">
+                <h1 class="df-header-title">Vehicle & Fleet Management</h1>
+                <p class="df-header-subtitle">Oversee inventory, vehicle models, mileage records, and live operational status.</p>
+            </div>
         </div>
+
         <div style="display: flex; gap: 0.75rem; align-items: center;">
             <a th:href="@{/bookings/new}" class="btn btn-secondary" sec:authorize="hasRole('CUSTOMER')">
                 Book a Vehicle
@@ -45,9 +59,102 @@
         </div>
     </div>
 
+    <!-- CUSTOMER BRAND CATEGORY FILTER: First clicks the brand name to view models under that brand -->
+    <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--slate-900); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🏎️</span>
+                    Filter by Vehicle Brand
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0.25rem 0 0 0;">
+                    Click a manufacturer to view the certified models stationed in our park.
+                </p>
+            </div>
+            <div th:if="${selectedBrand != null and !selectedBrand.isEmpty()}">
+                <a th:href="@{/vehicles}" class="btn btn-secondary btn-sm" style="font-size: 0.8rem; padding: 0.35rem 0.85rem;">
+                    &larr; View All Brands
+                </a>
+            </div>
+        </div>
+
+        <!-- 5 Brand Cards Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+            <!-- Brand: Toyota -->
+            <a th:href="@{/vehicles(brand='Toyota', status=${status})}"
+               style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
+               th:styleappend="${selectedBrand == 'Toyota'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    🔴
+                </div>
+                <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Toyota</strong>
+                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                      th:styleappend="${selectedBrand == 'Toyota'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
+                    <span th:text="${selectedBrand == 'Toyota'} ? 'Selected' : 'View Cars →'"></span>
+                </span>
+            </a>
+
+            <!-- Brand: Suzuki -->
+            <a th:href="@{/vehicles(brand='Suzuki', status=${status})}"
+               style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
+               th:styleappend="${selectedBrand == 'Suzuki'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    🔵
+                </div>
+                <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Suzuki</strong>
+                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                      th:styleappend="${selectedBrand == 'Suzuki'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
+                    <span th:text="${selectedBrand == 'Suzuki'} ? 'Selected' : 'View Cars →'"></span>
+                </span>
+            </a>
+
+            <!-- Brand: Honda -->
+            <a th:href="@{/vehicles(brand='Honda', status=${status})}"
+               style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
+               th:styleappend="${selectedBrand == 'Honda'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    🟡
+                </div>
+                <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Honda</strong>
+                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                      th:styleappend="${selectedBrand == 'Honda'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
+                    <span th:text="${selectedBrand == 'Honda'} ? 'Selected' : 'View Cars →'"></span>
+                </span>
+            </a>
+
+            <!-- Brand: Tesla -->
+            <a th:href="@{/vehicles(brand='Tesla', status=${status})}"
+               style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
+               th:styleappend="${selectedBrand == 'Tesla'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    ⚡
+                </div>
+                <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Tesla</strong>
+                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                      th:styleappend="${selectedBrand == 'Tesla'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
+                    <span th:text="${selectedBrand == 'Tesla'} ? 'Selected' : 'View Cars →'"></span>
+                </span>
+            </a>
+
+            <!-- Brand: Benz -->
+            <a th:href="@{/vehicles(brand='Benz', status=${status})}"
+               style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
+               th:styleappend="${selectedBrand == 'Benz'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
+                <div style="width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
+                    ⭐
+                </div>
+                <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Benz</strong>
+                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                      th:styleappend="${selectedBrand == 'Benz'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
+                    <span th:text="${selectedBrand == 'Benz'} ? 'Selected' : 'View Cars →'"></span>
+                </span>
+            </a>
+        </div>
+    </div>
+
     <!-- Staff Fleet Status Filter Tabs -->
     <div th:if="${isStaff != null and isStaff}" style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-        <a th:href="@{/vehicles(status='ALL', search=${search})}"
+        <a th:href="@{/vehicles(status='ALL', search=${search}, brand=${selectedBrand})}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${status == 'ALL'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
             All Active
@@ -55,7 +162,7 @@
                   th:styleappend="${status == 'ALL'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: var(--slate-100); color: var(--slate-600);'"
                   th:text="${statusCounts != null ? statusCounts['ALL'] : 0}">0</span>
         </a>
-        <a th:href="@{/vehicles(status='AVAILABLE', search=${search})}"
+        <a th:href="@{/vehicles(status='AVAILABLE', search=${search}, brand=${selectedBrand})}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${status == 'AVAILABLE'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
             Available
@@ -63,7 +170,7 @@
                   th:styleappend="${status == 'AVAILABLE'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #d1fae5; color: #065f46;'"
                   th:text="${statusCounts != null ? statusCounts['AVAILABLE'] : 0}">0</span>
         </a>
-        <a th:href="@{/vehicles(status='BOOKED', search=${search})}"
+        <a th:href="@{/vehicles(status='BOOKED', search=${search}, brand=${selectedBrand})}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${status == 'BOOKED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
             Booked
@@ -71,7 +178,7 @@
                   th:styleappend="${status == 'BOOKED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #fef3c7; color: #92400e;'"
                   th:text="${statusCounts != null ? statusCounts['BOOKED'] : 0}">0</span>
         </a>
-        <a th:href="@{/vehicles(status='MAINTENANCE', search=${search})}"
+        <a th:href="@{/vehicles(status='MAINTENANCE', search=${search}, brand=${selectedBrand})}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${status == 'MAINTENANCE'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
             Maintenance
@@ -79,7 +186,7 @@
                   th:styleappend="${status == 'MAINTENANCE'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #fee2e2; color: #991b1b;'"
                   th:text="${statusCounts != null ? statusCounts['MAINTENANCE'] : 0}">0</span>
         </a>
-        <a th:href="@{/vehicles(status='DECOMMISSIONED', search=${search})}"
+        <a th:href="@{/vehicles(status='DECOMMISSIONED', search=${search}, brand=${selectedBrand})}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${status == 'DECOMMISSIONED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
             Decommissioned
@@ -92,8 +199,9 @@
     <!-- Search & Filter Controls -->
     <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
         <form th:action="@{/vehicles}" method="get" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+            <input type="hidden" name="brand" th:value="${selectedBrand}" th:if="${selectedBrand != null and !selectedBrand.isEmpty()}">
             <div style="flex: 2; min-width: 200px;">
-                <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search by model or reg number (e.g. Prius, WP-CAR)...">
+                <input type="text" name="search" th:value="${search}" class="form-control" placeholder="Search by model or reg number (e.g. Prius, WP CA)...">
             </div>
             <div style="flex: 1; min-width: 150px;">
                 <select name="status" class="form-select">
@@ -111,11 +219,24 @@
         </form>
     </div>
 
+    <!-- Active Filter Indicator -->
+    <div th:if="${selectedBrand != null and !selectedBrand.isEmpty()}" 
+         style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; background: #eef2ff; border: 1px solid #c7d2fe; padding: 0.6rem 1rem; border-radius: var(--radius-md);">
+        <span style="font-size: 0.9rem; color: #4338ca; font-weight: 600;">
+            Displaying <strong th:text="${selectedBrand}">Brand</strong> fleet models in our park:
+        </span>
+        <a th:href="@{/vehicles}" style="font-size: 0.8rem; color: #4f46e5; text-decoration: underline; font-weight: 600;">
+            Clear Filter &bull; Show All
+        </a>
+    </div>
+
+    <!-- FLEET TABLE VIEW (Vehicle ID is STRICTLY HIDDEN for customers) -->
     <div class="df-table-container">
         <table class="df-table" th:if="${vehicles != null and !vehicles.empty}">
             <thead>
             <tr>
-                <th>Vehicle ID</th>
+                <!-- STRICT RULE: vehicle_id strictly hidden from customer view -->
+                <th th:if="${isStaff}">Vehicle ID</th>
                 <th>Reg Number</th>
                 <th>Model</th>
                 <th>Branch</th>
@@ -127,9 +248,12 @@
             </thead>
             <tbody>
             <tr th:each="v : ${vehicles}">
-                <td><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
+                <!-- STRICT RULE: vehicle_id shown ONLY for Staff, hidden for Customers -->
+                <td th:if="${isStaff}"><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
                 <td><strong th:text="${v.regNo}">ABC-1234</strong></td>
-                <td th:text="${v.model}">Toyota Prius</td>
+                <td>
+                    <strong th:text="${v.model}" style="color: var(--slate-900);">Toyota Prius</strong>
+                </td>
                 <td>
                     <span th:if="${v.branch != null}" th:text="${v.branch.branchName}">Colombo Central</span>
                     <span th:if="${v.branch == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
@@ -145,20 +269,30 @@
                     <span th:if="${v.status == 'AVAILABLE'}" class="badge badge-success">Available</span>
                     <span th:if="${v.status == 'BOOKED'}" class="badge badge-warning">Booked</span>
                     <span th:if="${v.status == 'MAINTENANCE'}" class="badge badge-danger">Maintenance</span>
+                    <span th:if="${v.status == 'UNAVAILABLE'}" class="badge badge-danger" style="background: #fecaca; color: #991b1b;">Unavailable</span>
                     <span th:if="${v.status == 'DECOMMISSIONED'}" class="badge badge-secondary">Decommissioned</span>
-                    <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
+                    <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'UNAVAILABLE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
                 </td>
-                <td style="text-align: right; white-space: nowrap;">
+                <td class="vehicle-actions-cell" style="text-align: right; white-space: nowrap;">
+                    <!-- Customer View Action -->
                     <a th:href="@{/bookings/new(vehicleId=${v.vehicleId}, branchId=${v.branch != null ? v.branch.branchId : ''})}" 
                        class="btn btn-primary btn-sm" 
                        sec:authorize="hasRole('CUSTOMER')" 
-                       th:if="${v.status == 'AVAILABLE'}">Pick this Car</a>
-                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn btn-secondary btn-sm" sec:authorize="hasRole('STAFF')">Edit</a>
-                    <a th:href="@{/vehicles/{id}/delete(id=${v.vehicleId})}"
-                       class="btn btn-danger btn-sm"
-                       sec:authorize="hasRole('STAFF')"
-                       style="margin-left: 0.35rem;"
-                       th:onclick="'return confirm(\'Are you sure you want to delete vehicle ' + ${v.model} + ' (' + ${v.regNo} + ')?\');'">Delete</a>
+                       th:if="${v.status == 'AVAILABLE'}"
+                       style="margin-right: 0.35rem;">Pick this Car</a>
+
+                    <!-- Edit Action Button -->
+                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" 
+                       class="btn btn-secondary btn-sm"
+                       style="margin-right: 0.35rem;">Edit</a>
+
+                    <!-- Red Delete Action Button -->
+                    <button type="button"
+                       class="btn btn-danger btn-sm btn-delete-vehicle"
+                       th:attr="data-id=${v.vehicleId}, data-regno=${v.regNo}, data-brand=${v.brand}, data-model=${v.model}"
+                       style="background-color: #dc2626; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                        Delete
+                    </button>
                 </td>
             </tr>
             </tbody>
@@ -168,21 +302,216 @@
         <div class="empty-state" th:if="${vehicles == null or vehicles.empty}">
             <div class="empty-state-icon">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path>
-                    <circle cx="7" cy="17" r="2"></circle>
-                    <path d="M9 17h6"></path>
-                    <circle cx="17" cy="17" r="2"></circle>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
                 </svg>
             </div>
             <h3 class="empty-state-title">No Vehicles Found</h3>
-            <p class="empty-state-desc">No fleet vehicles match the current filter or search criteria.</p>
-            <a th:href="@{/vehicles}" class="btn btn-secondary" style="margin-top: 0.5rem; margin-right: 0.5rem;">Clear Filters</a>
-            <a th:href="@{/vehicles/new}" class="btn btn-primary" sec:authorize="hasRole('STAFF')" style="margin-top: 0.5rem;">Register Vehicle</a>
+            <p class="empty-state-desc">No vehicle records currently match your brand or search filter.</p>
+            <a th:href="@{/vehicles}" class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;">Reset Filter</a>
         </div>
     </div>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<!-- Delete Confirmation Modal (Standard UI Confirmation) -->
+<div id="deleteConfirmationModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px);">
+    <div style="background: white; border-radius: 14px; max-width: 440px; width: 90%; padding: 1.75rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); border: 1px solid #e2e8f0; text-align: center;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem;">
+            ⚠️
+        </div>
+        <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem 0;">Confirm Vehicle Removal</h3>
+        <p id="deleteModalPromptText" style="font-size: 0.9rem; color: #64748b; margin: 0 0 1.25rem 0; line-height: 1.5;">
+            Are you sure you want to remove this vehicle from the fleet?
+        </p>
+        <div id="deleteModalVehicleDetails" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.6rem; margin-bottom: 1.25rem; font-size: 0.85rem; color: #334155; font-weight: 600;">
+        </div>
+        <div style="display: flex; gap: 0.75rem; justify-content: center;">
+            <button type="button" id="btnCancelDeleteModal" class="btn btn-secondary" style="padding: 0.5rem 1.25rem; font-weight: 600;">Cancel</button>
+            <button type="button" id="btnConfirmDeleteModal" class="btn btn-danger" style="background-color: #dc2626; color: white; padding: 0.5rem 1.25rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;">Confirm Delete</button>
+        </div>
+    </div>
+</div>
+
+<!-- Dynamic State Integration & Deletion Workflow Script -->
+<script>
+    (function () {
+        const BRANDS = ['Toyota', 'Suzuki', 'Honda', 'Tesla', 'Benz'];
+        window.__vehiclesList = [];
+
+        // Strict derivation rule: vehicles.filter(v => v.brand.toLowerCase() === brand.toLowerCase()).length
+        function syncBrandCountsStrict() {
+            BRANDS.forEach(function (brand) {
+                const count = window.__vehiclesList.filter(function (v) {
+                    return v && v.brand && v.brand.trim().toLowerCase() === brand.toLowerCase();
+                }).length;
+                const badge = document.querySelector('.brand-count-badge[data-brand="' + brand + '"]');
+                if (badge) {
+                    badge.textContent = count + ' Models in Park';
+                }
+            });
+        }
+
+        // Initialize vehicles list from DOM rows as immediate baseline
+        document.querySelectorAll('tbody tr').forEach(function(row) {
+            const deleteBtn = row.querySelector('.btn-delete-vehicle');
+            const modelStrong = row.querySelector('td:nth-child(3) strong');
+            const regStrong = row.querySelector('td:nth-child(2) strong');
+            
+            const brand = (deleteBtn && deleteBtn.getAttribute('data-brand')) || '';
+            const id = (deleteBtn && deleteBtn.getAttribute('data-id')) || null;
+            const regNo = (deleteBtn && deleteBtn.getAttribute('data-regno')) || (regStrong ? regStrong.textContent.trim() : '');
+            const model = (deleteBtn && deleteBtn.getAttribute('data-model')) || (modelStrong ? modelStrong.textContent.trim() : '');
+
+            if (brand) {
+                window.__vehiclesList.push({
+                    vehicleId: id ? parseInt(id, 10) : null,
+                    brand: brand,
+                    regNo: regNo,
+                    model: model
+                });
+            }
+        });
+
+        // Also fetch live array from backend for full accuracy
+        fetch('/api/vehicles')
+            .then(function (res) { return res.ok ? res.json() : Promise.reject(); })
+            .then(function (data) {
+                if (Array.isArray(data) && data.length > 0) {
+                    window.__vehiclesList = data;
+                    syncBrandCountsStrict();
+                }
+            })
+            .catch(function () {
+                fetch('/vehicles/api/by-brand?availableOnly=false')
+                    .then(function (res) { return res.ok ? res.json() : []; })
+                    .then(function (data) {
+                        if (Array.isArray(data) && data.length > 0) {
+                            window.__vehiclesList = data;
+                            syncBrandCountsStrict();
+                        }
+                    })
+                    .catch(function (err) {
+                        console.warn('Initial fleet synchronization:', err);
+                    });
+            });
+
+        // Modal elements
+        const modal = document.getElementById('deleteConfirmationModal');
+        const modalDetails = document.getElementById('deleteModalVehicleDetails');
+        const btnCancel = document.getElementById('btnCancelDeleteModal');
+        const btnConfirm = document.getElementById('btnConfirmDeleteModal');
+
+        let targetVehicleId = null;
+        let targetRegNo = null;
+        let targetRow = null;
+
+        function openModal(id, regNo, brand, model, row) {
+            targetVehicleId = id;
+            targetRegNo = regNo;
+            targetRow = row;
+            modalDetails.textContent = (model || 'Vehicle') + ' (' + (regNo || '#VH-' + id) + ') - ' + (brand || '');
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            targetVehicleId = null;
+            targetRegNo = null;
+            targetRow = null;
+        }
+
+        btnCancel.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+
+        // Event delegation for red Delete action buttons
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.btn-delete-vehicle');
+            if (!btn) return;
+
+            const id = btn.getAttribute('data-id');
+            const regNo = btn.getAttribute('data-regno');
+            const brand = btn.getAttribute('data-brand');
+            const model = btn.getAttribute('data-model');
+            const row = btn.closest('tr');
+
+            openModal(id, regNo, brand, model, row);
+        });
+
+        // Deletion Execution upon confirmation
+        btnConfirm.addEventListener('click', function () {
+            if (!targetVehicleId && !targetRegNo) {
+                closeModal();
+                return;
+            }
+
+            btnConfirm.disabled = true;
+            btnConfirm.textContent = 'Deleting...';
+
+            const deleteUrl = targetVehicleId 
+                ? '/api/vehicles/' + targetVehicleId 
+                : '/api/vehicles/reg/' + encodeURIComponent(targetRegNo);
+
+            fetch(deleteUrl, {
+                method: 'DELETE',
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function (res) {
+                if (!res.ok) {
+                    // Fallback to /vehicles/api/{id}
+                    return fetch('/vehicles/api/' + targetVehicleId, { method: 'DELETE' });
+                }
+                return res;
+            })
+            .then(function () {
+                // 1. Remove vehicle row from table
+                if (targetRow) {
+                    targetRow.remove();
+                }
+
+                // 2. Remove record from local state array
+                window.__vehiclesList = window.__vehiclesList.filter(function (v) {
+                    if (targetVehicleId && (v.vehicleId || v.id)) {
+                        return (v.vehicleId || v.id) != targetVehicleId;
+                    }
+                    return v.regNo !== targetRegNo;
+                });
+
+                // 3. Immediately decrement that brand's "Models in Park" badge count without browser reload
+                syncBrandCountsStrict();
+                closeModal();
+            })
+            .catch(function (err) {
+                console.error('Delete error:', err);
+                alert('Failed to remove vehicle: ' + err.message);
+                closeModal();
+            })
+            .finally(function () {
+                btnConfirm.disabled = false;
+                btnConfirm.textContent = 'Confirm Delete';
+            });
+        });
+
+        // Public API: Adding a new vehicle immediately increments that brand's count
+        window.onVehicleAdded = function (newVehicle) {
+            if (!newVehicle) return;
+            window.__vehiclesList.unshift(newVehicle);
+            syncBrandCountsStrict();
+        };
+
+        window.addEventListener('vehicleAdded', function(e) {
+            if (e.detail) {
+                window.onVehicleAdded(e.detail);
+            }
+        });
+
+        // Expose strict count synchronization function
+        window.syncBrandCountsStrict = syncBrandCountsStrict;
+    })();
+</script>
 
 </body>
 </html>

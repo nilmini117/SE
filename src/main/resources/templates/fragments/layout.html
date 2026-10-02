@@ -58,7 +58,7 @@
                 </a>
             </li>
             <li sec:authorize="hasRole('CUSTOMER')">
-                <a th:href="@{/profile#invoices}" class="df-nav-link">
+                <a th:href="@{/invoices-payments}" th:classappend="${activeTab == 'invoices-payments'} ? 'active' : ''" class="df-nav-link">
                     Invoices & Payments
                 </a>
             </li>

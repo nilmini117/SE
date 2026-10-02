@@ -35,47 +35,48 @@
               th:object="${vehicle}" method="post">
 
             <div class="form-row">
+                <!-- Field 1: Mandatory Vehicle Brand Dropdown -->
                 <div class="form-group">
-                    <label class="form-label">Registration Number</label>
-                    <input type="text" th:field="*{regNo}" class="form-control" placeholder="e.g. CA-8942" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Vehicle Make / Model</label>
-                    <input type="text" th:field="*{model}" class="form-control" placeholder="e.g. Toyota RAV4 2024" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Vehicle Color</label>
-                    <input type="text" th:field="*{color}" class="form-control" placeholder="e.g. Midnight Blue" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Current Mileage (km)</label>
-                    <input type="number" th:field="*{mileage}" class="form-control" placeholder="0" min="0" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Operational Status</label>
-                    <select th:field="*{status}" class="form-select">
-                        <option value="AVAILABLE">AVAILABLE — Ready for Rent</option>
-                        <option value="BOOKED">BOOKED — Currently on Trip</option>
-                        <option value="MAINTENANCE">MAINTENANCE — In Workshop</option>
-                        <option value="DECOMMISSIONED">DECOMMISSIONED — Retired</option>
+                    <label class="form-label" for="brand">Vehicle Brand <span style="color: var(--danger);">*</span></label>
+                    <select th:field="*{brand}" id="brand" name="brand" class="form-select" required>
+                        <option value="" disabled th:selected="${vehicle.brand == null}">-- Select Vehicle Brand --</option>
+                        <option value="Toyota" th:selected="${vehicle.brand == 'Toyota'}">Toyota</option>
+                        <option value="Suzuki" th:selected="${vehicle.brand == 'Suzuki'}">Suzuki</option>
+                        <option value="Honda" th:selected="${vehicle.brand == 'Honda'}">Honda</option>
+                        <option value="Tesla" th:selected="${vehicle.brand == 'Tesla'}">Tesla</option>
+                        <option value="Benz" th:selected="${vehicle.brand == 'Benz'}">Benz</option>
                     </select>
                 </div>
+                <!-- Field 2: Vehicle Make / Model -->
                 <div class="form-group">
-                    <label class="form-label">Quantity <span style="color: var(--danger);">*</span></label>
-                    <input type="number" th:field="*{quantity}" class="form-control" placeholder="1" min="1" required>
+                    <label class="form-label" for="model">Vehicle Make / Model <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{model}" id="model" class="form-control" placeholder="e.g. Prius 2024 or RAV4 Prime" required>
                 </div>
             </div>
 
             <div class="form-row">
+                <!-- Field 3: Registration Number -->
                 <div class="form-group">
-                    <label class="form-label">Assigned Branch</label>
-                    <select name="branchId" class="form-select">
+                    <label class="form-label" for="regNo">Registration Number <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{regNo}" id="regNo" class="form-control" placeholder="e.g. WP CA-8942" required>
+                </div>
+                <!-- Field 4: Vehicle Color -->
+                <div class="form-group">
+                    <label class="form-label" for="color">Vehicle Color <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{color}" id="color" class="form-control" placeholder="e.g. Midnight Blue" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <!-- Field 5: Current Mileage -->
+                <div class="form-group">
+                    <label class="form-label" for="mileage">Current Mileage (km) <span style="color: var(--danger);">*</span></label>
+                    <input type="number" th:field="*{mileage}" id="mileage" class="form-control" placeholder="0" min="0" required>
+                </div>
+                <!-- Field 6: Assigned Branch -->
+                <div class="form-group">
+                    <label class="form-label" for="branchId">Assigned Branch</label>
+                    <select name="branchId" id="branchId" class="form-select">
                         <option value="">-- Select Branch --</option>
                         <option th:each="b : ${branches}"
                                 th:value="${b.branchId}"
@@ -85,11 +86,37 @@
                         </option>
                     </select>
                 </div>
+            </div>
+
+            <div class="form-row">
+                <!-- Field 7: Operational Status (Locked to AVAILABLE on Register/Create Mode) -->
                 <div class="form-group">
-                    <label class="form-label" style="visibility: hidden;">Inventory Note</label>
-                    <p style="color: var(--slate-500); font-size: 0.82rem; margin-top: 0.4rem; line-height: 1.4;">
-                        Ensure quantity is at least 1. Each vehicle inventory record tracks operational and rental availability.
-                    </p>
+                    <label class="form-label" for="status">Operational Status <span style="color: var(--danger);">*</span></label>
+                    
+                    <!-- Create/Register Mode: Locked strictly to AVAILABLE only -->
+                    <th:block th:if="${vehicle.vehicleId == null}">
+                        <select th:field="*{status}" id="status" class="form-select" readonly style="background-color: var(--slate-100); cursor: not-allowed;">
+                            <option value="AVAILABLE" selected>AVAILABLE — Ready for Rent</option>
+                        </select>
+                    </th:block>
+
+                    <!-- Edit Mode: Full status options -->
+                    <th:block th:if="${vehicle.vehicleId != null}">
+                        <select th:field="*{status}" id="status" class="form-select">
+                            <option value="AVAILABLE">AVAILABLE — Ready for Rent</option>
+                            <option value="BOOKED">BOOKED — Currently on Trip</option>
+                            <option value="MAINTENANCE">MAINTENANCE — In Workshop</option>
+                            <option value="UNAVAILABLE">UNAVAILABLE — In Service</option>
+                            <option value="DECOMMISSIONED">DECOMMISSIONED — Retired</option>
+                        </select>
+                    </th:block>
+                </div>
+
+                <!-- Field 8: Quantity (Disabled & Locked to 1, Helper Text Removed) -->
+                <div class="form-group">
+                    <label class="form-label" for="quantity">Quantity</label>
+                    <input type="number" id="quantity" class="form-control" value="1" readonly disabled style="background-color: var(--slate-100); cursor: not-allowed; font-weight: 600; color: var(--slate-700);">
+                    <input type="hidden" name="quantity" value="1">
                 </div>
             </div>
 

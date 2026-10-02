@@ -26,17 +26,34 @@ public class PaymentController {
     // --- PAYMENTS ---
 
     @GetMapping
-    public String listPayments(Model model, org.springframework.security.core.Authentication authentication) {
+    public String listPayments(
+            @RequestParam(value = "tab", required = false, defaultValue = "transactions") String tab,
+            Model model,
+            org.springframework.security.core.Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()
                 && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
             String email = authentication.getName();
             boolean isStaff = staffRepository.findByEmail(email).isPresent();
             if (!isStaff) {
-                return "redirect:/profile#invoices";
+                return "redirect:/invoices-payments";
             }
         }
+        model.addAttribute("activeTab", tab);
         model.addAttribute("payments", paymentService.getAllPayments());
+        model.addAttribute("salesSummary", paymentService.getCompanySalesSummary());
         return "payment/payment-list";
+    }
+
+    @GetMapping("/api/sales")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<CompanySalesSummaryDto> getCompanySalesApi() {
+        return org.springframework.http.ResponseEntity.ok(paymentService.getCompanySalesSummary());
+    }
+
+    @GetMapping("/api")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<java.util.List<Payment>> getPaymentsApi() {
+        return org.springframework.http.ResponseEntity.ok(paymentService.getAllPayments());
     }
 
     @GetMapping("/new")

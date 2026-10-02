@@ -51,6 +51,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                         @Param("startDate") LocalDate startDate,
                                         @Param("endDate") LocalDate endDate);
 
+    boolean existsByVehicle_VehicleId(Long vehicleId);
+
     default List<Booking> findByCustomer(Customer customer) {
         if (customer == null || customer.getSystemId() == null) {
             return List.of();

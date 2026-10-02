@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Invoices & Payments')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('invoices-payments')}"></nav>
+
+<main class="df-main">
+    <!-- Header -->
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Invoices & Payments</h1>
+            <p class="df-header-subtitle">
+                Review staff-confirmed vehicle reservations and complete your payment securely via the integrated card gateway.
+            </p>
+        </div>
+        <div class="df-header-actions">
+            <span class="badge badge-info" style="font-size: 0.85rem; padding: 0.5rem 0.9rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                Post-Approval Payment Gate
+            </span>
+        </div>
+    </div>
+
+    <!-- Feedback Alerts -->
+    <div th:if="${successMessage}" class="alert alert-success" style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Success message</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">Error message</span>
+    </div>
+    <div th:if="${infoMessage}" class="alert alert-info" style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; font-weight: 600;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <span th:text="${infoMessage}">Info message</span>
+    </div>
+
+    <!-- Summary Metrics -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div class="df-card" style="padding: 1.25rem 1.5rem; border-left: 4px solid var(--primary);">
+            <div class="df-stat-label">Confirmed Reservations</div>
+            <div class="df-stat-value" style="font-size: 1.5rem;" th:text="${confirmedBookings != null ? confirmedBookings.size() : 0}">0</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.2rem;">Approved by staff</div>
+        </div>
+        <div class="df-card" style="padding: 1.25rem 1.5rem; border-left: 4px solid var(--warning);">
+            <div class="df-stat-label">Awaiting Payment</div>
+            <div class="df-stat-value" style="font-size: 1.5rem; color: #b45309;" th:text="${unpaidCount}">0</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.2rem;">Ready for card settlement</div>
+        </div>
+        <div class="df-card" style="padding: 1.25rem 1.5rem; border-left: 4px solid var(--success);">
+            <div class="df-stat-label">Settled Invoices</div>
+            <div class="df-stat-value" style="font-size: 1.5rem; color: #047857;" th:text="${paidCount}">0</div>
+            <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 0.2rem;">Paid & verified</div>
+        </div>
+    </div>
+
+    <!-- SECTION 1: MIGRATED CONFIRMED BOOKINGS TABLE -->
+    <div style="margin-bottom: 2.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin: 0 0 0.25rem;">
+                    Confirmed Rental Bookings
+                </h2>
+                <p style="font-size: 0.88rem; color: var(--slate-500); margin: 0;">
+                    In accordance with DriveFlow security policy, payment is unlocked exclusively for reservations formally confirmed by staff.
+                </p>
+            </div>
+            <a th:href="@{/bookings/new}" class="btn btn-secondary btn-sm" style="font-weight: 600;">+ New Reservation</a>
+        </div>
+
+        <div class="df-table-container">
+            <table class="df-table" id="confirmedBookingsTable" th:if="${confirmedBookings != null and !confirmedBookings.empty}">
+                <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Vehicle</th>
+                    <th>Rental Dates</th>
+                    <th>Total Due</th>
+                    <th>Approval Status</th>
+                    <th>Invoice Status</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="b : ${confirmedBookings}"
+                    th:id="'bookingRow-' + ${b.bookingId}"
+                    th:style="${selectedItem != null and selectedItem.bookingId == b.bookingId} ? 'background-color: #f5f3ff;' : ''">
+                    <td>
+                        <strong style="color: var(--slate-900);" th:text="'#BK-' + ${b.bookingId}">#BK-1</strong>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--slate-900);" th:text="${b.vehicleModel}">Toyota Prius</div>
+                        <div style="font-size: 0.8rem; color: var(--slate-500);" th:if="${b.vehicleRegNo != null and !b.vehicleRegNo.isEmpty()}" th:text="${b.vehicleRegNo}">WP CA-1020</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 0.88rem; color: var(--slate-700);" th:text="${b.pickupDate} + ' &rarr; ' + ${b.returnDate}">2026-09-10 &rarr; 2026-09-15</div>
+                        <div style="font-size: 0.78rem; color: var(--slate-500);" th:text="'(' + ${b.duration} + ' days)'">5 days</div>
+                    </td>
+                    <td>
+                        <strong style="color: var(--primary); font-size: 1rem;" th:text="'$' + ${#numbers.formatDecimal(b.totalAmountDue != null ? b.totalAmountDue : 0, 1, 2)}">$150.00</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-success" style="font-weight: 700;">&#10003; Confirmed</span>
+                        <div th:if="${b.staffMessage != null and !#strings.isEmpty(b.staffMessage)}"
+                             style="margin-top: 0.25rem; font-size: 0.75rem; color: #047857;"
+                             th:text="${b.staffMessage}">
+                            Approved by team
+                        </div>
+                    </td>
+                    <td>
+                        <span th:if="${b.isPaid}" class="badge badge-success">&#10003; Paid</span>
+                        <span th:if="${!b.isPaid}" class="badge badge-warning">Unpaid</span>
+                        <div th:if="${b.invoiceId != null}" style="font-size: 0.75rem; color: var(--slate-500); margin-top: 0.2rem;" th:text="'#INV-' + ${b.invoiceId}">#INV-1</div>
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button th:if="${!b.isPaid}"
+                                type="button"
+                                class="btn btn-primary btn-sm"
+                                style="font-weight: 700; gap: 0.35rem;"
+                                th:data-booking-id="${b.bookingId}"
+                                th:data-invoice-id="${b.invoiceId}"
+                                th:data-amount="${#numbers.formatDecimal(b.totalAmountDue != null ? b.totalAmountDue : 0, 1, 2)}"
+                                th:data-vehicle="${b.vehicleModel}"
+                                th:data-dates="${b.pickupDate} + ' to ' + ${b.returnDate}"
+                                onclick="selectBookingForPayment(this)">
+                            Pay with Card &rarr;
+                        </button>
+                        <span th:if="${b.isPaid}" class="badge badge-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.65rem; background: var(--slate-100); color: var(--slate-600);">
+                            Settled
+                        </span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${confirmedBookings == null or confirmedBookings.empty}">
+                <div class="empty-state-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">No Confirmed Bookings Awaiting Payment</h3>
+                <p class="empty-state-desc">
+                    Only reservations that have been formally reviewed and confirmed by staff appear here for payment.
+                </p>
+                <a th:href="@{/bookings/new}" class="btn btn-primary btn-sm" style="margin-top: 0.75rem;">Make a Vehicle Reservation</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: INTEGRATED PAYMENT GATEWAY FORM -->
+    <div id="paymentGatewaySection" class="df-card" style="border-top: 4px solid var(--primary); background: #ffffff; margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
+                    <div style="width: 34px; height: 34px; border-radius: 8px; background: #e0e7ff; color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                    </div>
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin: 0;">
+                        Secure Payment Gateway
+                    </h2>
+                </div>
+                <p style="font-size: 0.88rem; color: var(--slate-500); margin: 0;">
+                    Complete settlement for your staff-confirmed booking using any major Credit or Debit card.
+                </p>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="badge badge-success" style="font-size: 0.78rem;">256-Bit SSL Encrypted</span>
+            </div>
+        </div>
+
+        <div th:if="${unpaidCount == 0 and (confirmedBookings != null and !confirmedBookings.empty)}"
+             style="padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); text-align: center; color: var(--slate-600);">
+            <div style="font-size: 1.25rem; font-weight: 700; color: #047857; margin-bottom: 0.35rem;">All Confirmed Reservations Are Settled!</div>
+            <p style="font-size: 0.9rem; margin: 0;">You have no outstanding invoices awaiting card settlement.</p>
+        </div>
+
+        <!-- The Payment Gateway Form -->
+        <form th:if="${unpaidCount > 0 or confirmedBookings == null or confirmedBookings.empty}"
+              id="paymentGatewayForm"
+              th:action="@{/invoices-payments/pay}"
+              method="post"
+              onsubmit="return validatePaymentForm(event)">
+
+            <!-- Hidden Inputs -->
+            <input type="hidden" name="bookingId" id="formBookingId" th:value="${selectedItem != null ? selectedItem.bookingId : ''}" />
+            <input type="hidden" name="invoiceId" id="formInvoiceId" th:value="${selectedItem != null ? selectedItem.invoiceId : ''}" />
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 1.5rem;">
+                
+                <!-- Left Summary Box: Selected Booking Breakdown -->
+                <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--slate-500); letter-spacing: 0.05em; margin-bottom: 0.75rem;">
+                            Selected Settlement Summary
+                        </div>
+
+                        <!-- Target Booking Selector if multiple unpaid -->
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label class="form-label" style="font-size: 0.82rem; font-weight: 600; color: var(--slate-700);">Target Reservation</label>
+                            <select id="bookingSelector" class="form-control" onchange="onBookingSelectorChange(this)"
+                                    style="width: 100%; padding: 0.6rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-weight: 600; background: white;">
+                                <option th:each="b : ${confirmedBookings}"
+                                        th:if="${!b.isPaid}"
+                                        th:value="${b.bookingId}"
+                                        th:data-invoice-id="${b.invoiceId}"
+                                        th:data-amount="${#numbers.formatDecimal(b.totalAmountDue != null ? b.totalAmountDue : 0, 1, 2)}"
+                                        th:data-vehicle="${b.vehicleModel}"
+                                        th:data-dates="${b.pickupDate} + ' to ' + ${b.returnDate}"
+                                        th:selected="${selectedItem != null and selectedItem.bookingId == b.bookingId}"
+                                        th:text="'#BK-' + ${b.bookingId} + ' — ' + ${b.vehicleModel} + ' ($' + ${#numbers.formatDecimal(b.totalAmountDue != null ? b.totalAmountDue : 0, 1, 2)} + ')'">
+                                    #BK-1 — Toyota Prius ($150.00)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.88rem; margin-bottom: 1rem;">
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase; display: block;">Vehicle Model</span>
+                                <strong id="summaryVehicle" style="color: var(--slate-900);" th:text="${selectedItem != null ? selectedItem.vehicleModel : 'Toyota Prius'}">Toyota Prius</strong>
+                            </div>
+                            <div>
+                                <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase; display: block;">Booking Status</span>
+                                <span class="badge badge-success" style="font-size: 0.72rem;">&#10003; Staff Confirmed</span>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 0.88rem; margin-bottom: 1rem;">
+                            <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase; display: block;">Rental Dates</span>
+                            <span id="summaryDates" style="color: var(--slate-800); font-weight: 600;"
+                                  th:text="${selectedItem != null ? selectedItem.pickupDate + ' to ' + selectedItem.returnDate : 'Selected dates'}">
+                                2026-09-10 to 2026-09-15
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Authorized Total Due Highlight -->
+                    <div style="padding-top: 1rem; border-top: 2px dashed var(--slate-300); display: flex; justify-content: space-between; align-items: flex-end;">
+                        <div>
+                            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--slate-600); display: block;">Total Amount to Authorize</span>
+                            <span style="font-size: 0.78rem; color: var(--slate-500);">All taxes & mileage included</span>
+                        </div>
+                        <div id="summaryAmountDue" style="font-size: 1.8rem; font-weight: 800; color: var(--primary);"
+                             th:text="'$' + ${#numbers.formatDecimal(selectedItem != null and selectedItem.totalAmountDue != null ? selectedItem.totalAmountDue : 0, 1, 2)}">
+                            $150.00
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Form: Card Payment Input Fields -->
+                <div>
+                    <!-- Bank Name -->
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Issuing Bank</label>
+                        <input type="text" name="bankName" id="bankName" class="form-control"
+                               placeholder="e.g. Commercial Bank of Ceylon, Chase, HSBC, Bank of Ceylon"
+                               value="Commercial Bank"
+                               required
+                               style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: inherit; font-size: 0.95rem;">
+                    </div>
+
+                    <!-- Cardholder Name -->
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Cardholder Name</label>
+                        <input type="text" class="form-control"
+                               th:value="${customer != null ? customer.name : 'Authorized Customer'}"
+                               readonly
+                               style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-200); background: var(--slate-100); color: var(--slate-700); font-weight: 600; font-size: 0.95rem;">
+                    </div>
+
+                    <!-- 16-Digit Credit Card Number -->
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700); display: flex; justify-content: space-between;">
+                            <span>16-Digit Credit / Debit Card Number</span>
+                            <span id="cardTypeBadge" style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">VISA / MASTERCARD</span>
+                        </label>
+                        <div style="position: relative;">
+                            <input type="text"
+                                   name="cardNo"
+                                   id="cardNo"
+                                   class="form-control"
+                                   placeholder="4111 2222 3333 4444"
+                                   maxlength="19"
+                                   required
+                                   autocomplete="cc-number"
+                                   oninput="formatCardNumber(this)"
+                                   style="width: 100%; padding: 0.7rem 2.8rem 0.7rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 1.05rem; letter-spacing: 0.05em; font-weight: 600;">
+                            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-400); pointer-events: none;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                                </svg>
+                            </span>
+                        </div>
+                        <small style="color: var(--slate-500); font-size: 0.78rem; margin-top: 0.3rem; display: block;">
+                            Card must contain exactly 16 numeric digits. Numbers are securely tokenized.
+                        </small>
+                    </div>
+
+                    <!-- Expiration Date & CVV Row -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                        <!-- Expiration Date (MM/YY) -->
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Expiration (MM/YY)</label>
+                            <input type="text"
+                                   name="expiry"
+                                   id="expiry"
+                                   class="form-control"
+                                   placeholder="12/28"
+                                   maxlength="5"
+                                   required
+                                   autocomplete="cc-exp"
+                                   oninput="formatExpiry(this)"
+                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                        </div>
+
+                        <!-- 3-Digit CVV -->
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">3-Digit CVV</label>
+                            <input type="password"
+                                   name="cvv"
+                                   id="cvv"
+                                   class="form-control"
+                                   placeholder="123"
+                                   maxlength="3"
+                                   required
+                                   autocomplete="cc-csc"
+                                   oninput="formatCvv(this)"
+                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit"
+                            id="submitPaymentBtn"
+                            class="btn btn-primary"
+                            style="width: 100%; padding: 0.85rem; font-size: 1.05rem; font-weight: 700; gap: 0.5rem;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Confirm & Authorize Payment</span>
+                    </button>
+
+                    <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--slate-500); font-size: 0.78rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <span>Certified PCI-DSS Compliant Payment Clearance</span>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+    <!-- SECTION 3: PAST PAYMENT RECEIPTS & SETTLEMENTS -->
+    <div style="margin-top: 2rem;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.85rem;">
+            Settled Receipts & Transaction History
+        </h3>
+        <div class="df-table-container">
+            <table class="df-table" th:if="${payments != null and !payments.empty}">
+                <thead>
+                <tr>
+                    <th>Payment Ref</th>
+                    <th>Linked Invoice</th>
+                    <th>Settlement Date</th>
+                    <th>Amount Paid</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="p : ${payments}">
+                    <td>
+                        <strong style="color: var(--slate-900);" th:text="${p.refNo}">PAY-882194</strong>
+                    </td>
+                    <td>
+                        <span th:if="${p.invoice != null}" th:text="'#INV-' + ${p.invoice.invoiceId}">#INV-1</span>
+                        <span th:if="${p.invoice == null}">-</span>
+                    </td>
+                    <td th:text="${p.paymentDate}">2026-09-12</td>
+                    <td>
+                        <strong style="color: var(--success);" th:text="'$' + ${#numbers.formatDecimal(p.amountPaid != null ? p.amountPaid : 0, 1, 2)}">$150.00</strong>
+                    </td>
+                    <td>
+                        <span class="badge badge-success">&#10003; Cleared</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${payments == null or payments.empty}" style="padding: 2.5rem 1rem;">
+                <p class="empty-state-desc" style="color: var(--slate-500); margin: 0;">No completed payment receipts found on this account yet.</p>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    /**
+     * Card number real-time formatter: adds space every 4 digits, limits to 16 digits.
+     */
+    function formatCardNumber(input) {
+        var value = input.value.replace(/\D/g, '');
+        if (value.length > 16) {
+            value = value.substring(0, 16);
+        }
+        var formatted = '';
+        for (var i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formatted += ' ';
+            }
+            formatted += value[i];
+        }
+        input.value = formatted;
+    }
+
+    /**
+     * Expiration date formatter: MM/YY format.
+     */
+    function formatExpiry(input) {
+        var value = input.value.replace(/\D/g, '');
+        if (value.length > 4) {
+            value = value.substring(0, 4);
+        }
+        if (value.length >= 2) {
+            input.value = value.substring(0, 2) + '/' + value.substring(2);
+        } else {
+            input.value = value;
+        }
+    }
+
+    /**
+     * CVV formatter: exactly 3 numeric digits.
+     */
+    function formatCvv(input) {
+        input.value = input.value.replace(/\D/g, '').substring(0, 3);
+    }
+
+    /**
+     * Client-side validation ensuring:
+     * - Exactly 16 digits for card number
+     * - Valid MM/YY format
+     * - 3-digit CVV
+     */
+    function validatePaymentForm(e) {
+        var cardNoInput = document.getElementById('cardNo');
+        var expiryInput = document.getElementById('expiry');
+        var cvvInput = document.getElementById('cvv');
+        var bookingIdInput = document.getElementById('formBookingId');
+
+        if (!bookingIdInput.value) {
+            alert('Please select a confirmed booking to pay.');
+            e.preventDefault();
+            return false;
+        }
+
+        var rawCard = cardNoInput.value.replace(/\D/g, '');
+        if (rawCard.length !== 16) {
+            alert('Invalid Card: Please enter a full 16-digit credit or debit card number.');
+            cardNoInput.focus();
+            e.preventDefault();
+            return false;
+        }
+
+        var expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!expiryPattern.test(expiryInput.value)) {
+            alert('Invalid Expiry: Please enter a valid expiration date in MM/YY format (e.g. 12/28).');
+            expiryInput.focus();
+            e.preventDefault();
+            return false;
+        }
+
+        if (cvvInput.value.length !== 3) {
+            alert('Invalid CVV: Security code must be exactly 3 digits.');
+            cvvInput.focus();
+            e.preventDefault();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * When user clicks "Pay with Card" on any confirmed booking row.
+     */
+    function selectBookingForPayment(button) {
+        var bookingId = button.getAttribute('data-booking-id');
+        var invoiceId = button.getAttribute('data-invoice-id');
+        var amount = button.getAttribute('data-amount');
+        var vehicle = button.getAttribute('data-vehicle');
+        var dates = button.getAttribute('data-dates');
+
+        updateSelectedBooking(bookingId, invoiceId, amount, vehicle, dates);
+
+        // Highlight selected row in table
+        document.querySelectorAll('#confirmedBookingsTable tbody tr').forEach(function(row) {
+            row.style.backgroundColor = '';
+        });
+        var activeRow = document.getElementById('bookingRow-' + bookingId);
+        if (activeRow) {
+            activeRow.style.backgroundColor = '#f5f3ff';
+        }
+
+        // Scroll smoothly to payment gateway
+        var gatewaySection = document.getElementById('paymentGatewaySection');
+        if (gatewaySection) {
+            gatewaySection.scrollIntoView({ behavior: 'smooth' });
+        }
+        var cardInput = document.getElementById('cardNo');
+        if (cardInput) {
+            setTimeout(function() { cardInput.focus(); }, 400);
+        }
+    }
+
+    /**
+     * When user selects a different booking from the dropdown.
+     */
+    function onBookingSelectorChange(select) {
+        var opt = select.options[select.selectedIndex];
+        if (opt) {
+            var bookingId = opt.value;
+            var invoiceId = opt.getAttribute('data-invoice-id');
+            var amount = opt.getAttribute('data-amount');
+            var vehicle = opt.getAttribute('data-vehicle');
+            var dates = opt.getAttribute('data-dates');
+
+            updateSelectedBooking(bookingId, invoiceId, amount, vehicle, dates);
+        }
+    }
+
+    function updateSelectedBooking(bookingId, invoiceId, amount, vehicle, dates) {
+        document.getElementById('formBookingId').value = bookingId;
+        document.getElementById('formInvoiceId').value = invoiceId || '';
+        document.getElementById('summaryVehicle').textContent = vehicle;
+        document.getElementById('summaryDates').textContent = dates;
+        document.getElementById('summaryAmountDue').textContent = '$' + amount;
+
+        var selector = document.getElementById('bookingSelector');
+        if (selector) {
+            selector.value = bookingId;
+        }
+    }
+</script>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

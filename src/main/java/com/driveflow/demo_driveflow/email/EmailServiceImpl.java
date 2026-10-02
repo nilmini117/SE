@@ -32,4 +32,35 @@ public class EmailServiceImpl implements EmailService {
         log.info("Content   :\n{}", body);
         log.info("================================================================================");
     }
+
+    @Override
+    public void sendMaintenanceNotificationEmail(String toEmail, String companyName, String vehicleDetails,
+                                                java.time.LocalDate serviceDate, java.math.BigDecimal approximatedCost) {
+        String subject = "DriveFlow Fleet Maintenance Schedule: " + vehicleDetails;
+        String costFormatted = (approximatedCost != null) ? "$" + approximatedCost.toPlainString() : "$0.00";
+        String dateFormatted = (serviceDate != null) ? serviceDate.toString() : java.time.LocalDate.now().toString();
+
+        String body = String.format(
+            "Dear %s Team,\n\n" +
+            "A vehicle from the DriveFlow park has been scheduled for maintenance and allocated to your service company:\n\n" +
+            "  • Vehicle Details    : %s\n" +
+            "  • Scheduled Date     : %s\n" +
+            "  • Approximated Cost  : %s\n\n" +
+            "Please ensure your service bay is prepared for vehicle intake. Global vehicle status has been updated to UNAVAILABLE.\n\n" +
+            "Best Regards,\n" +
+            "DriveFlow Fleet Operations",
+            (companyName != null && !companyName.isBlank()) ? companyName : "Maintenance Partner",
+            vehicleDetails,
+            dateFormatted,
+            costFormatted
+        );
+
+        log.info("================================================================================");
+        log.info("📧 [AUTOMATED MAINTENANCE NOTIFICATION EMAIL TRIGGERED]");
+        log.info("Recipient : {}", toEmail);
+        log.info("Company   : {}", companyName);
+        log.info("Subject   : {}", subject);
+        log.info("Content   :\n{}", body);
+        log.info("================================================================================");
+    }
 }

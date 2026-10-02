@@ -3,14 +3,14 @@ package com.driveflow.demo_driveflow.maintenance;
 import java.util.List;
 
 public interface MaintenanceService {
-    // Maintenance records
-    List<MaintenanceRecord> getAllRecords();
-    MaintenanceRecord getRecordById(Long id);
-    MaintenanceRecord scheduleService(MaintenanceRecord record);
-    MaintenanceRecord updateRecord(Long id, MaintenanceRecord record);
+    // Maintenance records & schedules
+    List<Maintenance> getAllRecords();
+    Maintenance getRecordById(Long id);
+    Maintenance scheduleService(Maintenance record);
+    Maintenance updateRecord(Long id, Maintenance record);
     void removeRecord(Long id);
 
-    // Vehicle documents
+    // Vehicle documents (kept for underlying data layer)
     List<VehicleDocument> getAllDocuments();
     VehicleDocument getDocumentById(Long id);
     VehicleDocument addDocument(VehicleDocument document);

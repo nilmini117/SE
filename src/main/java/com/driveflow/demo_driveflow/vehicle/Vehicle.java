@@ -40,12 +40,43 @@ public class Vehicle {
     @Column(name = "status")
     private String status; // AVAILABLE, BOOKED, MAINTENANCE, DECOMMISSIONED
 
+    @Column(name = "brand")
+    private String brand; // Toyota, Suzuki, Honda, Tesla, Benz
+
     @ManyToOne
     @JoinColumn(name = "branch_id")
     private Branch branch;
 
+    public Vehicle(Long vehicleId, String regNo, String model, Integer quantity, String color, Integer mileage, String status, Branch branch) {
+        this.vehicleId = vehicleId;
+        this.regNo = regNo;
+        this.model = model;
+        this.quantity = quantity;
+        this.color = color;
+        this.mileage = mileage;
+        this.status = status;
+        this.branch = branch;
+        if (model != null && model.contains(" ")) {
+            this.brand = model.substring(0, model.indexOf(" "));
+        }
+    }
+
+    public Vehicle(Long vehicleId, String regNo, String model, Integer quantity, String color, Integer mileage, String status, Branch branch, String brand) {
+        this.vehicleId = vehicleId;
+        this.regNo = regNo;
+        this.model = model;
+        this.quantity = quantity;
+        this.color = color;
+        this.mileage = mileage;
+        this.status = status;
+        this.branch = branch;
+        this.brand = brand;
+    }
 
     public String getBrand() {
+        if (brand != null && !brand.isBlank()) {
+            return brand;
+        }
         if (model != null && model.contains(" ")) {
             return model.substring(0, model.indexOf(" "));
         }

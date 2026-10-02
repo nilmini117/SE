@@ -9,4 +9,17 @@ public interface EmailService {
      * @param customerName Recipient customer name
      */
     void sendWelcomeEmail(String toEmail, String customerName);
+
+    /**
+     * Automatically triggers an email notification to the assigned maintenance company
+     * upon saving a vehicle maintenance schedule.
+     *
+     * @param toEmail          Recipient maintenance company email address
+     * @param companyName      Maintenance company name
+     * @param vehicleDetails   Vehicle model and registration number
+     * @param serviceDate      Scheduled service date
+     * @param approximatedCost Approximated service cost
+     */
+    void sendMaintenanceNotificationEmail(String toEmail, String companyName, String vehicleDetails,
+                                         java.time.LocalDate serviceDate, java.math.BigDecimal approximatedCost);
 }

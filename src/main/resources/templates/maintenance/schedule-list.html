@@ -9,7 +9,7 @@
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Maintenance & Fleet Care</h1>
-            <p class="df-header-subtitle">Schedule routine mechanical services, oil changes, and track upkeep costs.</p>
+            <p class="df-header-subtitle">Schedule routine mechanical services, outsource repairs to external companies, and track fleet costs.</p>
         </div>
         <div class="df-header-actions">
             <a th:href="@{/maintenance/new}" class="btn btn-primary">
@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <!-- Sub-Navigation Tabs -->
+    <!-- Sub-Navigation Tabs (Vehicle Documents removed; Maintenance Companies added) -->
     <div class="df-tabs">
         <a th:href="@{/maintenance}" class="df-tab-item active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -30,12 +30,12 @@
             </svg>
             Service Schedules
         </a>
-        <a th:href="@{/maintenance/documents}" class="df-tab-item">
+        <a th:href="@{/maintenance/companies}" class="df-tab-item">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
             </svg>
-            Vehicle Documents & Compliance
+            Maintenance Companies
         </a>
     </div>
 
@@ -60,10 +60,12 @@
         <table class="df-table" th:if="${records != null and !records.empty}">
             <thead>
             <tr>
-                <th>Service Record ID</th>
+                <th>Service ID</th>
                 <th>Vehicle</th>
+                <th>Assigned Company</th>
                 <th>Service Date</th>
-                <th>Maintenance Cost</th>
+                <th>Approximated Cost</th>
+                <th>Actual Cost</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -71,14 +73,29 @@
             <tr th:each="r : ${records}">
                 <td><strong th:text="'#MNT-' + ${r.maintenanceId}">#MNT-1</strong></td>
                 <td>
-                    <span th:if="${r.vehicle != null}">
-                        <strong th:text="${r.vehicle.model}">Toyota Camry</strong>
-                        <span style="color: var(--slate-500); font-size: 0.85rem;" th:text="' (' + ${r.vehicle.regNo} + ')'"></span>
-                    </span>
+                    <div th:if="${r.vehicle != null}">
+                        <strong th:text="${r.vehicle.model}" style="color: var(--slate-900);">Toyota Camry</strong>
+                        <div style="color: var(--slate-500); font-size: 0.82rem;" th:text="${r.vehicle.regNo}">WP-1234</div>
+                        <span th:if="${r.vehicle.status == 'UNAVAILABLE'}" class="badge badge-danger" style="font-size: 0.7rem; padding: 0.1rem 0.4rem; background: #fee2e2; color: #991b1b;">
+                            Unavailable
+                        </span>
+                    </div>
                     <span th:if="${r.vehicle == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
                 </td>
+                <td>
+                    <div th:if="${r.maintenanceCompany != null}">
+                        <strong th:text="${r.maintenanceCompany.companyName}" style="color: #4f46e5;">AutoCare Precision</strong>
+                        <div style="font-size: 0.8rem; color: var(--slate-500);" th:text="${r.maintenanceCompany.email}">email@mail.com</div>
+                    </div>
+                    <span th:if="${r.maintenanceCompany == null}" style="color: #ef4444; font-size: 0.82rem; font-weight: 600;">Not Allocated</span>
+                </td>
                 <td th:text="${r.serviceDate}">2026-09-01</td>
-                <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(r.cost != null ? r.cost : 0, 1, 2)}">$240.00</strong></td>
+                <td>
+                    <strong style="color: #059669;" th:text="${r.approximatedCost != null ? '$' + #numbers.formatDecimal(r.approximatedCost, 1, 2) : '-'}">$240.00</strong>
+                </td>
+                <td>
+                    <span th:text="${r.cost != null ? '$' + #numbers.formatDecimal(r.cost, 1, 2) : '-'}">$240.00</span>
+                </td>
                 <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
                     <a th:href="@{/maintenance/{id}/edit(id=${r.maintenanceId})}" class="btn btn-secondary btn-sm">Edit</a>
                     <button type="button"
@@ -86,7 +103,7 @@
                             th:data-id="${r.maintenanceId}"
                             th:data-vehicle="${r.vehicle != null ? r.vehicle.model + ' (' + r.vehicle.regNo + ')' : 'Unassigned'}"
                             th:data-date="${r.serviceDate}"
-                            th:data-cost="${#numbers.formatDecimal(r.cost != null ? r.cost : 0, 1, 2)}"
+                            th:data-cost="${r.approximatedCost != null ? #numbers.formatDecimal(r.approximatedCost, 1, 2) : '0.00'}"
                             onclick="openDeleteScheduleModal(this.getAttribute('data-id'), this.getAttribute('data-vehicle'), this.getAttribute('data-date'), this.getAttribute('data-cost'))">
                         Delete
                     </button>
@@ -158,9 +175,9 @@
 
         summary.innerHTML =
             '<div><strong>Record ID:</strong> #MNT-' + id + '</div>' +
-            '<div><strong>Vehicle:</strong> ' + vehicle + '</div>' +
-            '<div><strong>Service Date:</strong> ' + date + '</div>' +
-            '<div><strong>Cost:</strong> <span style="font-weight: 700; color: #0284c7;">$' + cost + '</span></div>';
+            '<div><strong>Vehicle:</strong> ' + (vehicle || 'Unassigned') + '</div>' +
+            '<div><strong>Date:</strong> ' + (date || '-') + '</div>' +
+            '<div><strong>Cost:</strong> $' + (cost || '0.00') + '</div>';
 
         modal.style.display = 'flex';
     }
@@ -170,12 +187,12 @@
         modal.style.display = 'none';
     }
 
-    window.addEventListener('click', function(e) {
+    window.onclick = function(event) {
         var modal = document.getElementById('deleteScheduleModal');
-        if (e.target === modal) {
+        if (event.target === modal) {
             closeDeleteScheduleModal();
         }
-    });
+    };
 </script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

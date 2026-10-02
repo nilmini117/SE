@@ -33,7 +33,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"))
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/vehicles/api/**", "/payments/api/**"))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/",
@@ -41,7 +41,12 @@ public class SecurityConfig {
                     "/register",
                     "/api/auth/**",
                     "/api/register",
+                    "/api/vehicles",
+                    "/api/vehicles/**",
+                    "/api/company-sales",
                     "/vehicles",
+                    "/vehicles/api/**",
+                    "/payments/api/**",
                     "/promotions",
                     "/error",
                     "/css/**",
@@ -49,8 +54,8 @@ public class SecurityConfig {
                     "/images/**",
                     "/favicon.ico"
                 ).permitAll()
-                // Customer profile (authenticated; staff is redirected to / in ProfileController)
-                .requestMatchers("/profile/**").authenticated()
+                // Customer profile and invoices-payments (authenticated)
+                .requestMatchers("/profile/**", "/invoices-payments", "/invoices-payments/**").authenticated()
                 // Staff-only booking approval
                 .requestMatchers("/bookings/*/approve").hasRole("STAFF")
                 // Booking creation strictly requires authenticated user (Customer or Staff)

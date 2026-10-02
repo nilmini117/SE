@@ -151,4 +151,64 @@ public class PaymentServiceImpl implements PaymentService {
         refund.setApprovalStatus("REJECTED");
         return refundRepository.save(refund);
     }
+
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.maintenance.MaintenanceRepository maintenanceRepository;
+
+    @Override
+    public CompanySalesSummaryDto getCompanySalesSummary() {
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        BigDecimal totalMaintenanceCosts = BigDecimal.ZERO;
+
+        // Try the native cross-table SQL aggregation query first
+        try {
+            CompanySalesProjection projection = paymentRepository.getCompanySalesSummarySql();
+            if (projection != null) {
+                totalRevenue = projection.getTotalRevenue() != null ? projection.getTotalRevenue() : BigDecimal.ZERO;
+                totalMaintenanceCosts = projection.getTotalMaintenanceCosts() != null ? projection.getTotalMaintenanceCosts() : BigDecimal.ZERO;
+            }
+        } catch (Exception e) {
+            // Fallback to separate repository calculations
+            try {
+                BigDecimal rev = paymentRepository.calculateTotalRevenue();
+                if (rev != null) totalRevenue = rev;
+            } catch (Exception ignored) {}
+
+            try {
+                if (maintenanceRepository != null) {
+                    BigDecimal mnt = maintenanceRepository.calculateTotalMaintenanceCosts();
+                    if (mnt != null) totalMaintenanceCosts = mnt;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Real net income calculation: SUM(revenue) - SUM(maintenance_costs)
+        BigDecimal netIncome = totalRevenue.subtract(totalMaintenanceCosts);
+
+        // Fetch detailed records for the data tables
+        List<Payment> approvedPayments = paymentRepository.findAllApprovedPayments();
+        List<com.driveflow.demo_driveflow.maintenance.Maintenance> maintenanceRecords = java.util.Collections.emptyList();
+        if (maintenanceRepository != null) {
+            maintenanceRecords = maintenanceRepository.findAll();
+        }
+
+        return CompanySalesSummaryDto.builder()
+                .totalRevenue(totalRevenue)
+                .totalMaintenanceCosts(totalMaintenanceCosts)
+                .netIncome(netIncome)
+                .approvedPaymentsCount(approvedPayments.size())
+                .maintenanceServicesCount(maintenanceRecords.size())
+                .beneficiaryName("DriveFlow Car Rental Systems Inc.")
+                .bankName("Commercial Bank of Ceylon (Corporate Banking Division)")
+                .accountName("DriveFlow Corporate Operating Fund")
+                .accountNumber("1000-8842-9931-5021")
+                .routingNumber("071000288")
+                .swiftCode("CBCLKLX")
+                .branchName("Colombo Central Main Hub")
+                .depositInstructions("Please quote Customer Invoice ID (#INV-XXXX) or Booking ID (#BK-XXXX) in payment reference.")
+                .approvedPayments(approvedPayments)
+                .maintenanceRecords(maintenanceRecords)
+                .build();
+    }
 }
+

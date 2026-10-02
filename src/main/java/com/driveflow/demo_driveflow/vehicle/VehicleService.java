@@ -1,13 +1,20 @@
 package com.driveflow.demo_driveflow.vehicle;
 
 import java.util.List;
+import java.util.Map;
 
 public interface VehicleService {
     List<Vehicle> getAllVehicles();
     List<Vehicle> searchVehicles(String search, String status);
+    List<Vehicle> searchVehiclesWithBrand(String search, String status, String brand);
+    List<Vehicle> getVehiclesByBrand(String brand);
+    List<Vehicle> getAvailableVehiclesByBrand(String brand);
+    List<String> getAllBrands();
     Vehicle getVehicleById(Long id);
     Vehicle registerVehicle(Vehicle vehicle);
+    Vehicle registerVehicle(VehicleRegistrationDto dto);
     Vehicle updateVehicle(Long id, Vehicle vehicle);
     void removeVehicle(Long id);
-    java.util.Map<String, Long> getVehicleStatusCounts();
+    Map<String, Long> getVehicleStatusCounts();
+    Map<String, Long> getBrandVehicleCounts();
 }
