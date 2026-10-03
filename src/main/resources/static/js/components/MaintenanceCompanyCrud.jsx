@@ -15,7 +15,7 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
       companyId: 1,
       companyName: 'AutoCare Precision Services',
       email: 'autocare@precisionfleet.com',
-      contactNumber: '011-2894567',
+      contactNumber: '0112894567',
       address: '45 Station Road, Colombo 03',
       speciality: 'Engine & Transmission Overhaul'
     },
@@ -23,7 +23,7 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
       companyId: 2,
       companyName: 'Apex Fleet Mechanics & Bodywork',
       email: 'service@apexfleet.com',
-      contactNumber: '011-4567890',
+      contactNumber: '0114567890',
       address: '122 Baseline Highway, Colombo 08',
       speciality: 'Bodywork, Paint & Structural Repairs'
     },
@@ -31,7 +31,7 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
       companyId: 3,
       companyName: 'VoltTech Hybrid & EV Diagnostics',
       email: 'support@volttechfleet.com',
-      contactNumber: '011-3456789',
+      contactNumber: '0113456789',
       address: '88 High Level Road, Nugegoda',
       speciality: 'Hybrid & Electric Vehicle Servicing'
     }
@@ -71,6 +71,9 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
       err.email = 'Notification email is mandatory.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       err.email = 'Please provide a valid email format.';
+    }
+    if (!formData.contactNumber || !/^[0-9]{10}$/.test(formData.contactNumber.trim())) {
+      err.contactNumber = 'Contact number must be exactly 10 digits long.';
     }
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -274,15 +277,21 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                    Phone Number
+                    Phone Number (10 digits) <span style={{ color: '#dc2626' }}>*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.contactNumber}
                     onChange={e => setFormData({ ...formData, contactNumber: e.target.value })}
-                    style={{ width: '100%', padding: '0.55rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.88rem' }}
-                    placeholder="011-2894567"
+                    maxLength={10}
+                    style={{ width: '100%', padding: '0.55rem', border: `1px solid ${errors.contactNumber ? '#dc2626' : '#cbd5e1'}`, borderRadius: '6px', fontSize: '0.88rem' }}
+                    placeholder="0112894567"
                   />
+                  {errors.contactNumber && (
+                    <span style={{ color: '#dc2626', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>
+                      {errors.contactNumber}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>

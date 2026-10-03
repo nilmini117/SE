@@ -41,7 +41,23 @@ public class Booking {
     private BigDecimal chargedRate;
 
     @Column(name = "status")
-    private String status; // PENDING, CONFIRMED, CANCELLED, COMPLETED
+    private String status; // PENDING, APPROVED, CONFIRMED, ACTIVE, RETURNED, COMPLETED, CANCELLED
+
+    public BookingStatus getBookingStatus() {
+        return this.status != null ? BookingStatus.fromString(this.status) : null;
+    }
+
+    public void setBookingStatus(BookingStatus bookingStatus) {
+        this.status = bookingStatus != null ? bookingStatus.name() : null;
+    }
+
+    public void setStatus(BookingStatus bookingStatus) {
+        this.status = bookingStatus != null ? bookingStatus.name() : null;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     @Column(name = "staff_message", length = 500)
     private String staffMessage;
@@ -56,6 +72,14 @@ public class Booking {
             return days > 0 ? (int) days : 1;
         }
         return 1;
+    }
+
+    public LocalDate getStartDate() {
+        return bookingDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.bookingDate = startDate;
     }
 
     // Relationships

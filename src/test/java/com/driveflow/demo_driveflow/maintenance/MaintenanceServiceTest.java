@@ -1,6 +1,8 @@
 package com.driveflow.demo_driveflow.maintenance;
 
 import com.driveflow.demo_driveflow.email.EmailService;
+import com.driveflow.demo_driveflow.payment.CompanySalesSummaryDto;
+import com.driveflow.demo_driveflow.payment.PaymentService;
 import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import com.driveflow.demo_driveflow.vehicle.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +41,9 @@ public class MaintenanceServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private PaymentService paymentService;
+
     @InjectMocks
     private MaintenanceServiceImpl maintenanceService;
 
@@ -58,7 +63,7 @@ public class MaintenanceServiceTest {
         company.setCompanyId(501L);
         company.setCompanyName("AutoCare Precision Services");
         company.setEmail("autocare@precisionfleet.com");
-        company.setContactNumber("011-2894567");
+        company.setContactNumber("0112894567");
         company.setSpeciality("Engine & Transmission Overhaul");
 
         maintenance = new Maintenance();
@@ -72,6 +77,10 @@ public class MaintenanceServiceTest {
     @DisplayName("Verify scheduling a vehicle automatically updates status to UNAVAILABLE and triggers email notification")
     void scheduleService_shouldSetVehicleStatusToUnavailable_andTriggerEmailNotification() {
         // Arrange
+        CompanySalesSummaryDto sales = CompanySalesSummaryDto.builder()
+                .netIncome(new BigDecimal("150000.00"))
+                .build();
+        when(paymentService.getCompanySalesSummary()).thenReturn(sales);
         when(vehicleRepository.findById(101L)).thenReturn(Optional.of(vehicle));
         when(maintenanceCompanyRepository.findById(501L)).thenReturn(Optional.of(company));
         when(maintenanceRepository.save(any(Maintenance.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -99,6 +108,66 @@ public class MaintenanceServiceTest {
                 eq(maintenance.getServiceDate()),
                 eq(new BigDecimal("18500.00"))
         );
+    }
+
+    @Test
+    @DisplayName("Verify scheduling fails when approximated cost exceeds Real Net Operating Income")
+    void scheduleService_shouldFail_whenCostExceedsNetOperatingIncome() {
+        CompanySalesSummaryDto sales = CompanySalesSummaryDto.builder()
+                .netIncome(new BigDecimal("10000.00"))
+                .build();
+        when(paymentService.getCompanySalesSummary()).thenReturn(sales);
+        maintenance.setApproximatedCost(new BigDecimal("25000.00"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            maintenanceService.scheduleService(maintenance);
+        });
+
+        assertTrue(ex.getMessage().contains("strictly less than the company's current Real Net Operating Income"));
+        verify(maintenanceRepository, never()).save(any());
+        verify(vehicleRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Verify scheduling fails when approximated cost equals Real Net Operating Income (must be strictly less)")
+    void scheduleService_shouldFail_whenCostEqualsNetOperatingIncome() {
+        CompanySalesSummaryDto sales = CompanySalesSummaryDto.builder()
+                .netIncome(new BigDecimal("18500.00"))
+                .build();
+        when(paymentService.getCompanySalesSummary()).thenReturn(sales);
+        maintenance.setApproximatedCost(new BigDecimal("18500.00"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            maintenanceService.scheduleService(maintenance);
+        });
+
+        assertTrue(ex.getMessage().contains("strictly less than the company's current Real Net Operating Income"));
+        verify(maintenanceRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Verify updating record fails when updated approximated cost exceeds Net Operating Income")
+    void updateRecord_shouldFail_whenApproximatedCostExceedsNetOperatingIncome() {
+        Maintenance existing = new Maintenance();
+        existing.setMaintenanceId(1L);
+        existing.setApproximatedCost(new BigDecimal("5000.00"));
+        existing.setCost(new BigDecimal("5000.00"));
+
+        when(maintenanceRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        CompanySalesSummaryDto sales = CompanySalesSummaryDto.builder()
+                .netIncome(new BigDecimal("20000.00"))
+                .build();
+        when(paymentService.getCompanySalesSummary()).thenReturn(sales);
+
+        Maintenance updated = new Maintenance();
+        updated.setApproximatedCost(new BigDecimal("25000.00"));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            maintenanceService.updateRecord(1L, updated);
+        });
+
+        assertTrue(ex.getMessage().contains("strictly less than the company's current Real Net Operating Income"));
     }
 
     @Test

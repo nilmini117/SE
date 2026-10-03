@@ -70,7 +70,13 @@ public class SecurityConfig {
                 .requestMatchers("/vehicles/new", "/vehicles/*/edit", "/vehicles/*/delete").hasRole("STAFF")
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/promotions", "/promotions/**").hasRole("STAFF")
                 .requestMatchers("/promotions/new", "/promotions/*/edit", "/promotions/*/delete").hasRole("STAFF")
-                .requestMatchers("/feedback/*/resolve", "/feedback/*/delete").hasRole("STAFF")
+                // Staff-only feedback visibility toggles / approval / resolve
+                .requestMatchers("/feedback/*/resolve", "/feedback/*/toggle-visibility", "/feedback/*/approve", "/api/feedback/*/toggle-visibility", "/api/feedback/*/approve").hasRole("STAFF")
+                // Staff Permissions (Immutability): Staff must have strictly read-only access to feedback text.
+                // PUT requests to alter feedback text are strictly restricted to CUSTOMER role (Staff is rejected with 403 Forbidden).
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/feedback/**", "/api/feedback/**").hasRole("CUSTOMER")
+                // Feedback views and actions
+                .requestMatchers("/feedback/new", "/feedback", "/feedback/**", "/api/feedback/**").authenticated()
                 // Other views can be browsed by authenticated users
                 .anyRequest().authenticated()
             )

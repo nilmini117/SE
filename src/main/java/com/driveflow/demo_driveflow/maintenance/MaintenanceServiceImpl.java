@@ -33,6 +33,24 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.driveflow.demo_driveflow.payment.PaymentService paymentService;
+
+    private BigDecimal getRealNetOperatingIncome() {
+        if (paymentService != null) {
+            try {
+                com.driveflow.demo_driveflow.payment.CompanySalesSummaryDto sales = paymentService.getCompanySalesSummary();
+                if (sales != null && sales.getNetIncome() != null) {
+                    return sales.getNetIncome();
+                }
+            } catch (Exception e) {
+                log.warn("Could not retrieve company sales summary for net income validation: {}", e.getMessage());
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
     @Override
     public List<Maintenance> getAllRecords() {
         return maintenanceRepository.findAll();
@@ -60,6 +78,13 @@ public class MaintenanceServiceImpl implements MaintenanceService {
         // 3. Mandatory Numerical Approximated Cost Validation
         if (record.getApproximatedCost() == null || record.getApproximatedCost().compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Mandatory input: A valid numerical approximated cost must be specified.");
+        }
+
+        // 4. Strict Cost Validation: Must be strictly less than current Real Net Operating Income
+        BigDecimal netIncome = getRealNetOperatingIncome();
+        if (record.getApproximatedCost().compareTo(netIncome) >= 0) {
+            throw new IllegalArgumentException("Approximated maintenance cost (Rs. " + record.getApproximatedCost()
+                    + ") must be strictly less than the company's current Real Net Operating Income (Rs. " + netIncome + ").");
         }
 
         // Retrieve managed vehicle
@@ -112,9 +137,14 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     public Maintenance updateRecord(Long id, Maintenance updated) {
         Maintenance existing = getRecordById(id);
         existing.setServiceDate(updated.getServiceDate());
-        existing.setCost(updated.getCost());
         if (updated.getApproximatedCost() != null) {
+            BigDecimal netIncome = getRealNetOperatingIncome();
+            if (updated.getApproximatedCost().compareTo(netIncome) >= 0) {
+                throw new IllegalArgumentException("Approximated maintenance cost (Rs. " + updated.getApproximatedCost()
+                        + ") must be strictly less than the company's current Real Net Operating Income (Rs. " + netIncome + ").");
+            }
             existing.setApproximatedCost(updated.getApproximatedCost());
+            existing.setCost(updated.getApproximatedCost());
         }
         if (updated.getVehicle() != null && updated.getVehicle().getVehicleId() != null) {
             Vehicle vehicle = vehicleRepository.findById(updated.getVehicle().getVehicleId())

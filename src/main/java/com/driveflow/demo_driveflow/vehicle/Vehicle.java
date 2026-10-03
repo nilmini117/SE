@@ -87,6 +87,14 @@ public class Vehicle {
         return "Standard";
     }
 
+    public String getOperationalStatus() {
+        return this.status;
+    }
+
+    public void setOperationalStatus(String operationalStatus) {
+        this.status = operationalStatus;
+    }
+
     public String getDisplayName() {
         return (model != null ? model : "Vehicle") + (regNo != null ? " (" + regNo + ")" : "");
     }

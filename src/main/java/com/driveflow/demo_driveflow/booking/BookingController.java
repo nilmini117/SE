@@ -543,6 +543,47 @@ public class BookingController {
         return "redirect:/bookings";
     }
 
+    /**
+     * Customer Vehicle Return Action (MVC fallback):
+     * Updates booking to RETURNED, releases vehicle to AVAILABLE, and redirects to unlocked feedback form.
+     */
+    @PostMapping("/{id}/return")
+    public String returnVehicle(
+            @PathVariable Long id,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+
+        Booking existing = bookingService.getBookingById(id);
+        if (existing == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Booking not found.");
+            return "redirect:/invoices-payments";
+        }
+
+        if (!isStaff(authentication)) {
+            String email = authentication.getName();
+            Optional<Customer> customerOpt = customerRepository.findByEmail(email);
+            if (customerOpt.isEmpty() || existing.getCustomer() == null ||
+                    !existing.getCustomer().getSystemId().equals(customerOpt.get().getSystemId())) {
+                redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to return this vehicle.");
+                return "redirect:/invoices-payments";
+            }
+        }
+
+        try {
+            bookingService.returnVehicle(id);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Vehicle successfully returned! Inventory is now released to AVAILABLE, and feedback has been unlocked for your trip.");
+            return "redirect:/feedback/new?bookingId=" + id;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Return Vehicle failed: " + e.getMessage());
+            return "redirect:/invoices-payments";
+        }
+    }
+
     // --- Dynamic REST API Endpoints for Frontend Engine ---
 
     @GetMapping("/calculate-pricing")

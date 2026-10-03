@@ -9,7 +9,6 @@
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Maintenance & Fleet Care</h1>
-            <p class="df-header-subtitle">Schedule routine mechanical services, outsource repairs to external companies, and track fleet costs.</p>
         </div>
         <div class="df-header-actions">
             <a th:href="@{/maintenance/new}" class="btn btn-primary">
@@ -65,7 +64,6 @@
                 <th>Assigned Company</th>
                 <th>Service Date</th>
                 <th>Approximated Cost</th>
-                <th>Actual Cost</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -91,13 +89,19 @@
                 </td>
                 <td th:text="${r.serviceDate}">2026-09-01</td>
                 <td>
-                    <strong style="color: #059669;" th:text="${r.approximatedCost != null ? '$' + #numbers.formatDecimal(r.approximatedCost, 1, 2) : '-'}">$240.00</strong>
-                </td>
-                <td>
-                    <span th:text="${r.cost != null ? '$' + #numbers.formatDecimal(r.cost, 1, 2) : '-'}">$240.00</span>
+                    <strong style="color: #059669;" th:text="${r.approximatedCost != null ? 'Rs. ' + #numbers.formatDecimal(r.approximatedCost, 1, 2) : '-'}">Rs. 240.00</strong>
                 </td>
                 <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
-                    <a th:href="@{/maintenance/{id}/edit(id=${r.maintenanceId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <button type="button"
+                            class="btn btn-secondary btn-sm edit-schedule-btn"
+                            th:data-id="${r.maintenanceId}"
+                            th:data-vehicle-id="${r.vehicle != null ? r.vehicle.vehicleId : ''}"
+                            th:data-company-id="${r.maintenanceCompany != null ? r.maintenanceCompany.companyId : ''}"
+                            th:data-date="${r.serviceDate}"
+                            th:data-cost="${r.approximatedCost != null ? #numbers.formatDecimal(r.approximatedCost, 1, 2) : '0.00'}"
+                            onclick="openEditScheduleModal(this.getAttribute('data-id'), this.getAttribute('data-vehicle-id'), this.getAttribute('data-company-id'), this.getAttribute('data-date'), this.getAttribute('data-cost'))">
+                        Edit
+                    </button>
                     <button type="button"
                             class="btn btn-danger btn-sm"
                             th:data-id="${r.maintenanceId}"
@@ -125,6 +129,74 @@
         </div>
     </div>
 </main>
+
+<!-- Edit Service Record Modal -->
+<div id="editScheduleModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 580px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div style="width: 34px; height: 34px; border-radius: 50%; background: #e0e7ff; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700;">
+                    ✎
+                </div>
+                <h3 id="editScheduleModalTitle" style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;">Edit Service Record</h3>
+            </div>
+            <button type="button" onclick="closeEditScheduleModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <form id="editScheduleForm" method="post" action="">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" id="editRecordId" name="maintenanceId" />
+
+            <div style="padding: 1.5rem;">
+                <div id="editModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; font-size: 0.85rem;">
+                </div>
+
+                <!-- Vehicle selection -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 700;">Fleet Vehicle <span style="color: var(--danger);">*</span></label>
+                    <select name="vehicleId" id="editVehicleId" class="form-select" required>
+                        <option value="" disabled>-- Select Vehicle --</option>
+                        <option th:each="v : ${vehicles}"
+                                th:value="${v.vehicleId}"
+                                th:text="${v.model + ' (' + v.regNo + ')'}">
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Outsourced Maintenance Company -->
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 700;">External Maintenance Company <span style="color: var(--danger);">*</span></label>
+                    <select name="companyId" id="editCompanyId" class="form-select" required>
+                        <option value="" disabled>-- Select Maintenance Partner --</option>
+                        <option th:each="c : ${companies}"
+                                th:value="${c.companyId}"
+                                th:text="${c.companyName + ' (' + (c.speciality != null ? c.speciality : 'General') + ')'}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <!-- Service Date -->
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Service Date <span style="color: var(--danger);">*</span></label>
+                        <input type="date" name="serviceDate" id="editServiceDate" class="form-control" required />
+                    </div>
+
+                    <!-- Approximated Cost (Rs.) -->
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 700;">Approximated Cost (Rs.) <span style="color: var(--danger);">*</span></label>
+                        <input type="number" step="0.01" min="0" name="approximatedCost" id="editApproximatedCost" class="form-control" placeholder="0.00" required />
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeEditScheduleModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="font-weight: 700;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Delete Service Record Confirmation Modal -->
 <div id="deleteScheduleModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
@@ -165,7 +237,41 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    var currentNetIncome = /*[[${netIncome != null ? netIncome : 0}]]*/ 0;
+
+    function openEditScheduleModal(id, vehicleId, companyId, date, cost) {
+        var modal = document.getElementById('editScheduleModal');
+        var form = document.getElementById('editScheduleForm');
+        var title = document.getElementById('editScheduleModalTitle');
+        var idInput = document.getElementById('editRecordId');
+        var vehicleSelect = document.getElementById('editVehicleId');
+        var companySelect = document.getElementById('editCompanyId');
+        var dateInput = document.getElementById('editServiceDate');
+        var costInput = document.getElementById('editApproximatedCost');
+        var errorDiv = document.getElementById('editModalError');
+
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+
+        form.action = '/maintenance/' + id;
+        if (title) title.textContent = 'Edit Service Record #MNT-' + id;
+        if (idInput) idInput.value = id;
+        if (vehicleSelect && vehicleId) vehicleSelect.value = vehicleId;
+        if (companySelect && companyId) companySelect.value = companyId;
+        if (dateInput && date) dateInput.value = date;
+        if (costInput && cost) costInput.value = cost;
+
+        modal.style.display = 'flex';
+    }
+
+    function closeEditScheduleModal() {
+        var modal = document.getElementById('editScheduleModal');
+        if (modal) modal.style.display = 'none';
+    }
+
     function openDeleteScheduleModal(id, vehicle, date, cost) {
         var modal = document.getElementById('deleteScheduleModal');
         var form = document.getElementById('deleteScheduleForm');
@@ -177,20 +283,48 @@
             '<div><strong>Record ID:</strong> #MNT-' + id + '</div>' +
             '<div><strong>Vehicle:</strong> ' + (vehicle || 'Unassigned') + '</div>' +
             '<div><strong>Date:</strong> ' + (date || '-') + '</div>' +
-            '<div><strong>Cost:</strong> $' + (cost || '0.00') + '</div>';
+            '<div><strong>Approximated Cost:</strong> Rs. ' + (cost || '0.00') + '</div>';
 
         modal.style.display = 'flex';
     }
 
     function closeDeleteScheduleModal() {
         var modal = document.getElementById('deleteScheduleModal');
-        modal.style.display = 'none';
+        if (modal) modal.style.display = 'none';
     }
 
+    // Modal form client validation: cost must be strictly less than net income
+    document.addEventListener('DOMContentLoaded', function() {
+        var editForm = document.getElementById('editScheduleForm');
+        if (editForm) {
+            editForm.addEventListener('submit', function(e) {
+                var costInput = document.getElementById('editApproximatedCost');
+                if (costInput) {
+                    var cost = parseFloat(costInput.value);
+                    if (!isNaN(cost) && !isNaN(currentNetIncome) && cost >= currentNetIncome) {
+                        e.preventDefault();
+                        var errorDiv = document.getElementById('editModalError');
+                        if (errorDiv) {
+                            errorDiv.textContent = 'Approximated cost (Rs. ' + cost.toFixed(2) + 
+                                ') must be strictly less than the company\'s current Real Net Operating Income (Rs. ' + 
+                                Number(currentNetIncome).toFixed(2) + ').';
+                            errorDiv.style.display = 'block';
+                        }
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
     window.onclick = function(event) {
-        var modal = document.getElementById('deleteScheduleModal');
-        if (event.target === modal) {
+        var deleteModal = document.getElementById('deleteScheduleModal');
+        if (event.target === deleteModal) {
             closeDeleteScheduleModal();
+        }
+        var editModal = document.getElementById('editScheduleModal');
+        if (event.target === editModal) {
+            closeEditScheduleModal();
         }
     };
 </script>

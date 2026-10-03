@@ -311,6 +311,64 @@
             <a th:href="@{/vehicles}" class="btn btn-secondary btn-sm" style="margin-top: 0.75rem;">Reset Filter</a>
         </div>
     </div>
+
+    <!-- Verified Customer Reviews Section (Public Catalog Visibility) -->
+    <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.75rem; margin-top: 2.5rem; box-shadow: var(--shadow-sm);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--slate-900); margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>⭐</span>
+                    Verified Customer Reviews &amp; Fleet Experience
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0.25rem 0 0 0;">
+                    Genuine feedback from customers who completed rentals with DriveFlow.
+                </p>
+            </div>
+            <span class="badge badge-info" th:if="${publicFeedbackList != null}" th:text="${publicFeedbackList.size()} + ' Published Reviews'">0 Published Reviews</span>
+        </div>
+
+        <div th:if="${publicFeedbackList != null and !publicFeedbackList.empty}" 
+             style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem;">
+            <div th:each="rev : ${publicFeedbackList}" 
+                 style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <span class="badge badge-success" th:if="${rev.category == 'VEHICLE'}">Vehicle Quality</span>
+                            <span class="badge badge-info" th:if="${rev.category == 'SERVICE'}">Customer Service</span>
+                            <span class="badge badge-warning" th:if="${rev.category == 'PRICING'}">Pricing &amp; Rates</span>
+                            <span class="badge badge-primary" th:if="${rev.category == 'STAFF'}">Staff Interaction</span>
+                            <span class="badge badge-secondary" th:if="${rev.category != 'VEHICLE' and rev.category != 'SERVICE' and rev.category != 'PRICING' and rev.category != 'STAFF'}" th:text="${rev.category}">Review</span>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--slate-400);" th:text="${rev.date}">2026-09-15</span>
+                    </div>
+
+                    <p style="font-size: 0.92rem; color: var(--slate-800); line-height: 1.5; margin: 0 0 1rem 0; font-style: italic;" 
+                       th:text="'“' + ${rev.message} + '”'">
+                        "Excellent service and smooth vehicle."
+                    </p>
+                </div>
+
+                <div style="border-top: 1px dashed var(--slate-200); padding-top: 0.75rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--slate-600);">
+                    <div style="display: flex; align-items: center; gap: 0.4rem;">
+                        <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span>
+                        <strong th:if="${rev.customer != null}" th:text="${rev.customer.name}">Verified Customer</strong>
+                        <strong th:if="${rev.customer == null}">Verified Renter</strong>
+                    </div>
+                    <span th:if="${rev.booking != null and rev.booking.vehicle != null}" 
+                          style="color: var(--slate-500); font-weight: 500;" 
+                          th:text="${rev.booking.vehicle.brand + ' ' + rev.booking.vehicle.model}">
+                        Toyota Corolla
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${publicFeedbackList == null or publicFeedbackList.empty}" 
+             style="text-align: center; padding: 2rem; color: var(--slate-400); font-size: 0.9rem;">
+            No public customer reviews have been published yet. Customer reviews appear here once verified and approved.
+        </div>
+    </div>
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>

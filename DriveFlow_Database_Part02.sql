@@ -149,7 +149,7 @@ CREATE TABLE booking (
     pickup_branch_id BIGINT NOT NULL,
     return_branch_id BIGINT NOT NULL,
     vehicle_id BIGINT NOT NULL,
-    CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED')),
+    CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'APPROVED', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'ACTIVE', 'RETURNED')),
     CONSTRAINT chk_booking_dates CHECK (end_date >= booking_date),
     CONSTRAINT fk_booking_customer FOREIGN KEY (customer_id) REFERENCES customer(system_id),
     CONSTRAINT fk_booking_pickup FOREIGN KEY (pickup_branch_id) REFERENCES branch(branch_id),
@@ -705,12 +705,12 @@ BEGIN
         JOIN inserted i ON v.vehicle_id = i.vehicle_id
         WHERE i.status = 'CONFIRMED';
 
-        -- Update vehicle to AVAILABLE when booking is completed or cancelled
+        -- Update vehicle to AVAILABLE when booking is completed, cancelled, or returned
         UPDATE v
         SET v.status = 'AVAILABLE'
         FROM vehicle v
         JOIN inserted i ON v.vehicle_id = i.vehicle_id
-        WHERE i.status IN ('COMPLETED', 'CANCELLED');
+        WHERE i.status IN ('COMPLETED', 'CANCELLED', 'RETURNED');
     END
 END;
 GO

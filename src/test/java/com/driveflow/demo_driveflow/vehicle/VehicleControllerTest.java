@@ -38,6 +38,9 @@ public class VehicleControllerTest {
     @Mock
     private StaffRepository staffRepository;
 
+    @Mock
+    private com.driveflow.demo_driveflow.feedback.FeedbackService feedbackService;
+
     @InjectMocks
     private VehicleController vehicleController;
 
@@ -59,6 +62,7 @@ public class VehicleControllerTest {
         when(vehicleService.getAllBrands()).thenReturn(List.of("Toyota", "Suzuki", "Honda", "Tesla", "Benz"));
         when(vehicleService.searchVehicles(any(), eq("AVAILABLE"))).thenReturn(List.of());
         when(vehicleService.getBrandVehicleCounts()).thenReturn(dynamicCounts);
+        when(feedbackService.getPubliclyVisibleFeedback()).thenReturn(List.of());
 
         mockMvc.perform(get("/vehicles"))
                 .andExpect(status().isOk())

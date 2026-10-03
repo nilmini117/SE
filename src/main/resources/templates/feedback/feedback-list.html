@@ -8,19 +8,25 @@
 <main class="df-main">
     <div class="df-header">
         <div>
-            <h1 class="df-header-title" th:if="${isStaff}">Customer Feedback & Reviews</h1>
-            <h1 class="df-header-title" th:unless="${isStaff}">My Feedback & Support Requests</h1>
-            <p class="df-header-subtitle" th:if="${isStaff}">Review feedback inquiries, manage customer complaints, and audit service quality.</p>
-            <p class="df-header-subtitle" th:unless="${isStaff}">Submit an inquiry or complaint and track its status.</p>
+            <h1 class="df-header-title" th:if="${isStaff}">Customer Feedback &amp; Reviews</h1>
+            <h1 class="df-header-title" th:unless="${isStaff}">My Feedback</h1>
+            <p class="df-header-subtitle" th:if="${isStaff}">Audit customer feedback, review service quality, and manage public catalog visibility.</p>
+            <p class="df-header-subtitle" th:unless="${isStaff}">Submit feedback regarding your completed vehicle rentals and view staff review status.</p>
         </div>
-        <div class="df-header-actions">
-            <a th:href="@{/feedback/new}" class="btn btn-primary">
+        <!-- Staff members do NOT write feedback: "+ Submit feedback" is completely removed from staff dashboard -->
+        <div class="df-header-actions" th:unless="${isStaff}">
+            <a th:if="${hasCompletedBooking}" th:href="@{/feedback/new}" class="btn btn-primary" id="customerSubmitFeedbackBtn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Submit Feedback
+                + Submit Feedback
             </a>
+            <button th:unless="${hasCompletedBooking}" class="btn btn-secondary" disabled 
+                    style="opacity: 0.65; cursor: not-allowed;" 
+                    title="Feedback submission unlocks after your vehicle has been returned and rental marked completed.">
+                🔒 Submit Feedback (Locked)
+            </button>
         </div>
     </div>
 
@@ -41,26 +47,50 @@
         <span th:text="${errorMessage}">Error message</span>
     </div>
 
+    <!-- Customer Submission Lock Informative Banner -->
+    <div th:if="${!isStaff and !hasCompletedBooking}" class="alert alert-info" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <div>
+            <strong>Submission Lock Active:</strong> Customers can submit feedback only after a vehicle rental has been returned and marked as <strong>COMPLETED</strong> or <strong>RETURNED</strong>.
+        </div>
+    </div>
+
     <div class="df-table-container">
         <table class="df-table" th:if="${feedbackList != null and !feedbackList.empty}">
             <thead>
             <tr>
-                <th>Ticket ID</th>
+                <!-- Ticket ID strictly hidden from customer view; only visible to staff -->
+                <th th:if="${isStaff}">Ticket ID</th>
                 <th>Date</th>
                 <th th:if="${isStaff}">Customer</th>
+                <th>Linked Booking</th>
                 <th>Category</th>
-                <th>Customer Message</th>
-                <th>Status</th>
+                <th>Feedback Message</th>
+                <th>Approval Status</th>
+                <th>Catalog Visibility</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="f : ${feedbackList}">
-                <td><strong th:text="'#FB-' + ${f.feedbackId}">#FB-1</strong></td>
-                <td th:text="${f.date}">2026-09-13</td>
+                <!-- Internal DB/Ticket ID rendered ONLY for staff, completely absent from customer DOM -->
                 <td th:if="${isStaff}">
-                    <span th:if="${f.customer != null}" th:text="${f.customer.name}">Customer Name</span>
+                    <strong th:text="'#FB-' + ${f.feedbackId}">#FB-1</strong>
+                </td>
+                <td th:text="${f.date}" style="white-space: nowrap;">2026-09-13</td>
+                <td th:if="${isStaff}">
+                    <span th:if="${f.customer != null}" th:text="${f.customer.name}" style="font-weight: 600;">Customer Name</span>
                     <span th:if="${f.customer == null}" style="color: var(--slate-400); font-style: italic;">Anonymous</span>
+                </td>
+                <td>
+                    <div th:if="${f.booking != null}">
+                        <strong th:text="${f.booking.vehicle != null ? (f.booking.vehicle.brand + ' ' + f.booking.vehicle.model) : 'Vehicle #' + f.booking.bookingId}">Toyota Camry</strong>
+                        <div style="font-size: 0.75rem; color: var(--slate-500);" th:text="${f.booking.status}">COMPLETED</div>
+                    </div>
+                    <span th:if="${f.booking == null}" style="color: var(--slate-400); font-size: 0.85rem;">General Rental</span>
                 </td>
                 <td>
                     <span th:if="${f.category == 'SERVICE'}" class="badge badge-info">Service</span>
@@ -71,13 +101,46 @@
                 </td>
                 <td style="max-width: 320px; line-height: 1.4;" th:text="${f.message}">Customer message content</td>
                 <td>
-                    <span th:if="${f.status == 'RESOLVED'}" class="badge badge-success">Resolved</span>
-                    <span th:if="${f.status != 'RESOLVED'}" class="badge badge-warning" th:text="${f.status != null ? f.status : 'OPEN'}">OPEN</span>
+                    <span th:if="${f.approvalStatus == 'APPROVED' or f.isApproved()}" class="badge badge-success" style="background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;">APPROVED</span>
+                    <span th:unless="${f.approvalStatus == 'APPROVED' or f.isApproved()}" class="badge badge-warning" style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a;">PENDING REVIEW</span>
                 </td>
-                <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
-                    <a th:href="@{/feedback/{id}/edit(id=${f.feedbackId})}" class="btn btn-secondary btn-sm">Edit</a>
-                    <a th:if="${isStaff != null and isStaff and f.status != 'RESOLVED'}"
-                       th:href="@{/feedback/{id}/resolve(id=${f.feedbackId})}" class="btn btn-success btn-sm">Resolve</a>
+                <td>
+                    <span th:if="${f.publicVisibility}" class="badge badge-info" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;">🌐 Published</span>
+                    <span th:unless="${f.publicVisibility}" class="badge badge-secondary" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">🔒 Private</span>
+                </td>
+                <td style="text-align: right; white-space: nowrap;">
+                    <!-- CUSTOMER ACTIONS: Delete anytime, Edit only if NOT approved -->
+                    <th:block th:unless="${isStaff}">
+                        <a th:if="${f.approvalStatus != 'APPROVED' and !f.isApproved()}" 
+                           th:href="@{/feedback/{id}/edit(id=${f.feedbackId})}" 
+                           class="btn btn-secondary btn-sm" style="margin-right: 0.35rem;">
+                            Edit
+                        </a>
+                        <button th:if="${f.approvalStatus == 'APPROVED' or f.isApproved()}" 
+                                class="btn btn-secondary btn-sm" 
+                                disabled 
+                                style="opacity: 0.55; cursor: not-allowed; margin-right: 0.35rem;" 
+                                title="This feedback has been approved by staff and cannot be modified.">
+                            Edit (Locked)
+                        </button>
+                        <form th:action="@{/feedback/{id}/delete(id=${f.feedbackId})}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this feedback?');">
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #ef4444; color: white;">
+                                Delete
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- STAFF ACTIONS: Read-only text, no edits; single Toggle Public Visibility action -->
+                    <th:block th:if="${isStaff}">
+                        <form th:action="@{/feedback/{id}/toggle-visibility(id=${f.feedbackId})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-sm" 
+                                    th:classappend="${f.publicVisibility} ? 'btn-secondary' : 'btn-success'"
+                                    th:title="${f.publicVisibility} ? 'Click to hide this feedback from the public catalog' : 'Click to approve and publish this feedback on the public vehicle catalog'">
+                                <span th:if="${f.publicVisibility}">🔒 Hide from Catalog</span>
+                                <span th:unless="${f.publicVisibility}">🌐 Approve &amp; Publish</span>
+                            </button>
+                        </form>
+                    </th:block>
                 </td>
             </tr>
             </tbody>
@@ -90,11 +153,19 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
             </div>
-            <h3 class="empty-state-title" th:if="${isStaff}">No Feedback Tickets</h3>
+            <h3 class="empty-state-title" th:if="${isStaff}">No Feedback Inquiries</h3>
             <h3 class="empty-state-title" th:unless="${isStaff}">No Feedback Submitted Yet</h3>
-            <p class="empty-state-desc" th:if="${isStaff}">Customer inquiries and satisfaction ratings will appear in this inbox.</p>
-            <p class="empty-state-desc" th:unless="${isStaff}">Have a question, feedback, or need assistance? Submit your request here.</p>
-            <a th:href="@{/feedback/new}" class="btn btn-primary">Submit First Review</a>
+            <p class="empty-state-desc" th:if="${isStaff}">Customer inquiries and reviews will appear here for staff review and catalog publishing.</p>
+            <p class="empty-state-desc" th:unless="${isStaff}">Have you recently rented a vehicle with us? Share your experience once your trip is completed.</p>
+            <!-- Staff does not have submit button. Customer only gets active button if completed booking exists -->
+            <div th:unless="${isStaff}" style="margin-top: 1rem;">
+                <a th:if="${hasCompletedBooking}" th:href="@{/feedback/new}" class="btn btn-primary">
+                    Submit First Review
+                </a>
+                <p th:unless="${hasCompletedBooking}" style="color: var(--slate-500); font-size: 0.85rem; font-style: italic;">
+                    Feedback submission unlocks once your vehicle rental is finalized and returned.
+                </p>
+            </div>
         </div>
     </div>
 </main>

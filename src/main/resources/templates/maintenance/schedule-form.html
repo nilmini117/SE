@@ -100,19 +100,15 @@
                 <!-- Field 4: Mandatory Numerical Approximated Cost -->
                 <div class="form-group">
                     <label class="form-label" style="font-weight: 700;">
-                        Approximated Cost ($ USD) <span style="color: var(--danger);">*</span>
+                        Approximated Cost (Rs.) <span style="color: var(--danger);">*</span>
                     </label>
                     <input type="number" step="0.01" min="0" name="approximatedCost" id="approximatedCost" 
                            th:value="${record.approximatedCost != null ? record.approximatedCost : record.cost}" 
                            class="form-control" placeholder="e.g. 18500.00" required>
-                    <small style="color: var(--slate-500); font-size: 0.78rem;">Numerical cost estimate for repairs</small>
+                    <small style="color: var(--slate-500); font-size: 0.78rem; display: block; margin-top: 0.25rem;">
+                        Numerical cost estimate. Must be strictly less than current Net Operating Income (<span th:text="${netIncome != null ? 'Rs. ' + #numbers.formatDecimal(netIncome, 1, 2) : 'Rs. 0.00'}">Rs. 0.00</span>).
+                    </small>
                 </div>
-            </div>
-
-            <!-- Optional: Final Actual Cost if completing -->
-            <div class="form-group" style="margin-top: 0.5rem; margin-bottom: 1.5rem;" th:if="${record.maintenanceId != null}">
-                <label class="form-label" style="font-weight: 600;">Actual Final Cost (Optional upon completion)</label>
-                <input type="number" step="0.01" min="0" th:field="*{cost}" class="form-control" placeholder="0.00">
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem;">
@@ -125,6 +121,28 @@
         </form>
     </div>
 </main>
+
+<script th:inline="javascript">
+    var maxNetIncome = /*[[${netIncome != null ? netIncome : 0}]]*/ 0;
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                var costInput = document.getElementById('approximatedCost');
+                if (costInput) {
+                    var val = parseFloat(costInput.value);
+                    if (!isNaN(val) && !isNaN(maxNetIncome) && val >= maxNetIncome) {
+                        e.preventDefault();
+                        alert('Validation Error: Approximated maintenance cost (Rs. ' + val.toFixed(2) + 
+                              ') must be strictly less than the company\'s current Real Net Operating Income (Rs. ' + 
+                              Number(maxNetIncome).toFixed(2) + ').');
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+</script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 

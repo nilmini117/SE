@@ -84,10 +84,12 @@ public class BookingServiceImpl implements BookingService {
         long pending = bookingRepository.countByStatusIgnoreCase("PENDING");
         long confirmed = bookingRepository.countByStatusIgnoreCase("CONFIRMED");
         long completed = bookingRepository.countByStatusIgnoreCase("COMPLETED");
+        long returned = bookingRepository.countByStatusIgnoreCase("RETURNED");
         long cancelled = bookingRepository.countByStatusIgnoreCase("CANCELLED");
         counts.put("ALL", total);
         counts.put("PENDING", pending);
         counts.put("CONFIRMED", confirmed);
+        counts.put("RETURNED", returned);
         counts.put("COMPLETED", completed);
         counts.put("CANCELLED", cancelled);
         return counts;
@@ -267,6 +269,9 @@ public class BookingServiceImpl implements BookingService {
         }
 
         String cleanStatus = newStatus.trim().toUpperCase();
+        if (!BookingStatus.isValid(cleanStatus)) {
+            throw new IllegalArgumentException("Invalid booking status: " + cleanStatus);
+        }
         booking.setStatus(cleanStatus);
 
         if ("CONFIRMED".equalsIgnoreCase(cleanStatus) || "APPROVED".equalsIgnoreCase(cleanStatus)) {
@@ -278,11 +283,12 @@ public class BookingServiceImpl implements BookingService {
                 vehicleRepository.save(v);
             }
             ensureInvoiceForBooking(booking);
-        } else if ("COMPLETED".equalsIgnoreCase(cleanStatus)) {
-            booking.setStaffMessage("Rental marked as completed by staff.");
+        } else if ("COMPLETED".equalsIgnoreCase(cleanStatus) || "RETURNED".equalsIgnoreCase(cleanStatus)) {
+            booking.setStaffMessage("Rental marked as " + cleanStatus.toLowerCase() + ". Vehicle inventory released to catalog.");
             if (booking.getVehicle() != null) {
                 Vehicle v = booking.getVehicle();
                 v.setStatus("AVAILABLE");
+                v.setOperationalStatus("AVAILABLE");
                 vehicleRepository.save(v);
             }
         } else if ("CANCELLED".equalsIgnoreCase(cleanStatus)) {
@@ -389,5 +395,57 @@ public class BookingServiceImpl implements BookingService {
         } catch (Exception ignored) {}
 
         bookingRepository.save(booking);
+    }
+
+    @Override
+    @Transactional
+    public Booking returnVehicle(Long bookingId) {
+        Booking booking = getBookingById(bookingId);
+        if (booking == null) {
+            throw new IllegalArgumentException("Booking not found: #" + bookingId);
+        }
+
+        String currentStatus = booking.getStatus();
+        // Visibility & Execution Constraint:
+        // Must only be executed for bookings currently in CONFIRMED or ACTIVE state (or APPROVED)
+        if (currentStatus == null || (!"CONFIRMED".equalsIgnoreCase(currentStatus.trim()) &&
+                !"ACTIVE".equalsIgnoreCase(currentStatus.trim()) &&
+                !"APPROVED".equalsIgnoreCase(currentStatus.trim()))) {
+            throw new IllegalStateException(
+                    "Vehicle return rejected: Booking #BK-" + bookingId + " is currently in '" + currentStatus +
+                    "' state. Only bookings in CONFIRMED or ACTIVE status can be returned."
+            );
+        }
+
+        // 1. Update Booking Status to RETURNED
+        booking.setStatus(BookingStatus.RETURNED.name());
+        booking.setStaffMessage("Vehicle successfully returned by customer. Inventory released to available.");
+
+        // 2. Automate Inventory Release: Flip associated vehicle status back to AVAILABLE
+        Vehicle vehicle = booking.getVehicle();
+        if (vehicle != null) {
+            vehicle.setStatus("AVAILABLE");
+            vehicle.setOperationalStatus("AVAILABLE");
+            vehicleRepository.save(vehicle);
+        }
+
+        return bookingRepository.save(booking);
+    }
+
+    @Override
+    public List<Booking> getCompletedBookingsForCustomer(Long customerId) {
+        if (customerId == null) return List.of();
+        return bookingRepository.findCompletedBookingsByCustomerId(customerId);
+    }
+
+    @Override
+    public Booking getLastCompletedBookingForCustomer(Long customerId) {
+        List<Booking> completed = getCompletedBookingsForCustomer(customerId);
+        return completed.isEmpty() ? null : completed.get(0);
+    }
+
+    @Override
+    public boolean hasCompletedBooking(Long customerId) {
+        return !getCompletedBookingsForCustomer(customerId).isEmpty();
     }
 }

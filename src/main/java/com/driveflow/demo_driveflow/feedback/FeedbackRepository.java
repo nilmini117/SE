@@ -6,4 +6,9 @@ import java.util.List;
 
 public interface FeedbackRepository extends JpaRepository<Feedback, Long> {
     List<Feedback> findByCustomer(Customer customer);
+    List<Feedback> findByCustomerOrderByDateDesc(Customer customer);
+    List<Feedback> findByCustomer_SystemIdOrderByDateDesc(Long customerId);
+    List<Feedback> findAllByOrderByDateDesc();
+    List<Feedback> findByPublicVisibilityTrueOrderByDateDesc();
+    List<Feedback> findByPublicVisibilityTrueAndApprovalStatusIgnoreCaseOrderByDateDesc(String approvalStatus);
 }

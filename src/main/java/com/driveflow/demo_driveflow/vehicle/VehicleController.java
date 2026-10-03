@@ -26,6 +26,9 @@ public class VehicleController {
     @Autowired
     private StaffRepository staffRepository;
 
+    @Autowired
+    private com.driveflow.demo_driveflow.feedback.FeedbackService feedbackService;
+
     private boolean isStaff(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return false;
@@ -77,6 +80,7 @@ public class VehicleController {
         model.addAttribute("isStaff", isStaff);
 
         model.addAttribute("brandCounts", vehicleService.getBrandVehicleCounts());
+        model.addAttribute("publicFeedbackList", feedbackService.getPubliclyVisibleFeedback());
 
         if (isStaff) {
             model.addAttribute("statusCounts", vehicleService.getVehicleStatusCounts());

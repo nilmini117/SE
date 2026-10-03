@@ -10,6 +10,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Query("SELECT p FROM Payment p WHERE p.invoice.booking.customer = :customer")
     List<Payment> findByInvoiceBookingCustomer(@Param("customer") Customer customer);
 
+    List<Payment> findByInvoice(Invoice invoice);
+
     /**
      * Cross-table SQL aggregation query that aggregates from both the Payment (revenue)
      * and Maintenance (expenses) tables to calculate:

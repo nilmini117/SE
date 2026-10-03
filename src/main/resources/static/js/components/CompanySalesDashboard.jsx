@@ -96,9 +96,6 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
           <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', margin: 0 }}>
             Corporate Financial Ledger & Sales
           </h1>
-          <p style={{ fontSize: '0.95rem', color: '#64748b', marginTop: '0.25rem', margin: 0 }}>
-            Immutable customer payment records and aggregate corporate revenue vs fleet maintenance performance.
-          </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -286,7 +283,7 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
                       <strong style={{ color: '#10b981', fontSize: '0.95rem' }}>
-                        ${Number(p.amountPaid || 0).toFixed(2)}
+                        Rs. {Number(p.amountPaid || 0).toFixed(2)}
                       </strong>
                     </td>
                   </tr>
@@ -330,9 +327,6 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
                     Central Corporate Bank Account
                   </h2>
                 </div>
-                <p style={{ fontSize: '0.88rem', color: '#64748b', margin: 0 }}>
-                  Designated central company bank account where all customer payments and card transactions are deposited.
-                </p>
               </div>
 
               <span style={{
@@ -391,7 +385,7 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
 
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: '#64748b', letterSpacing: '0.05em', marginBottom: '0.3rem' }}>
-                  Account Number
+                  Account Number (Rs. / Primary)
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <code style={{ fontSize: '1.05rem', fontWeight: 800, color: '#4f46e5', background: 'white', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #c7d2fe' }}>
@@ -473,7 +467,7 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
                 </div>
               </div>
               <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#065f46' }}>
-                ${totalRevenue.toFixed(2)}
+                Rs. {totalRevenue.toFixed(2)}
               </div>
               <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.35rem' }}>
                 Aggregated from {salesSummary?.approvedPaymentsCount || payments.length} cleared payments
@@ -500,7 +494,7 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
                 </div>
               </div>
               <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#991b1b' }}>
-                -${totalMaintenanceCosts.toFixed(2)}
+                -Rs. {totalMaintenanceCosts.toFixed(2)}
               </div>
               <div style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.35rem' }}>
                 Total approximated cost from Maintenance module ({salesSummary?.maintenanceServicesCount || 0} services)
@@ -528,143 +522,12 @@ export default function CompanySalesDashboard({ initialTab = 'transactions' }) {
                 </div>
               </div>
               <div style={{ fontSize: '1.6rem', fontWeight: 800, color: netIncome >= 0 ? '#047857' : '#b91c1c' }}>
-                ${netIncome.toFixed(2)}
+                Rs. {netIncome.toFixed(2)}
               </div>
               <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#4f46e5', marginTop: '0.35rem' }}>
                 Formula: SUM(revenue) - SUM(maintenance_costs)
               </div>
             </div>
-          </div>
-
-          {/* SECTION 3: PROFIT & LOSS DYNAMIC CALCULATION TABLE */}
-          <div style={{ background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', overflow: 'hidden', marginBottom: '2.5rem' }}>
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
-                  Corporate Profit & Loss Statement
-                </h3>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0.2rem 0 0 0' }}>
-                  Real-time aggregation from live Payment revenue and Maintenance service expenditures.
-                </p>
-              </div>
-              <span style={{
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                textTransform: 'uppercase',
-                padding: '0.3rem 0.65rem',
-                background: '#ecfeff',
-                color: '#155e75',
-                border: '1px solid #a5f3fc',
-                borderRadius: '9999px'
-              }}>
-                Live Aggregation
-              </span>
-            </div>
-
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <th style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', width: '25%' }}>Financial Category</th>
-                  <th style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', width: '35%' }}>Source Module & Accounting Logic</th>
-                  <th style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', width: '15%', textAlign: 'center' }}>Record Volume</th>
-                  <th style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', width: '12%', textAlign: 'center' }}>Flow Type</th>
-                  <th style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#475569', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', width: '13%', textAlign: 'right' }}>Amount (USD)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Row 1: Revenue */}
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '1rem 1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-                      <div>
-                        <strong style={{ color: '#0f172a' }}>Gross Customer Rental Revenue</strong>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Cleared rental receipts</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#334155' }}>
-                    <code>SELECT SUM(amount_paid) FROM payment WHERE status != 'CANCELLED'</code>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                    <span style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
-                      {salesSummary?.approvedPaymentsCount || 0} payments
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                    <span style={{ padding: '0.25rem 0.6rem', background: '#ecfdf5', color: '#065f46', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      + Inflow
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                    <strong style={{ color: '#065f46', fontSize: '1.05rem' }}>
-                      +${totalRevenue.toFixed(2)}
-                    </strong>
-                  </td>
-                </tr>
-
-                {/* Row 2: Maintenance Costs */}
-                <tr style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '1rem 1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', display: 'inline-block' }}></span>
-                      <div>
-                        <strong style={{ color: '#0f172a' }}>Fleet Maintenance & Repairs</strong>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Vehicle servicing & parts</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', fontSize: '0.85rem', color: '#334155' }}>
-                    <code>SELECT SUM(approximated_cost) FROM maintenance</code>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                    <span style={{ padding: '0.25rem 0.5rem', background: '#f1f5f9', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, color: '#475569' }}>
-                      {salesSummary?.maintenanceServicesCount || 0} services
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'center' }}>
-                    <span style={{ padding: '0.25rem 0.6rem', background: '#fef2f2', color: '#991b1b', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700 }}>
-                      - Outflow
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                    <strong style={{ color: '#991b1b', fontSize: '1.05rem' }}>
-                      -${totalMaintenanceCosts.toFixed(2)}
-                    </strong>
-                  </td>
-                </tr>
-              </tbody>
-
-              {/* Summary Row */}
-              <tfoot>
-                <tr style={{ background: '#f1f5f9', borderTop: '2px solid #cbd5e1' }}>
-                  <td colSpan="2" style={{ padding: '1.1rem 1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>=</div>
-                      <div>
-                        <strong style={{ fontSize: '1.05rem', color: '#0f172a' }}>Final Net Corporate Operating Income</strong>
-                        <div style={{ fontSize: '0.8rem', color: '#475569', fontWeight: 500 }}>
-                          Real Profit Calculation: <code>SUM(revenue) - SUM(maintenance_costs)</code>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600, color: '#334155' }}>
-                    Consolidated
-                  </td>
-                  <td style={{ padding: '1.1rem 1.25rem', textAlign: 'center' }}>
-                    <span style={{ padding: '0.3rem 0.65rem', background: '#e0e7ff', color: '#4338ca', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 800 }}>
-                      NET RESULT
-                    </span>
-                  </td>
-                  <td style={{ padding: '1.1rem 1.25rem', textAlign: 'right' }}>
-                    <strong style={{ fontSize: '1.25rem', color: netIncome >= 0 ? '#047857' : '#b91c1c' }}>
-                      ${netIncome.toFixed(2)}
-                    </strong>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
           </div>
         </div>
       )}

@@ -10,7 +10,6 @@
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Corporate Financial Ledger & Sales</h1>
-            <p class="df-header-subtitle">Immutable payment records and aggregate corporate revenue vs fleet maintenance performance.</p>
         </div>
         <div class="df-header-actions">
             <span class="badge badge-secondary" style="font-size: 0.85rem; padding: 0.5rem 0.9rem; display: inline-flex; align-items: center; gap: 0.45rem; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569;">
@@ -106,7 +105,7 @@
                     </td>
                     <td th:text="${p.paymentDate}">2026-09-12</td>
                     <td style="text-align: right;">
-                        <strong style="color: var(--success); font-size: 0.95rem;" th:text="'$' + ${#numbers.formatDecimal(p.amountPaid != null ? p.amountPaid : 0, 1, 2)}">$320.00</strong>
+                        <strong style="color: var(--success); font-size: 0.95rem;" th:text="'Rs. ' + ${#numbers.formatDecimal(p.amountPaid != null ? p.amountPaid : 0, 1, 2)}">Rs. 320.00</strong>
                     </td>
                 </tr>
                 </tbody>
@@ -126,7 +125,7 @@
         </div>
     </div>
 
-    <!-- PANE 2: COMPANY SALES INFORMATION (CORPORATE FINANCIAL DASHBOARD & PROFIT/LOSS) -->
+    <!-- PANE 2: COMPANY SALES INFORMATION (CORPORATE FINANCIAL DASHBOARD) -->
     <div id="paneSales" th:style="${activeTab == 'sales'} ? 'display: block;' : 'display: none;'">
         
         <!-- SECTION 1: CENTRAL COMPANY BANK ACCOUNT DETAILS -->
@@ -142,7 +141,6 @@
                         </div>
                         <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--slate-900); margin: 0;">Central Corporate Bank Account</h2>
                     </div>
-                    <p style="font-size: 0.88rem; color: var(--slate-500); margin: 0;">Designated corporate settlement account where all verified customer rental payments and card proceeds are deposited.</p>
                 </div>
                 <span class="badge badge-success" style="font-size: 0.78rem; padding: 0.4rem 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -167,7 +165,7 @@
                 </div>
 
                 <div>
-                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--slate-500); letter-spacing: 0.05em; margin-bottom: 0.3rem;">Account Number (USD / Primary)</div>
+                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--slate-500); letter-spacing: 0.05em; margin-bottom: 0.3rem;">Account Number (Rs. / Primary)</div>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <code style="font-size: 1.05rem; font-weight: 800; color: var(--primary); background: white; padding: 0.3rem 0.6rem; border-radius: 4px; border: 1px solid #c7d2fe;" th:text="${salesSummary != null ? salesSummary.accountNumber : '1000-8842-9931-5021'}">1000-8842-9931-5021</code>
                     </div>
@@ -207,7 +205,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="df-stat-value" style="color: #065f46;" th:text="'$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalRevenue : 0, 1, 2)}">$0.00</div>
+                <div class="df-stat-value" style="color: #065f46;" th:text="'Rs. ' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalRevenue : 0, 1, 2)}">Rs. 0.00</div>
                 <div style="font-size: 0.82rem; color: var(--slate-500); margin-top: 0.35rem;" th:text="'Aggregated from ' + (${salesSummary != null ? salesSummary.approvedPaymentsCount : 0}) + ' cleared payment transactions'">Aggregated from 0 cleared transactions</div>
             </div>
 
@@ -221,7 +219,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="df-stat-value" style="color: #991b1b;" th:text="'-$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalMaintenanceCosts : 0, 1, 2)}">-$0.00</div>
+                <div class="df-stat-value" style="color: #991b1b;" th:text="'-Rs. ' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalMaintenanceCosts : 0, 1, 2)}">-Rs. 0.00</div>
                 <div style="font-size: 0.82rem; color: var(--slate-500); margin-top: 0.35rem;" th:text="'Total approximated costs across ' + (${salesSummary != null ? salesSummary.maintenanceServicesCount : 0}) + ' vehicle service logs'">Approximated cost from maintenance module</div>
             </div>
 
@@ -238,181 +236,14 @@
                 </div>
                 <div class="df-stat-value"
                      th:style="${salesSummary != null and salesSummary.netIncome != null and salesSummary.netIncome.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'color: #047857;' : 'color: #b91c1c;'"
-                     th:text="'$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.netIncome : 0, 1, 2)}">$0.00</div>
+                     th:text="'Rs. ' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.netIncome : 0, 1, 2)}">Rs. 0.00</div>
                 <div style="font-size: 0.82rem; font-weight: 600; color: var(--primary); margin-top: 0.35rem;">
                     Formula: SUM(revenue) - SUM(maintenance_costs)
                 </div>
             </div>
         </div>
 
-        <!-- SECTION 3: PROFIT & LOSS DYNAMIC CALCULATION TABLE -->
-        <div class="df-table-container" style="margin-bottom: 2.5rem;">
-            <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-200); background: var(--slate-50); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                <div>
-                    <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--slate-900); margin: 0;">Corporate Profit & Loss Statement</h3>
-                    <p style="font-size: 0.85rem; color: var(--slate-500); margin: 0.2rem 0 0 0;">Real-time SQL aggregation from live Payment revenue and Maintenance service expenditures.</p>
-                </div>
-                <span class="badge badge-info" style="font-size: 0.78rem;">Live Database Aggregation</span>
-            </div>
-
-            <table class="df-table" id="profitLossTable">
-                <thead>
-                <tr>
-                    <th style="width: 25%;">Financial Category</th>
-                    <th style="width: 35%;">Data Source & Accounting Logic</th>
-                    <th style="width: 15%; text-align: center;">Record Volume</th>
-                    <th style="width: 12%; text-align: center;">Cash Flow Type</th>
-                    <th style="width: 13%; text-align: right;">Amount (USD)</th>
-                </tr>
-                </thead>
-                <tbody>
-                <!-- Row 1: Revenue -->
-                <tr>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--success); display: inline-block;"></span>
-                            <div>
-                                <strong style="color: var(--slate-900);">Gross Customer Rental Revenue</strong>
-                                <div style="font-size: 0.8rem; color: var(--slate-500);">Rental invoice settlements & receipts</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="font-size: 0.85rem; color: var(--slate-700);">
-                        <code>SELECT SUM(amount_paid) FROM payment WHERE status != 'CANCELLED'</code>
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-secondary" th:text="(${salesSummary != null ? salesSummary.approvedPaymentsCount : 0}) + ' payments'">0 payments</span>
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-success">+ Inflow</span>
-                    </td>
-                    <td style="text-align: right;">
-                        <strong style="color: #065f46; font-size: 1.05rem;" th:text="'+$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalRevenue : 0, 1, 2)}">+$0.00</strong>
-                    </td>
-                </tr>
-
-                <!-- Row 2: Maintenance Costs -->
-                <tr>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--danger); display: inline-block;"></span>
-                            <div>
-                                <strong style="color: var(--slate-900);">Fleet Maintenance & Repairs</strong>
-                                <div style="font-size: 0.8rem; color: var(--slate-500);">Vehicle servicing, parts & contractor labor</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="font-size: 0.85rem; color: var(--slate-700);">
-                        <code>SELECT SUM(approximated_cost) FROM maintenance</code>
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-secondary" th:text="(${salesSummary != null ? salesSummary.maintenanceServicesCount : 0}) + ' service logs'">0 service logs</span>
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-danger">- Outflow</span>
-                    </td>
-                    <td style="text-align: right;">
-                        <strong style="color: #991b1b; font-size: 1.05rem;" th:text="'-$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.totalMaintenanceCosts : 0, 1, 2)}">-$0.00</strong>
-                    </td>
-                </tr>
-                </tbody>
-
-                <!-- Summary Row: Real Net Operating Income -->
-                <tfoot>
-                <tr style="background: #f1f5f9; border-top: 2px solid var(--slate-300);">
-                    <td colspan="2">
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 800;">=</div>
-                            <div>
-                                <strong style="font-size: 1.05rem; color: var(--slate-900);">Final Net Corporate Operating Income</strong>
-                                <div style="font-size: 0.8rem; color: var(--slate-600); font-weight: 500;">
-                                    Real Profit Calculation: <code>SUM(revenue) - SUM(maintenance_costs)</code>
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="text-align: center; font-size: 0.85rem; font-weight: 600; color: var(--slate-700);">
-                        Consolidated Ledger
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge badge-info" style="font-weight: 800;">NET RESULT</span>
-                    </td>
-                    <td style="text-align: right;">
-                        <strong style="font-size: 1.25rem;"
-                                th:style="${salesSummary != null and salesSummary.netIncome != null and salesSummary.netIncome.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'color: #047857;' : 'color: #b91c1c;'"
-                                th:text="'$' + ${#numbers.formatDecimal(salesSummary != null ? salesSummary.netIncome : 0, 1, 2)}">
-                            $0.00
-                        </strong>
-                    </td>
-                </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- SECTION 4: DETAILED AUDIT DATA LEDGERS -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 1.5rem;">
-            <!-- Approved Payments Ledger -->
-            <div class="df-table-container">
-                <div style="padding: 1rem 1.25rem; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="font-size: 0.95rem; color: var(--slate-900);">Approved Revenue Contributions</strong>
-                    <span class="badge badge-success" th:text="(${salesSummary != null and salesSummary.approvedPayments != null ? salesSummary.approvedPayments.size() : 0}) + ' Cleared'">0 Cleared</span>
-                </div>
-                <div style="max-height: 320px; overflow-y: auto;">
-                    <table class="df-table" style="font-size: 0.85rem;">
-                        <thead>
-                        <tr>
-                            <th>Payment</th>
-                            <th>Reference</th>
-                            <th>Date</th>
-                            <th style="text-align: right;">Amount</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="p : ${salesSummary != null ? salesSummary.approvedPayments : null}">
-                            <td><strong th:text="'#PAY-' + ${p.paymentId}">#PAY-1</strong></td>
-                            <td><code th:text="${p.refNo}">REF-123</code></td>
-                            <td th:text="${p.paymentDate}">2026-09-12</td>
-                            <td style="text-align: right; color: var(--success); font-weight: 700;" th:text="'$' + ${#numbers.formatDecimal(p.amountPaid != null ? p.amountPaid : 0, 1, 2)}">$320.00</td>
-                        </tr>
-                        <tr th:if="${salesSummary == null or salesSummary.approvedPayments == null or salesSummary.approvedPayments.empty}">
-                            <td colspan="4" style="text-align: center; color: var(--slate-400); padding: 1.5rem;">No cleared payment records found.</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Maintenance Expense Logs -->
-            <div class="df-table-container">
-                <div style="padding: 1rem 1.25rem; background: var(--slate-50); border-bottom: 1px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center;">
-                    <strong style="font-size: 0.95rem; color: var(--slate-900);">Maintenance Cost Deductions</strong>
-                    <span class="badge badge-danger" th:text="(${salesSummary != null and salesSummary.maintenanceRecords != null ? salesSummary.maintenanceRecords.size() : 0}) + ' Services'">0 Services</span>
-                </div>
-                <div style="max-height: 320px; overflow-y: auto;">
-                    <table class="df-table" style="font-size: 0.85rem;">
-                        <thead>
-                        <tr>
-                            <th>Service #</th>
-                            <th>Vehicle</th>
-                            <th>Issue / Type</th>
-                            <th style="text-align: right;">Cost</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="m : ${salesSummary != null ? salesSummary.maintenanceRecords : null}">
-                            <td><strong th:text="'#MNT-' + ${m.maintenanceId}">#MNT-1</strong></td>
-                            <td th:text="${m.vehicle != null ? m.vehicle.model + ' (' + m.vehicle.registrationNumber + ')' : 'Vehicle'}">Toyota Prius</td>
-                            <td th:text="${m.issueDescription != null ? m.issueDescription : 'Routine maintenance'}">Oil change</td>
-                            <td style="text-align: right; color: var(--danger); font-weight: 700;" th:text="'-$' + ${#numbers.formatDecimal(m.approximatedCost != null ? m.approximatedCost : 0, 1, 2)}">-$150.00</td>
-                        </tr>
-                        <tr th:if="${salesSummary == null or salesSummary.maintenanceRecords == null or salesSummary.maintenanceRecords.empty}">
-                            <td colspan="4" style="text-align: center; color: var(--slate-400); padding: 1.5rem;">No maintenance expenses logged.</td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    </div>
 
     </div>
 </main>

@@ -19,8 +19,12 @@ public interface BookingService {
     void approveBooking(Long id);
     void declineBooking(Long id, String reason);
     void cancelBooking(Long id);
+    Booking returnVehicle(Long bookingId);
 
     long getActiveBookingCount(Long customerId);
     boolean hasActiveBooking(Long customerId);
+    List<Booking> getCompletedBookingsForCustomer(Long customerId);
+    Booking getLastCompletedBookingForCustomer(Long customerId);
+    boolean hasCompletedBooking(Long customerId);
     PricingBreakdown calculatePricing(Long vehicleId, Long branchId, LocalDate startDate, LocalDate endDate, String couponCode);
 }

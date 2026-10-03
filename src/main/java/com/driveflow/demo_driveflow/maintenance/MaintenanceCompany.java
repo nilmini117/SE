@@ -3,6 +3,7 @@ package com.driveflow.demo_driveflow.maintenance;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,8 @@ public class MaintenanceCompany {
     @Column(name = "email", nullable = false)
     private String email;
 
+    @NotBlank(message = "Contact number is mandatory.")
+    @Pattern(regexp = "^[0-9]{10}$", message = "Contact number must be exactly 10 digits long.")
     @Column(name = "contact_number")
     private String contactNumber;
 

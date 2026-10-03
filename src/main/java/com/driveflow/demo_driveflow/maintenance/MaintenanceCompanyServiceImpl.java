@@ -35,12 +35,24 @@ public class MaintenanceCompanyServiceImpl implements MaintenanceCompanyService 
         if (company.getEmail() == null || company.getEmail().trim().isEmpty()) {
             throw new IllegalArgumentException("Company email cannot be blank.");
         }
+        if (company.getContactNumber() == null || !company.getContactNumber().trim().matches("^[0-9]{10}$")) {
+            throw new IllegalArgumentException("Contact number must be exactly 10 digits long.");
+        }
         return maintenanceCompanyRepository.save(company);
     }
 
     @Override
     @Transactional
     public MaintenanceCompany updateCompany(Long id, MaintenanceCompany company) {
+        if (company.getCompanyName() == null || company.getCompanyName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Company name cannot be blank.");
+        }
+        if (company.getEmail() == null || company.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Company email cannot be blank.");
+        }
+        if (company.getContactNumber() == null || !company.getContactNumber().trim().matches("^[0-9]{10}$")) {
+            throw new IllegalArgumentException("Contact number must be exactly 10 digits long.");
+        }
         MaintenanceCompany existing = getCompanyById(id);
         existing.setCompanyName(company.getCompanyName());
         existing.setEmail(company.getEmail());

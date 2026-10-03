@@ -9,7 +9,7 @@ import React, { useState } from 'react';
  * 3. Status Trigger: Automatically update vehicle status to UNAVAILABLE upon scheduling.
  * 4. Notification: Automatically dispatch email alert to the assigned company.
  */
-export default function ScheduleMaintenanceForm({ vehicles = [], companies = [], onSubmitSchedule }) {
+export default function ScheduleMaintenanceForm({ vehicles = [], companies = [], netIncome = null, onSubmitSchedule }) {
   const [formData, setFormData] = useState({
     vehicleId: '',
     companyId: '',
@@ -31,6 +31,12 @@ export default function ScheduleMaintenanceForm({ vehicles = [], companies = [],
     }
     if (!formData.approximatedCost || isNaN(formData.approximatedCost) || Number(formData.approximatedCost) < 0) {
       err.approximatedCost = 'Mandatory: Input a valid non-negative numerical approximated cost.';
+    } else if (netIncome !== null && netIncome !== undefined) {
+      const costVal = Number(formData.approximatedCost);
+      const incomeVal = Number(netIncome);
+      if (!isNaN(costVal) && !isNaN(incomeVal) && costVal >= incomeVal) {
+        err.approximatedCost = `Mandatory: Approximated cost (Rs. ${costVal.toFixed(2)}) must be strictly less than current Real Net Operating Income (Rs. ${incomeVal.toFixed(2)}).`;
+      }
     }
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -151,7 +157,7 @@ export default function ScheduleMaintenanceForm({ vehicles = [], companies = [],
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
-                Approximated Cost ($) <span style={{ color: '#dc2626' }}>*</span>
+                Approximated Cost (Rs.) <span style={{ color: '#dc2626' }}>*</span>
               </label>
               <input
                 type="number"

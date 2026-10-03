@@ -135,9 +135,10 @@ public class CustomerInvoicePaymentController {
             return "redirect:/invoices-payments";
         }
 
-        // Rule: Customers can only pay for bookings approved/confirmed by staff
+        // Rule: Customers can only pay for bookings approved/confirmed by staff, active, or returned
         String status = booking.getStatus();
-        if (status == null || (!status.equalsIgnoreCase("CONFIRMED") && !status.equalsIgnoreCase("APPROVED"))) {
+        if (status == null || (!status.equalsIgnoreCase("CONFIRMED") && !status.equalsIgnoreCase("APPROVED") &&
+                !status.equalsIgnoreCase("ACTIVE") && !status.equalsIgnoreCase("RETURNED"))) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Payment Rejected: Reservation #BK-" + bookingId + " is currently " + status
                     + " and must be approved by staff before payment can be accepted.");
@@ -276,9 +277,11 @@ public class CustomerInvoicePaymentController {
             }
 
             Booking booking = bookingService.getBookingById(bookingId);
-            if (!"CONFIRMED".equalsIgnoreCase(booking.getStatus()) && !"APPROVED".equalsIgnoreCase(booking.getStatus())) {
+            String bStatus = booking != null ? booking.getStatus() : null;
+            if (bStatus == null || (!"CONFIRMED".equalsIgnoreCase(bStatus) && !"APPROVED".equalsIgnoreCase(bStatus) &&
+                    !"ACTIVE".equalsIgnoreCase(bStatus) && !"RETURNED".equalsIgnoreCase(bStatus))) {
                 response.put("success", false);
-                response.put("message", "Booking is not approved by staff yet.");
+                response.put("message", "Booking is not in payable status (must be approved, active, or returned).");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -324,8 +327,13 @@ public class CustomerInvoicePaymentController {
 
         for (Booking b : bookings) {
             String status = b.getStatus();
-            // Strictly render bookings that have been approved by staff (Status: CONFIRMED or APPROVED)
-            if (status != null && ("CONFIRMED".equalsIgnoreCase(status.trim()) || "APPROVED".equalsIgnoreCase(status.trim()))) {
+            // Render bookings that are CONFIRMED, APPROVED, ACTIVE, or RETURNED
+            if (status != null && (
+                    "CONFIRMED".equalsIgnoreCase(status.trim()) ||
+                    "APPROVED".equalsIgnoreCase(status.trim()) ||
+                    "ACTIVE".equalsIgnoreCase(status.trim()) ||
+                    "RETURNED".equalsIgnoreCase(status.trim())
+            )) {
                 Optional<Invoice> invOpt = invoiceRepository.findByBooking(b);
                 Invoice inv = invOpt.orElse(null);
                 if (inv == null) {
@@ -346,6 +354,7 @@ public class CustomerInvoicePaymentController {
                         ? inv.getTotalAmt()
                         : (b.getChargedRate() != null ? b.getChargedRate() : BigDecimal.ZERO);
 
+                String cleanStatus = status.trim().toUpperCase();
                 dtoList.add(ConfirmedBookingPaymentDto.builder()
                         .bookingId(b.getBookingId())
                         .vehicleModel(b.getVehicle() != null ? b.getVehicle().getModel() : "Vehicle")
@@ -354,8 +363,8 @@ public class CustomerInvoicePaymentController {
                         .returnDate(b.getEndDate())
                         .duration(b.getDuration())
                         .chargedRate(b.getChargedRate())
-                        .bookingStatus("CONFIRMED")
-                        .staffMessage(b.getStaffMessage() != null ? b.getStaffMessage() : "Staff Confirmed")
+                        .bookingStatus(cleanStatus)
+                        .staffMessage(b.getStaffMessage() != null ? b.getStaffMessage() : ("RETURNED".equals(cleanStatus) ? "Vehicle returned" : "Staff Confirmed"))
                         .invoiceId(inv != null ? inv.getInvoiceId() : null)
                         .invoiceStatus(inv != null ? inv.getStatus() : "UNPAID")
                         .rentalAmount(inv != null ? inv.getRentalAmt() : b.getChargedRate())

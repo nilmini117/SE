@@ -61,8 +61,15 @@
             <div class="form-row">
                 <!-- Field 3: Contact Number -->
                 <div class="form-group">
-                    <label class="form-label" style="font-weight: 600;">Contact Phone</label>
-                    <input type="text" th:field="*{contactNumber}" class="form-control" placeholder="e.g. 011-2894567">
+                    <label class="form-label" style="font-weight: 700;">
+                        Contact Phone (10 digits) <span style="color: var(--danger);">*</span>
+                    </label>
+                    <input type="text" th:field="*{contactNumber}" class="form-control" placeholder="e.g. 0112894567"
+                           pattern="^[0-9]{10}$" maxlength="10" title="Contact number must be exactly 10 digits" required>
+                    <small style="color: var(--slate-500); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                        Must be exactly 10 digits (e.g. 0112894567).
+                    </small>
+                    <div th:if="${#fields.hasErrors('contactNumber')}" th:errors="*{contactNumber}" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.25rem;"></div>
                 </div>
 
                 <!-- Field 4: Speciality -->

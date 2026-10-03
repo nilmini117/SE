@@ -24,6 +24,22 @@ public class MaintenanceController {
     @Autowired
     private VehicleService vehicleService;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private com.driveflow.demo_driveflow.payment.PaymentService paymentService;
+
+    private BigDecimal getNetOperatingIncome() {
+        if (paymentService != null) {
+            try {
+                com.driveflow.demo_driveflow.payment.CompanySalesSummaryDto sales = paymentService.getCompanySalesSummary();
+                if (sales != null && sales.getNetIncome() != null) {
+                    return sales.getNetIncome();
+                }
+            } catch (Exception ignored) {}
+        }
+        return BigDecimal.ZERO;
+    }
+
     // =========================================================================
     // 1. MAINTENANCE SCHEDULES
     // =========================================================================
@@ -31,6 +47,9 @@ public class MaintenanceController {
     @GetMapping
     public String listSchedules(Model model) {
         model.addAttribute("records", maintenanceService.getAllRecords());
+        model.addAttribute("vehicles", vehicleService.getAllVehicles());
+        model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+        model.addAttribute("netIncome", getNetOperatingIncome());
         return "maintenance/schedule-list";
     }
 
@@ -40,6 +59,7 @@ public class MaintenanceController {
         model.addAttribute("record", maintenance);
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
         model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+        model.addAttribute("netIncome", getNetOperatingIncome());
         return "maintenance/schedule-form";
     }
 
@@ -48,28 +68,50 @@ public class MaintenanceController {
                                   @RequestParam(value = "vehicleId", required = false) Long vehicleId,
                                   @RequestParam(value = "companyId", required = false) Long companyId,
                                   @RequestParam(value = "approximatedCost", required = false) BigDecimal approximatedCost,
+                                  jakarta.servlet.http.HttpServletResponse response,
                                   Model model,
                                   RedirectAttributes redirectAttributes) {
+        BigDecimal netIncome = getNetOperatingIncome();
+
         // Strict Validation: Vehicle, Outsourced Company, Numerical Approximated Cost
         if (vehicleId == null) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Mandatory requirement: Please select a vehicle from the fleet.");
             model.addAttribute("record", record);
             model.addAttribute("vehicles", vehicleService.getAllVehicles());
             model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
             return "maintenance/schedule-form";
         }
         if (companyId == null) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Mandatory requirement: Please select an outsourced maintenance company from the dropdown.");
             model.addAttribute("record", record);
             model.addAttribute("vehicles", vehicleService.getAllVehicles());
             model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
             return "maintenance/schedule-form";
         }
         if (approximatedCost == null || approximatedCost.compareTo(BigDecimal.ZERO) < 0) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Mandatory requirement: Please enter a valid numerical approximated cost.");
             model.addAttribute("record", record);
             model.addAttribute("vehicles", vehicleService.getAllVehicles());
             model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
+            return "maintenance/schedule-form";
+        }
+
+        // Strict Maintenance Cost Limit: Cost must be strictly less than current Real Net Operating Income
+        if (netIncome != null && approximatedCost.compareTo(netIncome) >= 0) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            model.addAttribute("errorMessage", "Validation failed: Approximated maintenance cost (Rs. " 
+                    + approximatedCost + ") must be strictly less than the company's current Real Net Operating Income (Rs. " 
+                    + netIncome + ").");
+            model.addAttribute("record", record);
+            model.addAttribute("vehicles", vehicleService.getAllVehicles());
+            model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
             return "maintenance/schedule-form";
         }
 
@@ -83,11 +125,21 @@ public class MaintenanceController {
                     "Maintenance scheduled successfully! Vehicle status automatically changed to UNAVAILABLE, and notification email sent to "
                             + saved.getMaintenanceCompany().getEmail() + ".");
             return "redirect:/maintenance";
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Scheduling failed: " + e.getMessage());
             model.addAttribute("record", record);
             model.addAttribute("vehicles", vehicleService.getAllVehicles());
             model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
+            return "maintenance/schedule-form";
+        } catch (Exception e) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            model.addAttribute("errorMessage", "Scheduling failed: " + e.getMessage());
+            model.addAttribute("record", record);
+            model.addAttribute("vehicles", vehicleService.getAllVehicles());
+            model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+            model.addAttribute("netIncome", netIncome);
             return "maintenance/schedule-form";
         }
     }
@@ -97,6 +149,7 @@ public class MaintenanceController {
         model.addAttribute("record", maintenanceService.getRecordById(id));
         model.addAttribute("vehicles", vehicleService.getAllVehicles());
         model.addAttribute("companies", maintenanceCompanyService.getAllCompanies());
+        model.addAttribute("netIncome", getNetOperatingIncome());
         return "maintenance/schedule-form";
     }
 
@@ -106,7 +159,16 @@ public class MaintenanceController {
                                  @RequestParam(value = "vehicleId", required = false) Long vehicleId,
                                  @RequestParam(value = "companyId", required = false) Long companyId,
                                  @RequestParam(value = "approximatedCost", required = false) BigDecimal approximatedCost,
+                                 jakarta.servlet.http.HttpServletResponse response,
                                  RedirectAttributes redirectAttributes) {
+        BigDecimal netIncome = getNetOperatingIncome();
+        if (approximatedCost != null && netIncome != null && approximatedCost.compareTo(netIncome) >= 0) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            redirectAttributes.addFlashAttribute("errorMessage", "Validation failed: Approximated maintenance cost (Rs. " 
+                    + approximatedCost + ") must be strictly less than the company's current Real Net Operating Income (Rs. " 
+                    + netIncome + ").");
+            return "redirect:/maintenance";
+        }
         if (vehicleId != null) {
             record.setVehicle(vehicleService.getVehicleById(vehicleId));
         }
@@ -116,9 +178,15 @@ public class MaintenanceController {
         if (approximatedCost != null) {
             record.setApproximatedCost(approximatedCost);
         }
-        maintenanceService.updateRecord(id, record);
-        redirectAttributes.addFlashAttribute("successMessage", "Maintenance service record #MNT-" + id + " updated successfully.");
-        return "redirect:/maintenance";
+        try {
+            maintenanceService.updateRecord(id, record);
+            redirectAttributes.addFlashAttribute("successMessage", "Maintenance service record #MNT-" + id + " updated successfully.");
+            return "redirect:/maintenance";
+        } catch (IllegalArgumentException e) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            redirectAttributes.addFlashAttribute("errorMessage", "Update failed: " + e.getMessage());
+            return "redirect:/maintenance";
+        }
     }
 
     @PostMapping("/{id}/delete")
@@ -156,9 +224,14 @@ public class MaintenanceController {
     @PostMapping("/companies")
     public String createCompany(@Valid @ModelAttribute MaintenanceCompany company,
                                 BindingResult result,
+                                jakarta.servlet.http.HttpServletResponse response,
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
+        if (company.getContactNumber() == null || !company.getContactNumber().trim().matches("^[0-9]{10}$")) {
+            result.rejectValue("contactNumber", "error.contactNumber", "Contact number must be exactly 10 digits long.");
+        }
         if (result.hasErrors()) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             return "maintenance/company-form";
         }
         try {
@@ -166,7 +239,12 @@ public class MaintenanceController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Maintenance Company '" + company.getCompanyName() + "' registered successfully.");
             return "redirect:/maintenance/companies";
+        } catch (IllegalArgumentException e) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            model.addAttribute("errorMessage", e.getMessage());
+            return "maintenance/company-form";
         } catch (Exception e) {
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Failed to register company: " + e.getMessage());
             return "maintenance/company-form";
         }
@@ -182,10 +260,15 @@ public class MaintenanceController {
     public String updateCompany(@PathVariable Long id,
                                 @Valid @ModelAttribute MaintenanceCompany company,
                                 BindingResult result,
+                                jakarta.servlet.http.HttpServletResponse response,
                                 Model model,
                                 RedirectAttributes redirectAttributes) {
+        if (company.getContactNumber() == null || !company.getContactNumber().trim().matches("^[0-9]{10}$")) {
+            result.rejectValue("contactNumber", "error.contactNumber", "Contact number must be exactly 10 digits long.");
+        }
         if (result.hasErrors()) {
             company.setCompanyId(id);
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             return "maintenance/company-form";
         }
         try {
@@ -193,8 +276,14 @@ public class MaintenanceController {
             redirectAttributes.addFlashAttribute("successMessage",
                     "Maintenance Company '" + company.getCompanyName() + "' updated successfully.");
             return "redirect:/maintenance/companies";
+        } catch (IllegalArgumentException e) {
+            company.setCompanyId(id);
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
+            model.addAttribute("errorMessage", e.getMessage());
+            return "maintenance/company-form";
         } catch (Exception e) {
             company.setCompanyId(id);
+            response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST);
             model.addAttribute("errorMessage", "Failed to update company: " + e.getMessage());
             return "maintenance/company-form";
         }

@@ -77,6 +77,14 @@
                   th:styleappend="${selectedStatus == 'CONFIRMED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #d1fae5; color: #065f46;'"
                   th:text="${statusCounts != null ? statusCounts['CONFIRMED'] : 0}">0</span>
         </a>
+        <a th:href="@{/bookings(status='RETURNED')}"
+           style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
+           th:styleappend="${selectedStatus == 'RETURNED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
+            Returned
+            <span style="font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                  th:styleappend="${selectedStatus == 'RETURNED'} ? 'background: rgba(255,255,255,0.25); color: white;' : 'background: #e0f2fe; color: #0284c7;'"
+                  th:text="${statusCounts != null ? statusCounts['RETURNED'] : 0}">0</span>
+        </a>
         <a th:href="@{/bookings(status='COMPLETED')}"
            style="text-decoration: none; padding: 0.5rem 1.15rem; border-radius: var(--radius-full); font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s;"
            th:styleappend="${selectedStatus == 'COMPLETED'} ? 'background: var(--primary); color: white;' : 'background: white; color: var(--slate-700); border: 1px solid var(--slate-200);'">
@@ -107,7 +115,7 @@
                 <th>Charged Rate</th>
                 <th>Status</th>
                 <th>Payment & Invoice</th>
-                <th th:if="${selectedStatus != 'COMPLETED' and selectedStatus != 'CANCELLED' and (isStaff != null and isStaff or (bookings != null and bookings.?[status == 'PENDING' or status == 'CONFIRMED'].size() > 0))}" style="text-align: right;">Actions</th>
+                <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -129,11 +137,13 @@
                 <td th:text="${b.duration != null ? b.duration + ' Days' : '-'}">6 Days</td>
                 <td><strong style="color: var(--primary);" th:text="'Rs. ' + ${#numbers.formatDecimal(b.chargedRate != null ? b.chargedRate : 0, 1, 2)}">Rs. 9,000.00</strong></td>
                 <td>
-                    <span th:if="${b.status == 'CONFIRMED'}" class="badge badge-success">Confirmed</span>
+                    <span th:if="${b.status == 'CONFIRMED' or b.status == 'APPROVED'}" class="badge badge-success">Confirmed</span>
+                    <span th:if="${b.status == 'ACTIVE'}" class="badge badge-primary" style="background: #3b82f6; color: white;">Active</span>
+                    <span th:if="${b.status == 'RETURNED'}" class="badge badge-info" style="background: #0284c7; color: white;">&#10003; Returned</span>
                     <span th:if="${b.status == 'PENDING'}" class="badge badge-warning">Pending</span>
                     <span th:if="${b.status == 'CANCELLED'}" class="badge badge-danger">Cancelled</span>
                     <span th:if="${b.status == 'COMPLETED'}" class="badge badge-info">Completed</span>
-                    <span th:if="${b.status != 'CONFIRMED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Other</span>
+                    <span th:if="${b.status != 'CONFIRMED' and b.status != 'APPROVED' and b.status != 'ACTIVE' and b.status != 'RETURNED' and b.status != 'PENDING' and b.status != 'CANCELLED' and b.status != 'COMPLETED'}" class="badge badge-secondary" th:text="${b.status}">Other</span>
 
                     <!-- Staff Message Banner under Status -->
                     <div th:if="${b.status == 'CONFIRMED' and b.staffMessage != null and !#strings.isEmpty(b.staffMessage)}"
@@ -184,7 +194,7 @@
                         <span th:if="${b.status == 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem; font-style: italic;">Pending Approval</span>
                         <span th:if="${b.status != 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem;">-</span>
                     </div>
-                <td th:if="${selectedStatus != 'COMPLETED' and selectedStatus != 'CANCELLED' and (isStaff != null and isStaff or (bookings != null and bookings.?[status == 'PENDING' or status == 'CONFIRMED'].size() > 0))}" style="text-align: right; white-space: nowrap;">
+                <td style="text-align: right; white-space: nowrap;">
                     <!-- Staff Actions -->
                     <span th:if="${isStaff != null and isStaff}" style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">
                         <!-- If Customer has paid: Status is completely locked (cannot edit status or decline) -->
@@ -233,25 +243,50 @@
                         </span>
                     </span>
                     <!-- Customer Actions -->
-                    <span th:if="${isStaff == null or !isStaff}">
+                    <span th:if="${isStaff == null or !isStaff}" style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">
+                        <!-- Return Vehicle: Primary Action button strictly visible and active for CONFIRMED or ACTIVE bookings -->
+                        <button th:if="${b.status == 'CONFIRMED' or b.status == 'ACTIVE' or b.status == 'APPROVED'}"
+                                type="button"
+                                class="btn btn-primary btn-sm btn-return-vehicle"
+                                style="font-weight: 700; gap: 0.35rem; background: #2563eb; color: #ffffff; border: none; box-shadow: 0 1px 2px rgba(0,0,0,0.08);"
+                                th:data-booking-id="${b.bookingId}"
+                                th:data-vehicle="${b.vehicle != null ? b.vehicle.model : 'Vehicle'}"
+                                th:data-reg="${b.vehicle != null ? b.vehicle.regNo : ''}"
+                                onclick="openReturnModal(this)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                            </svg>
+                            Return Vehicle
+                        </button>
+
+                        <!-- Feedback Link for Returned bookings -->
+                        <a th:if="${b.status == 'RETURNED' or b.status == 'COMPLETED'}"
+                           th:href="@{/feedback/new(bookingId=${b.bookingId})}"
+                           class="btn btn-success btn-sm"
+                           style="font-weight: 700; gap: 0.3rem; background: #059669; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            Write Feedback &rarr;
+                        </a>
+
                         <a th:if="${bookingInvoices != null and bookingInvoices.containsKey(b.bookingId) and bookingInvoices.get(b.bookingId).status != 'PAID' and (b.status == 'CONFIRMED' or b.status == 'APPROVED')}"
                            th:href="@{/profile/invoices/{id}/pay(id=${bookingInvoices.get(b.bookingId).invoiceId})}"
-                           class="btn btn-primary btn-sm"
-                           style="font-weight: 700; margin-right: 0.25rem;">Pay Now &rarr;</a>
+                           class="btn btn-outline-primary btn-sm"
+                           style="font-weight: 700;">Pay Now &rarr;</a>
                         
-                        <!-- Immutability: Customer edits are strictly locked once created -->
-
                         <!-- Cancellation Flow: Only PENDING bookings can be cancelled; if APPROVED/CONFIRMED, disable cancel -->
                         <a th:if="${b.status == 'PENDING'}"
                            th:href="@{/bookings/{id}/cancel(id=${b.bookingId})}"
                            class="btn btn-danger btn-sm"
                            onclick="return confirm('Are you sure you want to cancel your pending reservation?');">Cancel</a>
-                        <button th:if="${b.status == 'CONFIRMED' or b.status == 'APPROVED'}"
+                        <button th:if="${b.status == 'CONFIRMED' or b.status == 'APPROVED' or b.status == 'ACTIVE'}"
                                 type="button"
                                 class="btn btn-secondary btn-sm"
                                 disabled
                                 style="opacity: 0.55; cursor: not-allowed;"
-                                title="Approved bookings cannot be cancelled by customers. Cancellation action is disabled.">
+                                title="Active/confirmed reservations cannot be cancelled by customers.">
                             Cancel Locked
                         </button>
                     </span>
@@ -347,6 +382,7 @@
                             style="width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); padding: 0.65rem 0.75rem; font-family: inherit; font-size: 0.9rem;">
                         <option value="PENDING">PENDING - Awaiting Confirmation / Verification</option>
                         <option value="CONFIRMED">CONFIRMED (APPROVED) - Ready for payment / pickup</option>
+                        <option value="RETURNED">RETURNED - Vehicle returned by customer</option>
                         <option value="COMPLETED">COMPLETED - Vehicle returned and rental finished</option>
                         <option value="CANCELLED">CANCELLED - Voided / Cancelled</option>
                     </select>
@@ -357,6 +393,53 @@
                 <button type="submit" class="btn btn-primary" style="font-weight: 600;">Save Status Change</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Return Vehicle Confirmation Modal for Customers -->
+<div id="returnVehicleModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: 14px; max-width: 520px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden;">
+        <!-- Modal Header -->
+        <div style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; color: #60a5fa;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: white;">Return Vehicle Confirmation</h3>
+                </div>
+            </div>
+            <button type="button" onclick="closeReturnModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 0.25rem;">&times;</button>
+        </div>
+
+        <!-- Modal Body -->
+        <div style="padding: 1.5rem;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #64748b; font-weight: 700; margin-bottom: 0.35rem;">Vehicle &amp; Booking Details</div>
+                <div style="font-size: 1.1rem; font-weight: 800; color: #0f172a;" id="returnModalVehicle">Toyota Prius</div>
+                <div style="font-size: 0.85rem; color: #475569; margin-top: 0.2rem;">
+                    Booking Reference: <strong id="returnModalBookingId">#BK-1</strong> | Reg: <strong id="returnModalReg">WP CA-1020</strong>
+                </div>
+            </div>
+
+            <p style="font-size: 1rem; color: #334155; line-height: 1.5; margin: 0 0 1rem;">
+                <strong>Confirm you are returning this vehicle?</strong>
+            </p>
+
+            <div id="returnModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;"></div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button type="button" class="btn btn-secondary" onclick="closeReturnModal()" style="font-weight: 600;">Cancel</button>
+            <button type="button" id="btnConfirmReturn" class="btn btn-primary" onclick="executeReturnVehicle()" style="font-weight: 700; background: #2563eb; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span id="returnSpinner" style="display: none; width: 14px; height: 14px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                <span id="returnBtnText">Confirm Return</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -406,6 +489,86 @@
         }
     }
 
+    /* --- Return Vehicle Flow --- */
+    var currentReturnBookingId = null;
+
+    function openReturnModal(btn) {
+        currentReturnBookingId = btn.getAttribute('data-booking-id');
+        var vehicle = btn.getAttribute('data-vehicle') || 'Vehicle';
+        var reg = btn.getAttribute('data-reg') || 'N/A';
+
+        document.getElementById('returnModalBookingId').textContent = '#BK-' + currentReturnBookingId;
+        document.getElementById('returnModalVehicle').textContent = vehicle;
+        document.getElementById('returnModalReg').textContent = reg;
+        document.getElementById('returnModalError').style.display = 'none';
+        document.getElementById('returnModalError').textContent = '';
+
+        var btnConfirm = document.getElementById('btnConfirmReturn');
+        btnConfirm.disabled = false;
+        document.getElementById('returnSpinner').style.display = 'none';
+        document.getElementById('returnBtnText').textContent = 'Confirm Return';
+        btnConfirm.style.background = '#2563eb';
+
+        var modal = document.getElementById('returnVehicleModal');
+        modal.style.display = 'flex';
+    }
+
+    function closeReturnModal() {
+        var modal = document.getElementById('returnVehicleModal');
+        modal.style.display = 'none';
+        currentReturnBookingId = null;
+    }
+
+    function executeReturnVehicle() {
+        if (!currentReturnBookingId) return;
+
+        var btnConfirm = document.getElementById('btnConfirmReturn');
+        var spinner = document.getElementById('returnSpinner');
+        var btnText = document.getElementById('returnBtnText');
+        var errBox = document.getElementById('returnModalError');
+
+        btnConfirm.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.textContent = 'Processing Return...';
+        errBox.style.display = 'none';
+
+        fetch('/api/bookings/' + currentReturnBookingId + '/return', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(res) {
+            return res.json().then(function(data) {
+                return { status: res.status, ok: res.ok, data: data };
+            });
+        })
+        .then(function(result) {
+            if (result.ok && result.data && result.data.success) {
+                btnConfirm.style.background = '#059669';
+                spinner.style.display = 'none';
+                btnText.innerHTML = '&#10003; Returned! Redirecting...';
+                setTimeout(function() {
+                    window.location.href = result.data.feedbackUrl || ('/feedback/new?bookingId=' + currentReturnBookingId);
+                }, 800);
+            } else {
+                btnConfirm.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Confirm Return';
+                errBox.textContent = (result.data && result.data.message) ? result.data.message : 'Return failed. Please try again.';
+                errBox.style.display = 'block';
+            }
+        })
+        .catch(function(err) {
+            btnConfirm.disabled = false;
+            spinner.style.display = 'none';
+            btnText.textContent = 'Confirm Return';
+            errBox.textContent = 'Network or server error: ' + err.message;
+            errBox.style.display = 'block';
+        });
+    }
+
     window.addEventListener('click', function(e) {
         var declineModal = document.getElementById('declineModal');
         if (e.target === declineModal) {
@@ -414,6 +577,10 @@
         var editModal = document.getElementById('editStatusModal');
         if (e.target === editModal) {
             closeEditStatusModal();
+        }
+        var retModal = document.getElementById('returnVehicleModal');
+        if (e.target === retModal) {
+            closeReturnModal();
         }
     });
 </script>
