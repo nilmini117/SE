@@ -20,11 +20,11 @@ export default function CustomerVehicleCatalog({
   liveVehicles = null
 }) {
   const brands = [
-    { name: 'Toyota', emoji: '🔴', slogan: 'Hybrid Reliability & Versatile SUVs' },
-    { name: 'Suzuki', emoji: '🔵', slogan: 'Nimble City Hatchbacks & Compact 4x4s' },
-    { name: 'Honda', emoji: '🟡', slogan: 'VTEC Precision & Modern Hybrid Crossovers' },
-    { name: 'Tesla', emoji: '⚡', slogan: 'Cutting-Edge Electric Power & Smart Tech' },
-    { name: 'Benz', emoji: '⭐', slogan: 'Executive Luxury, Prestige & Refined Comfort' }
+    { name: 'Toyota', logo: '/images/brand_toyota.png', emoji: '🔴', slogan: 'Hybrid Reliability & Versatile SUVs' },
+    { name: 'Suzuki', logo: '/images/brand_suzuki.png', emoji: '🔵', slogan: 'Nimble City Hatchbacks & Compact 4x4s' },
+    { name: 'Honda', logo: '/images/brand_honda.png', emoji: '🟡', slogan: 'VTEC Precision & Modern Hybrid Crossovers' },
+    { name: 'Tesla', logo: '/images/brand_tesla.png', emoji: '⚡', slogan: 'Cutting-Edge Electric Power & Smart Tech' },
+    { name: 'Benz', logo: '/images/brand_benz.png', emoji: '⭐', slogan: 'Executive Luxury, Prestige & Refined Comfort' }
   ];
 
   // Default fallback park dataset (strictly no vehicle_id displayed)

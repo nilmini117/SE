@@ -58,7 +58,7 @@ public class Vehicle {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
-    @Column(name = "is_registered", nullable = false)
+    @Column(name = "is_registered")
     private Boolean isRegistered = true;
 
     @Column(name = "service_end_date")
@@ -153,11 +153,18 @@ public class Vehicle {
             return imageUrl;
         }
         String m = (model != null ? model : "").toLowerCase();
+        if (m.contains("model y")) return "/images/car_tesla_modely.jpg";
         if (m.contains("tesla")) return "/images/car_tesla_model3.jpg";
         if (m.contains("swift")) return "/images/car_suzuki_swift.jpg";
-        if (m.contains("benz") || m.contains("c-class") || m.contains("e-class") || m.contains("glc")) return "/images/category_luxury.jpg";
+        if (m.contains("glc")) return "/images/car_benz_glc.jpg";
+        if (m.contains("e-class") || m.contains("e300")) return "/images/car_benz_eclass.jpg";
+        if (m.contains("c-class") || m.contains("c200")) return "/images/car_benz_cclass.jpg";
+        if (m.contains("benz")) return "/images/car_benz_cclass.jpg";
+        if (m.contains("prius")) return "/images/car_toyota_prius.jpg";
+        if (m.contains("axio")) return "/images/car_toyota_axio.jpg";
+        if (m.contains("vezel")) return "/images/car_honda_vezel.jpg";
         if (m.contains("prado") || m.contains("rav4") || m.contains("cr-v") || m.contains("vitara") || m.contains("jimny") || m.contains("suv")) return "/images/category_suv.jpg";
-        if (m.contains("prius") || m.contains("axio") || m.contains("civic") || m.contains("vezel")) return "/images/category_economy.jpg";
+        if (m.contains("civic")) return "/images/category_economy.jpg";
         return "/images/lifestyle_car.jpg";
     }
 
@@ -177,7 +184,7 @@ public class Vehicle {
     }
 
     public boolean isRegistered() {
-        return Boolean.TRUE.equals(isRegistered);
+        return isRegistered != null ? isRegistered : true;
     }
 
     public String getCategoryBadge() {

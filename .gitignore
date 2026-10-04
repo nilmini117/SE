@@ -36,3 +36,8 @@ build/
 scratch/
 *cookie*.txt
 test_*.txt
+
+# Local secrets
+application-dev.properties
+uploads/
+.env

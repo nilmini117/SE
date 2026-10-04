@@ -31,14 +31,27 @@ public class EmailServiceImpl implements EmailService {
     @Override
     @Async
     public void sendNotification(String toEmail, String subject, String body) {
+        if (toEmail == null || toEmail.isBlank()) {
+            log.warn("Cannot send notification: recipient address is empty.");
+            return;
+        }
+        if (mailSender == null) {
+            log.warn("JavaMailSender bean is not configured. Email logged but not dispatched: {}", body);
+            return;
+        }
         SimpleMailMessage message = new SimpleMailMessage();
-        // This sets the official DriveFlow sender address you requested
-        message.setFrom("notifications@driveflow.com");
+        String sender = (fromEmail != null && !fromEmail.isBlank()) ? fromEmail : "notifications@driveflow.com";
+        message.setFrom(sender);
         message.setTo(toEmail);
         message.setSubject(subject);
         message.setText(body);
 
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+            log.info("✅ Successfully delivered notification email to {}", toEmail);
+        } catch (Exception ex) {
+            log.error("❌ Failed to deliver notification email to {}: {}", toEmail, ex.getMessage(), ex);
+        }
     }
 
     @Override

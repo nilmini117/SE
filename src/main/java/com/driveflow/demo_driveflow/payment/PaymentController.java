@@ -67,10 +67,10 @@ public class PaymentController {
 
     @PostMapping
     public String processPayment(@ModelAttribute Payment payment,
-                                 @RequestParam(value = "invoiceId", required = false) Long invoiceId,
-                                 @RequestParam(value = "paymentMethod", required = false, defaultValue = "CASH") String paymentMethod,
-                                 @RequestParam(value = "bankName", required = false) String bankName,
-                                 @RequestParam(value = "cardNo", required = false) String cardNo) {
+            @RequestParam(value = "invoiceId", required = false) Long invoiceId,
+            @RequestParam(value = "paymentMethod", required = false, defaultValue = "CASH") String paymentMethod,
+            @RequestParam(value = "bankName", required = false) String bankName,
+            @RequestParam(value = "cardNo", required = false) String cardNo) {
         Payment toSave = payment;
         if ("CREDIT_CARD".equalsIgnoreCase(paymentMethod)) {
             CreditCardPay cc = new CreditCardPay();
@@ -113,8 +113,8 @@ public class PaymentController {
 
     @PostMapping("/{id}")
     public String updatePayment(@PathVariable Long id,
-                                @ModelAttribute Payment payment,
-                                @RequestParam(value = "invoiceId", required = false) Long invoiceId) {
+            @ModelAttribute Payment payment,
+            @RequestParam(value = "invoiceId", required = false) Long invoiceId) {
         if (invoiceId != null) {
             payment.setInvoice(paymentService.getInvoiceById(invoiceId));
         }
@@ -124,26 +124,14 @@ public class PaymentController {
 
     @PostMapping("/{id}/cancel")
     public String cancelPaymentPost(@PathVariable Long id,
-                                    @RequestParam(value = "cancelReason", required = false) String cancelReason,
-                                    RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "cancelReason", required = false) String cancelReason,
+            RedirectAttributes redirectAttributes) {
         try {
             Payment payment = paymentService.getPaymentById(id);
             paymentService.cancelPayment(id);
             String ref = payment.getRefNo() != null ? payment.getRefNo() : ("#PAY-" + id);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment transaction " + ref + " has been successfully cancelled.");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel payment: " + e.getMessage());
-        }
-        return "redirect:/payments";
-    }
-
-    @GetMapping("/{id}/cancel")
-    public String cancelPayment(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            Payment payment = paymentService.getPaymentById(id);
-            paymentService.cancelPayment(id);
-            String ref = payment.getRefNo() != null ? payment.getRefNo() : ("#PAY-" + id);
-            redirectAttributes.addFlashAttribute("successMessage", "Payment transaction " + ref + " has been successfully cancelled.");
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Payment transaction " + ref + " has been successfully cancelled.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Failed to cancel payment: " + e.getMessage());
         }
@@ -169,7 +157,7 @@ public class PaymentController {
 
     @PostMapping("/invoices")
     public String generateInvoice(@ModelAttribute Invoice invoice,
-                                  @RequestParam(value = "bookingId", required = false) Long bookingId) {
+            @RequestParam(value = "bookingId", required = false) Long bookingId) {
         if (bookingId != null) {
             Booking booking = bookingService.getBookingById(bookingId);
             invoice.setBooking(booking);
@@ -191,8 +179,8 @@ public class PaymentController {
 
     @PostMapping("/invoices/{id}")
     public String updateInvoice(@PathVariable Long id,
-                                @ModelAttribute Invoice invoice,
-                                @RequestParam(value = "bookingId", required = false) Long bookingId) {
+            @ModelAttribute Invoice invoice,
+            @RequestParam(value = "bookingId", required = false) Long bookingId) {
         if (bookingId != null) {
             Booking booking = bookingService.getBookingById(bookingId);
             invoice.setBooking(booking);

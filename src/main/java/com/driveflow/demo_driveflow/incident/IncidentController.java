@@ -35,7 +35,8 @@ public class IncidentController {
     @GetMapping("/report")
     public String showCustomerReportForm(Model model, org.springframework.security.core.Authentication authentication) {
         com.driveflow.demo_driveflow.users.Customer customer = null;
-        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+        if (authentication != null && authentication.isAuthenticated()
+                && !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
             String email = authentication.getName();
             customer = userService.findCustomerByEmail(email).orElse(null);
         }
@@ -49,15 +50,18 @@ public class IncidentController {
 
         if (customer != null) {
             incident.setCustomer(customer);
-            // Auto-fetch customer's currently active booking vehicle (Strict single-active-booking rule)
-            java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository.findActiveBookingsByCustomerId(customer.getSystemId());
+            // Auto-fetch customer's currently active booking vehicle (Strict
+            // single-active-booking rule)
+            java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository
+                    .findActiveBookingsByCustomerId(customer.getSystemId());
 
             if (!activeBookings.isEmpty()) {
                 activeBooking = activeBookings.get(0);
                 activeVehicle = activeBooking.getVehicle();
             } else {
                 // Fallback to most recent booking if available
-                java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository.findByCustomerIdSorted(customer.getSystemId());
+                java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository
+                        .findByCustomerIdSorted(customer.getSystemId());
                 if (!recentBookings.isEmpty()) {
                     activeBooking = recentBookings.get(0);
                     activeVehicle = activeBooking.getVehicle();
@@ -78,8 +82,10 @@ public class IncidentController {
 
     @GetMapping("/api/active-vehicle")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> getActiveVehicle(org.springframework.security.core.Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+    public org.springframework.http.ResponseEntity<?> getActiveVehicle(
+            org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
             return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED)
                     .body(java.util.Map.of("error", "Unauthorized"));
         }
@@ -90,7 +96,8 @@ public class IncidentController {
                     .body(java.util.Map.of("error", "Customer record not found"));
         }
 
-        java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository.findActiveBookingsByCustomerId(customer.getSystemId());
+        java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository
+                .findActiveBookingsByCustomerId(customer.getSystemId());
         com.driveflow.demo_driveflow.vehicle.Vehicle activeVehicle = null;
         Long bookingId = null;
 
@@ -99,7 +106,8 @@ public class IncidentController {
             activeVehicle = b.getVehicle();
             bookingId = b.getBookingId();
         } else {
-            java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository.findByCustomerIdSorted(customer.getSystemId());
+            java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository
+                    .findByCustomerIdSorted(customer.getSystemId());
             if (!recentBookings.isEmpty()) {
                 com.driveflow.demo_driveflow.booking.Booking b = recentBookings.get(0);
                 activeVehicle = b.getVehicle();
@@ -117,8 +125,7 @@ public class IncidentController {
                 "vehicleId", activeVehicle.getVehicleId(),
                 "regNo", activeVehicle.getRegNo() != null ? activeVehicle.getRegNo() : "",
                 "brand", activeVehicle.getBrand() != null ? activeVehicle.getBrand() : "",
-                "model", activeVehicle.getModel() != null ? activeVehicle.getModel() : ""
-        ));
+                "model", activeVehicle.getModel() != null ? activeVehicle.getModel() : ""));
     }
 
     @PostMapping("/report")
@@ -128,13 +135,15 @@ public class IncidentController {
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
             org.springframework.security.core.Authentication authentication,
             RedirectAttributes redirectAttributes) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
         boolean isStaff = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"));
         if (isStaff) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Access Denied: Staff members cannot write or submit incidents.");
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Access Denied: Staff members cannot write or submit incidents.");
             return "redirect:/incidents";
         }
         String email = authentication.getName();
@@ -143,11 +152,13 @@ public class IncidentController {
             incident.setCustomer(customer);
             // If vehicle is not yet set, automatically bind the active booking vehicle
             if (vehicleId == null && incident.getVehicle() == null) {
-                java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository.findActiveBookingsByCustomerId(customer.getSystemId());
+                java.util.List<com.driveflow.demo_driveflow.booking.Booking> activeBookings = bookingRepository
+                        .findActiveBookingsByCustomerId(customer.getSystemId());
                 if (!activeBookings.isEmpty() && activeBookings.get(0).getVehicle() != null) {
                     incident.setVehicle(activeBookings.get(0).getVehicle());
                 } else {
-                    java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository.findByCustomerIdSorted(customer.getSystemId());
+                    java.util.List<com.driveflow.demo_driveflow.booking.Booking> recentBookings = bookingRepository
+                            .findByCustomerIdSorted(customer.getSystemId());
                     if (!recentBookings.isEmpty() && recentBookings.get(0).getVehicle() != null) {
                         incident.setVehicle(recentBookings.get(0).getVehicle());
                     }
@@ -162,7 +173,8 @@ public class IncidentController {
         }
         incident.setStatus("OPEN");
         incidentService.logIncident(incident);
-        redirectAttributes.addFlashAttribute("successMessage", "Support request #INC-" + incident.getIncidentId() + " submitted successfully. Our safety & support team has been notified.");
+        redirectAttributes.addFlashAttribute("successMessage", "Support request #INC-" + incident.getIncidentId()
+                + " submitted successfully. Our safety & support team has been notified.");
         return "redirect:/profile#incidents";
     }
 
@@ -179,9 +191,12 @@ public class IncidentController {
 
     @GetMapping("/new")
     @org.springframework.security.access.prepost.PreAuthorize("hasRole('CUSTOMER')")
-    public String showCreateForm(Model model, org.springframework.security.core.Authentication authentication, RedirectAttributes redirectAttributes) {
-        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"))) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Access Denied: Staff members cannot write or submit new incidents.");
+    public String showCreateForm(Model model, org.springframework.security.core.Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"))) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Access Denied: Staff members cannot write or submit new incidents.");
             return "redirect:/incidents";
         }
         Incident incident = new Incident();
@@ -201,8 +216,10 @@ public class IncidentController {
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
             org.springframework.security.core.Authentication authentication,
             RedirectAttributes redirectAttributes) {
-        if (authentication != null && authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"))) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Access Denied: Staff members cannot write or submit new incidents.");
+        if (authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"))) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Access Denied: Staff members cannot write or submit new incidents.");
             return "redirect:/incidents";
         }
         if (customerId != null) {
@@ -212,7 +229,8 @@ public class IncidentController {
             vehicleRepository.findById(vehicleId).ifPresent(incident::setVehicle);
         }
         incidentService.logIncident(incident);
-        redirectAttributes.addFlashAttribute("successMessage", "Incident report #INC-" + incident.getIncidentId() + " logged successfully.");
+        redirectAttributes.addFlashAttribute("successMessage",
+                "Incident report #INC-" + incident.getIncidentId() + " logged successfully.");
         return "redirect:/incidents";
     }
 

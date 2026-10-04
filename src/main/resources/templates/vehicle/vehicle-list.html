@@ -84,11 +84,11 @@
             <a th:href="@{/vehicles(brand='Toyota', status=${status})}"
                style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
                th:styleappend="${selectedBrand == 'Toyota'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
-                    🔴
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; border: 1px solid #fee2e2; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <img th:src="@{/images/brand_toyota.png}" src="/images/brand_toyota.png" alt="Toyota" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Toyota</strong>
-                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                <span class="brand-count-badge" data-brand="Toyota" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
                       th:styleappend="${selectedBrand == 'Toyota'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
                     <span th:text="${selectedBrand == 'Toyota'} ? 'Selected' : 'View Cars →'"></span>
                 </span>
@@ -98,11 +98,11 @@
             <a th:href="@{/vehicles(brand='Suzuki', status=${status})}"
                style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
                th:styleappend="${selectedBrand == 'Suzuki'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #dbeafe; color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
-                    🔵
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; border: 1px solid #dbeafe; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <img th:src="@{/images/brand_suzuki.png}" src="/images/brand_suzuki.png" alt="Suzuki" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Suzuki</strong>
-                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                <span class="brand-count-badge" data-brand="Suzuki" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
                       th:styleappend="${selectedBrand == 'Suzuki'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
                     <span th:text="${selectedBrand == 'Suzuki'} ? 'Selected' : 'View Cars →'"></span>
                 </span>
@@ -112,11 +112,11 @@
             <a th:href="@{/vehicles(brand='Honda', status=${status})}"
                style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
                th:styleappend="${selectedBrand == 'Honda'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
-                    🟡
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; border: 1px solid #fef3c7; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <img th:src="@{/images/brand_honda.png}" src="/images/brand_honda.png" alt="Honda" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Honda</strong>
-                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                <span class="brand-count-badge" data-brand="Honda" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
                       th:styleappend="${selectedBrand == 'Honda'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
                     <span th:text="${selectedBrand == 'Honda'} ? 'Selected' : 'View Cars →'"></span>
                 </span>
@@ -126,11 +126,11 @@
             <a th:href="@{/vehicles(brand='Tesla', status=${status})}"
                style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
                th:styleappend="${selectedBrand == 'Tesla'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
-                    ⚡
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; border: 1px solid #e0e7ff; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <img th:src="@{/images/brand_tesla.png}" src="/images/brand_tesla.png" alt="Tesla" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Tesla</strong>
-                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                <span class="brand-count-badge" data-brand="Tesla" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
                       th:styleappend="${selectedBrand == 'Tesla'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
                     <span th:text="${selectedBrand == 'Tesla'} ? 'Selected' : 'View Cars →'"></span>
                 </span>
@@ -140,11 +140,11 @@
             <a th:href="@{/vehicles(brand='Benz', status=${status})}"
                style="text-decoration: none; padding: 1.25rem 1rem; border-radius: var(--radius-md); border: 2px solid; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.65rem;"
                th:styleappend="${selectedBrand == 'Benz'} ? 'border-color: #4f46e5; background: #eef2ff; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.15);' : 'border-color: var(--slate-200); background: #f8fafc;'">
-                <div style="width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; color: #0f172a; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem;">
-                    ⭐
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #ffffff; border: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: center; padding: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+                    <img th:src="@{/images/brand_benz.png}" src="/images/brand_benz.png" alt="Benz" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
                 <strong style="font-size: 1.05rem; color: var(--slate-900); line-height: 1.2;">Benz</strong>
-                <span style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
+                <span class="brand-count-badge" data-brand="Benz" style="font-size: 0.72rem; padding: 0.2rem 0.65rem; border-radius: 9999px; font-weight: 700; margin-top: 0.15rem;"
                       th:styleappend="${selectedBrand == 'Benz'} ? 'background: #4f46e5; color: white;' : 'background: var(--slate-200); color: var(--slate-700);'">
                     <span th:text="${selectedBrand == 'Benz'} ? 'Selected' : 'View Cars →'"></span>
                 </span>
@@ -247,12 +247,39 @@
             </tr>
             </thead>
             <tbody>
-            <tr th:each="v : ${vehicles}">
+            <tr th:each="v : ${vehicles}" th:attr="data-brand=${v.brand}, data-model=${v.model}">
                 <!-- STRICT RULE: vehicle_id shown ONLY for Staff, hidden for Customers -->
                 <td th:if="${isStaff}"><strong th:text="'#VH-' + ${v.vehicleId}">#VH-1</strong></td>
                 <td><strong th:text="${v.regNo}">ABC-1234</strong></td>
                 <td>
-                    <strong th:text="${v.model}" style="color: var(--slate-900);">Toyota Prius</strong>
+                    <div style="display: flex; align-items: center; gap: 0.85rem;">
+                        <div class="vehicle-thumbnail-frame" 
+                             style="position: relative; width: 68px; height: 46px; border-radius: 8px; overflow: hidden; border: 1px solid var(--slate-200); background: #f8fafc; flex-shrink: 0; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); cursor: pointer;"
+                             th:attr="onclick=|window.showImageModal('${v.imageUrl}', '${v.model}')|"
+                             title="Click to view full photo">
+                            <img th:src="${v.imageUrl != null and !v.imageUrl.isEmpty() ? v.imageUrl : '/images/category_economy.jpg'}"
+                                 th:alt="${v.model}"
+                                 loading="lazy"
+                                 onerror="this.onerror=null; this.src='/images/category_economy.jpg';"
+                                 style="width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.25s ease;"
+                                 onmouseover="this.style.transform='scale(1.08)'"
+                                 onmouseout="this.style.transform='scale(1.0)'" />
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.15rem; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                <img th:if="${v.brand != null}"
+                                     th:src="@{'/images/brand_' + ${v.brand.toLowerCase()} + '.png'}"
+                                     th:alt="${v.brand}"
+                                     onerror="this.style.display='none'"
+                                     style="width: 16px; height: 16px; object-fit: contain; flex-shrink: 0;" />
+                                <strong class="vehicle-model-name" th:text="${v.model}" style="color: var(--slate-900); font-weight: 700; font-size: 0.95rem; line-height: 1.25;">Toyota Prius</strong>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.45rem; font-size: 0.72rem; color: var(--slate-500);">
+                                <span th:if="${v.categoryBadge != null}" th:text="${v.categoryBadge}" style="font-weight: 600; color: #4f46e5; background: #eef2ff; padding: 0.1rem 0.45rem; border-radius: 4px;">Hybrid Efficient</span>
+                                <span th:if="${v.fuel != null and !v.fuel.isEmpty()}" th:text="${v.fuel}" style="color: var(--slate-500);">Hybrid 24 km/L</span>
+                            </div>
+                        </div>
+                    </div>
                 </td>
                 <td>
                     <span th:if="${v.branch != null}" th:text="${v.branch.branchName}">Colombo Central</span>
@@ -395,8 +422,39 @@
     </div>
 </div>
 
+<!-- Vehicle Photo Preview Modal -->
+<div id="vehiclePhotoModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px); padding: 1rem;" onclick="if(event.target === this) this.style.display='none'">
+    <div style="background: white; border-radius: 16px; max-width: 640px; width: 100%; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0;">
+        <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #0f172a; display: flex; align-items: center; justify-content: center;">
+            <img id="vehiclePhotoModalImg" src="" alt="Vehicle" style="width: 100%; height: 100%; object-fit: contain;">
+            <button type="button" onclick="document.getElementById('vehiclePhotoModal').style.display='none'" 
+                    style="position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(15, 23, 42, 0.7); color: white; border: none; font-size: 1.25rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;">
+                &times;
+            </button>
+        </div>
+        <div style="padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; background: #ffffff;">
+            <div>
+                <h4 id="vehiclePhotoModalTitle" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a;">Vehicle Photo</h4>
+                <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; color: #64748b;">Certified Fleet Model &bull; DriveFlow Park</p>
+            </div>
+            <button type="button" onclick="document.getElementById('vehiclePhotoModal').style.display='none'" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem;">Close</button>
+        </div>
+    </div>
+</div>
+
 <!-- Dynamic State Integration & Deletion Workflow Script -->
 <script>
+    window.showImageModal = function(src, title) {
+        var modal = document.getElementById('vehiclePhotoModal');
+        var img = document.getElementById('vehiclePhotoModalImg');
+        var titleEl = document.getElementById('vehiclePhotoModalTitle');
+        if (modal && img) {
+            img.src = src;
+            if (titleEl) titleEl.textContent = title || 'Vehicle Photo';
+            modal.style.display = 'flex';
+        }
+    };
+
     (function () {
         const BRANDS = ['Toyota', 'Suzuki', 'Honda', 'Tesla', 'Benz'];
         window.__vehiclesList = [];
@@ -417,13 +475,13 @@
         // Initialize vehicles list from DOM rows as immediate baseline
         document.querySelectorAll('tbody tr').forEach(function(row) {
             const deleteBtn = row.querySelector('.btn-delete-vehicle');
-            const modelStrong = row.querySelector('td:nth-child(3) strong');
+            const modelStrong = row.querySelector('.vehicle-model-name') || row.querySelector('td:nth-child(3) strong') || row.querySelector('strong');
             const regStrong = row.querySelector('td:nth-child(2) strong');
             
-            const brand = (deleteBtn && deleteBtn.getAttribute('data-brand')) || '';
+            const brand = (deleteBtn && deleteBtn.getAttribute('data-brand')) || row.getAttribute('data-brand') || '';
             const id = (deleteBtn && deleteBtn.getAttribute('data-id')) || null;
             const regNo = (deleteBtn && deleteBtn.getAttribute('data-regno')) || (regStrong ? regStrong.textContent.trim() : '');
-            const model = (deleteBtn && deleteBtn.getAttribute('data-model')) || (modelStrong ? modelStrong.textContent.trim() : '');
+            const model = (deleteBtn && deleteBtn.getAttribute('data-model')) || row.getAttribute('data-model') || (modelStrong ? modelStrong.textContent.trim() : '');
 
             if (brand) {
                 window.__vehiclesList.push({

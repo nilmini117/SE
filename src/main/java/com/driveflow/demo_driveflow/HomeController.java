@@ -16,11 +16,16 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
 import java.util.*;
 
 @Controller
 public class HomeController {
+
+    private static final Logger log = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired(required = false)
     private VehicleService vehicleService;
@@ -48,7 +53,7 @@ public class HomeController {
                 model.addAttribute("vehicles", availableVehicles);
                 model.addAttribute("brands", vehicleService.getAllBrands());
             } catch (Exception e) {
-                // In case of unit test or uninitialized db
+                log.warn("Could not load vehicles for the home page", e);
             }
         }
 
@@ -60,7 +65,9 @@ public class HomeController {
                     activePromotions = promotionRepository.findByStatusIgnoreCase("ACTIVE");
                 }
                 model.addAttribute("activePromotions", activePromotions);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Could not load promotions for the home page", e);
+            }
         }
 
         // Partnered Maintenance Companies
@@ -68,7 +75,9 @@ public class HomeController {
             try {
                 List<MaintenanceCompany> maintenanceCompanies = maintenanceCompanyService.getAllCompanies();
                 model.addAttribute("maintenanceCompanies", maintenanceCompanies);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Could not load maintenance companies for the home page", e);
+            }
         }
 
         // Approved & Accepted Feedback tied to each vehicle
@@ -84,7 +93,9 @@ public class HomeController {
                 }
                 model.addAttribute("vehicleFeedbackMap", vehicleFeedbackMap);
                 model.addAttribute("allApprovedFeedback", approvedList);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                log.warn("Could not load approved feedback for the home page", e);
+            }
         }
 
         return "index";

@@ -416,20 +416,44 @@ export default function StaffVehicleTable({
                       {v.regNo}
                     </td>
                     <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#0f172a' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                        <img
-                          src={v.imageUrl || v.image || '/images/category_economy.jpg'}
-                          alt={v.model}
-                          style={{
-                            width: '42px',
-                            height: '28px',
-                            objectFit: 'cover',
-                            borderRadius: '4px',
-                            border: '1px solid #e2e8f0',
-                            backgroundColor: '#f1f5f9'
-                          }}
-                        />
-                        <span>{v.model}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '56px',
+                          height: '38px',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          border: '1px solid #e2e8f0',
+                          backgroundColor: '#f8fafc',
+                          flexShrink: 0,
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}>
+                          <img
+                            src={v.imageUrl || v.image || '/images/category_economy.jpg'}
+                            alt={v.model}
+                            onError={(e) => { e.target.onerror = null; e.target.src = '/images/category_economy.jpg'; }}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                          />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            {v.brand && (
+                              <img
+                                src={`/images/brand_${v.brand.toLowerCase()}.png`}
+                                alt={v.brand}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                                style={{ width: '15px', height: '15px', objectFit: 'contain' }}
+                              />
+                            )}
+                            <span style={{ fontWeight: 700, color: '#0f172a' }}>{v.model}</span>
+                          </div>
+                          {v.categoryBadge && (
+                            <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{v.categoryBadge}</span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td style={{ padding: '0.85rem 1rem', color: '#475569' }}>

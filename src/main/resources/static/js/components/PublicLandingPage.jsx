@@ -67,11 +67,11 @@ export default function PublicLandingPage({
 
   // 5 Certified Park Manufacturer Brands with Authentic Vector Logos
   const brands = [
-    { name: 'Toyota', logo: '/images/brand_toyota.svg', color: '#fee2e2', textColor: '#dc2626' },
-    { name: 'Suzuki', logo: '/images/brand_suzuki.svg', color: '#dbeafe', textColor: '#2563eb' },
-    { name: 'Honda', logo: '/images/brand_honda.svg', color: '#fef3c7', textColor: '#d97706' },
-    { name: 'Tesla', logo: '/images/brand_tesla.svg', color: '#e0e7ff', textColor: '#4338ca' },
-    { name: 'Benz', logo: '/images/brand_benz.svg', color: '#f1f5f9', textColor: '#0f172a' },
+    { name: 'Toyota', logo: '/images/brand_toyota.png', color: '#fee2e2', textColor: '#dc2626' },
+    { name: 'Suzuki', logo: '/images/brand_suzuki.png', color: '#dbeafe', textColor: '#2563eb' },
+    { name: 'Honda', logo: '/images/brand_honda.png', color: '#fef3c7', textColor: '#d97706' },
+    { name: 'Tesla', logo: '/images/brand_tesla.png', color: '#e0e7ff', textColor: '#4338ca' },
+    { name: 'Benz', logo: '/images/brand_benz.png', color: '#f1f5f9', textColor: '#0f172a' },
   ];
 
   // Authentic Sri Lankan Fleet Vehicles Dataset
