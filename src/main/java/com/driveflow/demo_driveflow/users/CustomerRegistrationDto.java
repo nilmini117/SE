@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,7 +41,7 @@ public class CustomerRegistrationDto {
     private String nicNumber;
 
     @NotBlank(message = "Email is required")
-    @Email(message = "Please enter a valid email address")
+    @com.driveflow.demo_driveflow.validation.ValidDomainEmail(message = "Please enter a valid email address with an active domain.")
     private String email;
 
     /**
@@ -86,6 +84,9 @@ public class CustomerRegistrationDto {
     private String password;
 
     private String confirmPassword;
+
+    @JsonProperty("otp")
+    private String otp;
 
     // --- Property Aliases & Backward-Compatible Accessors ---
 

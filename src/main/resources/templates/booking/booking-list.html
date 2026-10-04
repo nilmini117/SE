@@ -194,6 +194,7 @@
                         <span th:if="${b.status == 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem; font-style: italic;">Pending Approval</span>
                         <span th:if="${b.status != 'PENDING'}" style="color: var(--slate-400); font-size: 0.8rem;">-</span>
                     </div>
+                </td>
                 <td style="text-align: right; white-space: nowrap;">
                     <!-- Staff Actions -->
                     <span th:if="${isStaff != null and isStaff}" style="display: inline-flex; align-items: center; gap: 0.35rem; justify-content: flex-end;">

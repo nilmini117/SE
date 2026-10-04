@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Honda Iconic 'H' in rounded trapezoid Logo -->
+  <g fill="none" stroke="#d97706" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer rounded trapezoid -->
+    <path d="M20 20 H80 L88 80 H12 Z" rx="10"/>
+    <!-- Central H letter -->
+    <path d="M34 26 L38 74 M66 26 L62 74 M36 48 H64" stroke-width="6"/>
+  </g>
+</svg>

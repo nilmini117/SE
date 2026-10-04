@@ -17,4 +17,5 @@ public interface FeedbackService {
     void deleteFeedback(Long id);
     void deleteCustomerFeedback(Long id, Customer customer);
     Feedback save(Feedback feedback);
+    List<Feedback> getApprovedOrAcceptedFeedback();
 }

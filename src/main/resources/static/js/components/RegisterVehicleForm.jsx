@@ -16,14 +16,32 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
         regNo: '',
         color: '',
         mileage: 0,
+        transmission: 'Automatic (CVT)',
+        capacity: '5 Seats',
+        fuel: 'Hybrid 24 km/L',
+        dailyRate: 12500,
         status: 'AVAILABLE', // Strictly locked to AVAILABLE on create
         quantity: 1,         // Strictly locked to 1 on create
         branchId: branches.length > 0 ? branches[0].branchId : ''
     });
 
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [successMessage, setSuccessMessage] = useState(null);
+
+    const handleImageChange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            const previewUrl = URL.createObjectURL(file);
+            setImagePreview(previewUrl);
+        } else {
+            setImageFile(null);
+            setImagePreview(null);
+        }
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -57,25 +75,29 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
 
         setLoading(true);
         try {
-            // Payload sent to backend; backend service layer also unconditionally enforces status=AVAILABLE and quantity=1
-            const payload = {
-                brand: formData.brand,
-                model: formData.model.trim(),
-                regNo: formData.regNo.trim().toUpperCase(),
-                color: formData.color.trim(),
-                mileage: parseInt(formData.mileage, 10) || 0,
-                status: 'AVAILABLE',
-                quantity: 1,
-                branchId: formData.branchId ? parseInt(formData.branchId, 10) : null
-            };
+            // Build multipart FormData payload so image upload and metadata are processed together
+            const data = new FormData();
+            data.append('brand', formData.brand);
+            data.append('model', formData.model.trim());
+            data.append('regNo', formData.regNo.trim().toUpperCase());
+            data.append('color', formData.color.trim());
+            data.append('mileage', parseInt(formData.mileage, 10) || 0);
+            data.append('transmission', formData.transmission ? formData.transmission.trim() : 'Automatic (CVT)');
+            data.append('capacity', formData.capacity ? formData.capacity.trim() : '5 Seats');
+            data.append('fuel', formData.fuel ? formData.fuel.trim() : 'Hybrid 24 km/L');
+            data.append('dailyRate', parseFloat(formData.dailyRate) || 12500);
+            data.append('status', 'AVAILABLE');
+            data.append('quantity', 1);
+            if (formData.branchId) {
+                data.append('branchId', parseInt(formData.branchId, 10));
+            }
+            if (imageFile) {
+                data.append('image', imageFile);
+            }
 
             const response = await fetch('/vehicles/api/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(payload)
+                body: data
             });
 
             if (!response.ok) {
@@ -252,7 +274,79 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
                     </div>
                 </div>
 
-                {/* Row 4: Operational Status (Locked) & Quantity (Locked to 1) */}
+                {/* Row 4: Transmission & Capacity */}
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="react-transmission" style={{ fontWeight: 600 }}>
+                            Transmission <span style={{ color: 'var(--danger)' }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="react-transmission"
+                            name="transmission"
+                            className="form-control"
+                            placeholder="e.g. Automatic (CVT)"
+                            value={formData.transmission}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="react-capacity" style={{ fontWeight: 600 }}>
+                            Capacity <span style={{ color: 'var(--danger)' }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="react-capacity"
+                            name="capacity"
+                            className="form-control"
+                            placeholder="e.g. 5 Seats"
+                            value={formData.capacity}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                </div>
+
+                {/* Row 5: Engine/Fuel & Daily Rate */}
+                <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="react-fuel" style={{ fontWeight: 600 }}>
+                            Engine / Fuel <span style={{ color: 'var(--danger)' }}>*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="react-fuel"
+                            name="fuel"
+                            className="form-control"
+                            placeholder="e.g. Hybrid 24 km/L"
+                            value={formData.fuel}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label className="form-label" htmlFor="react-dailyRate" style={{ fontWeight: 600 }}>
+                            Daily Rental Rate (Rs.) <span style={{ color: 'var(--danger)' }}>*</span>
+                        </label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="react-dailyRate"
+                            name="dailyRate"
+                            className="form-control"
+                            placeholder="12500"
+                            min="0"
+                            value={formData.dailyRate}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+                </div>
+
+                {/* Row 6: Operational Status (Locked) & Quantity (Locked to 1) */}
                 <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                     <div className="form-group">
                         <label className="form-label" htmlFor="react-status" style={{ fontWeight: 600 }}>
@@ -295,6 +389,38 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
                             }}
                         />
                     </div>
+                </div>
+
+                {/* Row 7: Local Vehicle Image Upload Field */}
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label" htmlFor="react-vehicle-image" style={{ fontWeight: 600 }}>
+                        Vehicle Photo (Local File Upload)
+                    </label>
+                    <input
+                        type="file"
+                        id="react-vehicle-image"
+                        name="image"
+                        accept="image/*"
+                        className="form-control"
+                        onChange={handleImageChange}
+                        style={{ padding: '0.5rem' }}
+                    />
+                    <small style={{ color: 'var(--slate-500)', fontSize: '0.78rem', display: 'block', marginTop: '0.25rem' }}>
+                        Upload a photo of the vehicle (JPG, PNG, WebP) to display across fleet catalogs and booking summaries.
+                    </small>
+                    {imagePreview && (
+                        <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: 'var(--slate-50)', borderRadius: '8px', border: '1px solid var(--slate-200)' }}>
+                            <img
+                                src={imagePreview}
+                                alt="Vehicle Preview"
+                                style={{ width: '90px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                            />
+                            <div>
+                                <strong style={{ display: 'block', fontSize: '0.85rem', color: 'var(--slate-800)' }}>Selected Photo:</strong>
+                                <span style={{ fontSize: '0.8rem', color: 'var(--slate-600)' }}>{imageFile ? imageFile.name : ''}</span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>

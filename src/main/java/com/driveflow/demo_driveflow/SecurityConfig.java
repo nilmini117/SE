@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Autowired
@@ -35,41 +37,56 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/vehicles/api/**", "/payments/api/**"))
             .authorizeHttpRequests(auth -> auth
+                // Public Read-Only Endpoints: Anyone (unauthenticated or customer) can view static assets, login, and vehicle catalog (GET only)
                 .requestMatchers(
                     "/",
+                    "/booking",
+                    "/incident",
+                    "/incidents/report",
                     "/login",
                     "/register",
+                    "/register/**",
+                    "/forgot-password",
+                    "/forgot-password/**",
                     "/api/auth/**",
                     "/api/register",
-                    "/api/vehicles",
-                    "/api/vehicles/**",
+                    "/api/profile/password",
                     "/api/company-sales",
-                    "/vehicles",
-                    "/vehicles/api/**",
+                    "/api/promotions",
+                    "/api/maintenance-companies",
+                    "/api/maintenance-partners",
+                    "/api/feedback/approved",
                     "/payments/api/**",
-                    "/promotions",
                     "/error",
                     "/css/**",
                     "/js/**",
                     "/images/**",
+                    "/uploads/**",
                     "/favicon.ico"
                 ).permitAll()
+                // Vehicle catalog: Public strictly read-only access (GET only)
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/vehicles", "/vehicles/**", "/api/vehicles", "/api/vehicles/**").permitAll()
+                // Vehicle management (Staff Only): PUT, DELETE, POST
+                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/vehicles/**", "/vehicles/**").hasRole("STAFF")
+                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/vehicles/**", "/vehicles/**").hasRole("STAFF")
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/vehicles/**", "/vehicles/new", "/vehicles", "/vehicles/**").hasRole("STAFF")
                 // Customer profile and invoices-payments (authenticated)
                 .requestMatchers("/profile/**", "/invoices-payments", "/invoices-payments/**").authenticated()
                 // Staff-only booking approval
                 .requestMatchers("/bookings/*/approve").hasRole("STAFF")
                 // Booking creation strictly requires authenticated user (Customer or Staff)
                 .requestMatchers("/bookings/new", "/bookings", "/bookings/**").authenticated()
-                // Customer incident reporting endpoint
-                .requestMatchers("/incidents/report").authenticated()
-                // Staff-only modules & endpoints
+                // Incident logging restriction: Staff users cannot write or submit incidents. Strictly CUSTOMER only.
+                .requestMatchers(org.springframework.http.HttpMethod.POST, "/incidents/report", "/incidents").hasRole("CUSTOMER")
+                .requestMatchers("/incidents/new").hasRole("CUSTOMER")
+                .requestMatchers("/incidents/api/**").hasRole("CUSTOMER")
+                // Staff-only modules & endpoints (incident management, maintenance, payments)
                 .requestMatchers("/incidents/**").hasRole("STAFF")
                 .requestMatchers("/maintenance/**").hasRole("STAFF")
                 .requestMatchers("/payments/new", "/payments/*/refund", "/payments/*/cancel", "/payments/*/delete", "/payments/invoices/**").hasRole("STAFF")
                 .requestMatchers("/payments").authenticated()
-                .requestMatchers("/vehicles/new", "/vehicles/*/edit", "/vehicles/*/delete").hasRole("STAFF")
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/promotions", "/promotions/**").hasRole("STAFF")
-                .requestMatchers("/promotions/new", "/promotions/*/edit", "/promotions/*/delete").hasRole("STAFF")
+                // Staff Promotions Management: strictly staff-only
+                .requestMatchers("/promotions", "/promotions/**").hasRole("STAFF")
                 // Staff-only feedback visibility toggles / approval / resolve
                 .requestMatchers("/feedback/*/resolve", "/feedback/*/toggle-visibility", "/feedback/*/approve", "/api/feedback/*/toggle-visibility", "/api/feedback/*/approve").hasRole("STAFF")
                 // Staff Permissions (Immutability): Staff must have strictly read-only access to feedback text.

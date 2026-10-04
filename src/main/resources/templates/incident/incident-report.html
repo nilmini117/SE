@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/layout :: head('Report Vehicle Incident')}"></head>
+<head th:replace="~{fragments/layout :: head('Need to contact us')}"></head>
 <body>
 
-<nav th:replace="~{fragments/layout :: navbar('profile')}"></nav>
+<nav th:replace="~{fragments/layout :: navbar('incidents')}"></nav>
 
 <main class="df-main">
     <div style="max-width: 720px; margin: 0 auto 1.5rem;">
@@ -20,10 +20,10 @@
             </div>
             <div>
                 <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900); margin: 0 0 0.35rem;">
-                    Report Vehicle Incident or Damage
+                    Need to contact us
                 </h1>
                 <p style="color: var(--slate-500); font-size: 0.9rem; margin: 0; line-height: 1.4;">
-                    If you experienced an accident, mechanical issue, breakdown, or damage during your rental, submit the details below. Our safety response team will review your report immediately.
+                    If you experienced an issue, breakdown, collision, or require roadside assistance with your active booking, submit your report below. Our 24/7 operations and support team will assist you immediately.
                 </p>
             </div>
         </div>
@@ -32,42 +32,61 @@
         <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-md); padding: 0.85rem 1.15rem; margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-size: 1.25rem;">&#128222;</span>
             <div style="font-size: 0.85rem; color: #92400e;">
-                <strong>Emergency Roadside Assistance:</strong> Call <strong>+94 11 234 5678</strong> (24/7 Hotline) if you need immediate roadside towing or medical aid.
+                <strong>Emergency Roadside Assistance:</strong> Call <strong>+94 11 234 5678</strong> (24/7 Hotline) if you need immediate roadside towing or urgent dispatch.
             </div>
         </div>
 
-        <form th:action="@{/incidents/report}" th:object="${incident}" method="post">
+        <form th:action="@{/incidents/report}" th:object="${incident}" method="post" id="supportForm">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
-            <!-- Customer Read-Only Confirmation -->
+            <!-- Customer Read-Only Information -->
             <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Reporting Customer</span>
-                    <div style="font-weight: 700; color: var(--slate-800);" th:text="${customer.name}">John Customer</div>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Customer</span>
+                    <div style="font-weight: 700; color: var(--slate-800);" th:text="${customer != null ? customer.name : 'Valued Customer'}">John Customer</div>
                 </div>
                 <div style="text-align: right;">
                     <span style="font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase;">Account Email</span>
-                    <div style="font-size: 0.85rem; color: var(--slate-700);" th:text="${customer.email}">customer@driveflow.com</div>
+                    <div style="font-size: 0.85rem; color: var(--slate-700);" th:text="${customer != null ? customer.email : ''}">customer@driveflow.com</div>
                 </div>
             </div>
 
-            <div class="form-row">
-                <!-- Vehicle Selector -->
-                <div class="form-group">
-                    <label class="form-label" style="font-weight: 600;">
-                        Involved Rental Vehicle <span style="color: var(--danger);">*</span>
-                    </label>
-                    <select name="vehicleId" class="form-select" required>
-                        <option value="">-- Select Rented Vehicle --</option>
-                        <option th:each="v : ${vehicles}"
-                                th:value="${v.vehicleId}"
-                                th:text="${v.model + ' (' + v.regNo + ')'}">
-                            Toyota Prius (WP CA-1020)
-                        </option>
-                    </select>
-                    <small style="color: var(--slate-400); font-size: 0.78rem;">Select the vehicle associated with this event.</small>
+            <!-- Auto-Populated Active Vehicle Card (No manual selection dropdown) -->
+            <div id="activeVehicleSection" style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--slate-100);">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
+                        🚗 Active Rental Vehicle (Auto-Bound)
+                    </span>
+                    <span class="badge badge-success" id="activeBookingBadge" style="font-size: 0.75rem; font-weight: 700;">
+                        Active Booking
+                    </span>
                 </div>
 
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--slate-500); font-weight: 600; display: block; margin-bottom: 0.2rem;">Registration Number</span>
+                        <strong id="vehicleRegNo" style="font-size: 1.05rem; color: var(--slate-900); font-family: monospace;"
+                                th:text="${activeVehicle != null ? activeVehicle.regNo : 'General Support'}">WP CA-1020</strong>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--slate-500); font-weight: 600; display: block; margin-bottom: 0.2rem;">Brand</span>
+                        <span id="vehicleBrand" style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800);"
+                              th:text="${activeVehicle != null ? activeVehicle.brand : 'DriveFlow'}">Toyota</span>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--slate-500); font-weight: 600; display: block; margin-bottom: 0.2rem;">Model</span>
+                        <span id="vehicleModel" style="font-size: 1.05rem; font-weight: 700; color: var(--slate-800);"
+                              th:text="${activeVehicle != null ? activeVehicle.model : 'Emergency Assistance'}">Prius</span>
+                    </div>
+                </div>
+
+                <!-- Hidden Input for Vehicle ID - No dropdown allowed -->
+                <input type="hidden" name="vehicleId" id="vehicleIdInput"
+                       th:value="${activeVehicle != null ? activeVehicle.vehicleId : ''}" />
+            </div>
+
+            <!-- Incident / Contact Details -->
+            <div class="form-row">
                 <!-- Date -->
                 <div class="form-group">
                     <label class="form-label" style="font-weight: 600;">
@@ -75,9 +94,7 @@
                     </label>
                     <input type="date" th:field="*{date}" class="form-control" required />
                 </div>
-            </div>
 
-            <div class="form-row">
                 <!-- Severity Level -->
                 <div class="form-group">
                     <label class="form-label" style="font-weight: 600;">
@@ -110,6 +127,40 @@
         </form>
     </div>
 </main>
+
+<script>
+    // Dynamic binding to automatically fetch and verify customer's active vehicle
+    document.addEventListener("DOMContentLoaded", function() {
+        fetch('/incidents/api/active-vehicle')
+            .then(function(res) {
+                if (res.ok) return res.json();
+                return null;
+            })
+            .then(function(data) {
+                if (data && data.hasActiveBooking) {
+                    var input = document.getElementById('vehicleIdInput');
+                    if (input && data.vehicleId) {
+                        input.value = data.vehicleId;
+                    }
+                    var regElem = document.getElementById('vehicleRegNo');
+                    if (regElem && data.regNo) {
+                        regElem.textContent = data.regNo;
+                    }
+                    var brandElem = document.getElementById('vehicleBrand');
+                    if (brandElem && data.brand) {
+                        brandElem.textContent = data.brand;
+                    }
+                    var modelElem = document.getElementById('vehicleModel');
+                    if (modelElem && data.model) {
+                        modelElem.textContent = data.model;
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.debug("Active vehicle loaded from server template.", err);
+            });
+    });
+</script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 

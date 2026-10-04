@@ -1,7 +1,12 @@
 package com.driveflow.demo_driveflow.vehicle;
 
+import com.driveflow.demo_driveflow.users.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -15,6 +20,24 @@ public class VehicleApiController {
     @Autowired
     private VehicleService vehicleService;
 
+    @Autowired(required = false)
+    private StaffRepository staffRepository;
+
+    private boolean isStaff(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+        boolean hasStaffRole = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"));
+        if (hasStaffRole) {
+            return true;
+        }
+        if (staffRepository != null) {
+            return staffRepository.findByEmail(authentication.getName()).isPresent();
+        }
+        return false;
+    }
+
     @GetMapping
     public List<Map<String, Object>> getActiveVehicles() {
         return vehicleService.getVehiclesByBrand(null).stream().map(v -> {
@@ -26,14 +49,59 @@ public class VehicleApiController {
             map.put("color", v.getColor());
             map.put("mileage", v.getMileage());
             map.put("status", v.getStatus());
+            map.put("transmission", v.getTransmission());
+            map.put("capacity", v.getCapacity());
+            map.put("fuel", v.getFuel());
+            map.put("dailyRate", v.getDailyRate());
+            map.put("daily_rate", v.getDailyRate());
+            map.put("imageUrl", v.getImageUrl());
+            map.put("image", v.getImageUrl());
+            map.put("isRegistered", v.getIsRegistered());
+            map.put("isUnderMaintenance", v.isUnderMaintenance());
+            map.put("serviceEndDate", v.getServiceEndDate());
+            map.put("formattedServiceEndDate", v.getFormattedServiceEndDate());
+            map.put("categoryBadge", v.getCategoryBadge());
             map.put("branchName", v.getBranch() != null ? v.getBranch().getBranchName() : "Main Branch");
             map.put("branchId", v.getBranch() != null ? v.getBranch().getBranchId() : null);
             return map;
         }).toList();
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<?> updateVehicle(@PathVariable Long id, @RequestBody Vehicle vehicle, Authentication authentication) {
+        if (authentication == null || !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to modify vehicles."
+            ));
+        }
+        try {
+            Vehicle updated = vehicleService.updateVehicle(id, vehicle);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Vehicle #" + id + " has been successfully updated.",
+                    "vehicle", updated
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Failed to update vehicle #" + id + ": " + e.getMessage()
+            ));
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<?> deleteVehicle(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to delete vehicles."
+            ));
+        }
         try {
             vehicleService.removeVehicle(id);
             return ResponseEntity.ok(Map.of(
@@ -50,7 +118,15 @@ public class VehicleApiController {
     }
 
     @DeleteMapping("/reg/{regNo}")
-    public ResponseEntity<?> deleteVehicleByRegNo(@PathVariable String regNo) {
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<?> deleteVehicleByRegNo(@PathVariable String regNo, Authentication authentication) {
+        if (authentication == null || !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to delete vehicles."
+            ));
+        }
         try {
             List<Vehicle> all = vehicleService.getAllVehicles();
             Vehicle vehicle = all.stream()

@@ -9,4 +9,7 @@ public interface UserService {
     Optional<User> findUserByEmail(String email);
     Customer updateCustomerProfile(String email, String firstName, String lastName, String contactNumber, String drivingLicense);
     void changePassword(String email, String oldPassword, String newPassword);
+    void changePassword(String email, String oldPassword, String newPassword, String otp);
+    void resetPassword(String email, String newPassword);
+    void resetPassword(String email, String newPassword, String otp);
 }

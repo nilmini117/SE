@@ -43,8 +43,10 @@ public class PricingEngineServiceImpl implements PricingEngineService {
         if (vehicleId != null) {
             Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
             if (vehicleOpt.isPresent()) {
-                // If model has specific rate in future, can be overridden here
-                baseDailyRate = DEFAULT_BASE_DAILY_RATE;
+                Vehicle v = vehicleOpt.get();
+                if (v.getDailyRate() != null && v.getDailyRate().compareTo(BigDecimal.ZERO) > 0) {
+                    baseDailyRate = v.getDailyRate();
+                }
             }
         }
 
@@ -57,16 +59,19 @@ public class PricingEngineServiceImpl implements PricingEngineService {
         // 1. If customer entered a coupon ID / promotion code, evaluate it
         if (couponCode != null && !couponCode.trim().isBlank()) {
             String cleanCode = couponCode.trim();
-            Optional<Promotion> couponPromoOpt = promotionRepository.findByCouponCodeIgnoreCaseAndStatusIgnoreCase(cleanCode, "ACTIVE");
+            Optional<Promotion> couponPromoOpt = promotionRepository.findByCouponIdIgnoreCaseAndStatusIgnoreCase(cleanCode, "ACTIVE");
+            if (couponPromoOpt.isEmpty()) {
+                couponPromoOpt = promotionRepository.findByCouponCodeIgnoreCaseAndStatusIgnoreCase(cleanCode, "ACTIVE");
+            }
             if (couponPromoOpt.isPresent()) {
                 appliedPromo = couponPromoOpt.get();
-                couponIdToRecord = appliedPromo.getCouponCode() != null ? appliedPromo.getCouponCode() : cleanCode;
+                couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : cleanCode;
             } else {
                 // Try matching by title
                 List<Promotion> matched = promotionRepository.findMatchingPromotions(cleanCode);
                 if (!matched.isEmpty()) {
                     appliedPromo = matched.get(0);
-                    couponIdToRecord = appliedPromo.getCouponCode() != null ? appliedPromo.getCouponCode() : cleanCode;
+                    couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : cleanCode;
                 }
             }
         }
@@ -88,7 +93,7 @@ public class PricingEngineServiceImpl implements PricingEngineService {
                             BigDecimal r2 = p2.getDiscountRate() != null ? p2.getDiscountRate() : BigDecimal.ZERO;
                             return r1.compareTo(r2);
                         }).orElse(activePromos.get(0));
-                couponIdToRecord = appliedPromo.getCouponCode();
+                couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : appliedPromo.getCouponCode();
             }
         }
 

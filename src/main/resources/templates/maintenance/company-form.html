@@ -51,7 +51,8 @@
                 <label class="form-label" style="font-weight: 700;">
                     Official Notification Email <span style="color: var(--danger);">*</span>
                 </label>
-                <input type="email" th:field="*{email}" class="form-control" placeholder="e.g. service@autocarefleet.com" required>
+                <input type="email" id="email" th:field="*{email}" class="form-control" placeholder="e.g. service@autocarefleet.com" required>
+                <div id="companyEmailError" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
                 <small style="color: var(--slate-500); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
                     📧 Automated maintenance allocation notifications will be dispatched to this inbox.
                 </small>
@@ -97,6 +98,51 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('form');
+    const emailInput = document.getElementById('email');
+    const emailError = document.getElementById('companyEmailError');
+    const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+
+    function validateEmail() {
+        if (!emailInput) return true;
+        const val = emailInput.value.trim();
+        if (!val) {
+            emailError.textContent = 'Company email is mandatory.';
+            emailError.style.display = 'block';
+            emailInput.style.borderColor = '#dc2626';
+            return false;
+        }
+        if (!EMAIL_REGEX.test(val)) {
+            emailError.textContent = 'Please enter a valid email address';
+            emailError.style.display = 'block';
+            emailInput.style.borderColor = '#dc2626';
+            return false;
+        }
+        emailError.textContent = '';
+        emailError.style.display = 'none';
+        emailInput.style.borderColor = '';
+        return true;
+    }
+
+    if (emailInput) {
+        emailInput.addEventListener('input', validateEmail);
+        emailInput.addEventListener('blur', validateEmail);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            if (!validateEmail()) {
+                e.preventDefault();
+                e.stopPropagation();
+                emailInput.focus();
+            }
+        });
+    }
+});
+</script>
 
 </body>
 </html>

@@ -143,7 +143,7 @@ public class DataInitializer implements CommandLineRunner {
             new BranchData("Colombo Central Station", "10 Galle Road, Kollupitiya", "Colombo", "0112345678", "colombo@driveflow.com"),
             new BranchData("Kandy Heritage Hub", "45 Peradeniya Road", "Kandy", "0812233445", "kandy@driveflow.com"),
             new BranchData("Galle Coastal Office", "12 Rampart Street, Fort", "Galle", "0912244668", "galle@driveflow.com"),
-            new BranchData("Bandaranaike Airport Express", "Airport Access Road", "Katunayake", "0112252844", "airport@driveflow.com"),
+            new BranchData("Airport Express (Katunayake)", "Airport Access Road", "Katunayake", "0112252844", "airport@driveflow.com"),
             new BranchData("Negombo Beachway Branch", "88 Lewis Place", "Negombo", "0312224455", "negombo@driveflow.com")
         );
 
@@ -151,18 +151,17 @@ public class DataInitializer implements CommandLineRunner {
         List<Branch> existingBranches = branchRepository.findAll();
         for (BranchData bData : branchCatalog) {
             Branch branch = existingBranches.stream()
-                    .filter(b -> (b.getBranchName() != null && b.getBranchName().equalsIgnoreCase(bData.name))
-                              || (b.getEmail() != null && b.getEmail().equalsIgnoreCase(bData.email)))
+                    .filter(b -> (b.getEmail() != null && b.getEmail().trim().equalsIgnoreCase(bData.email.trim()))
+                              || (b.getBranchName() != null && b.getBranchName().trim().equalsIgnoreCase(bData.name.trim())))
                     .findFirst()
-                    .orElseGet(() -> {
-                        Branch b = new Branch();
-                        b.setBranchName(bData.name);
-                        b.setStreet(bData.street);
-                        b.setCity(bData.city);
-                        b.setContactNumber(bData.contact);
-                        b.setEmail(bData.email);
-                        return branchRepository.save(b);
-                    });
+                    .orElseGet(Branch::new);
+
+            branch.setBranchName(bData.name);
+            branch.setStreet(bData.street);
+            branch.setCity(bData.city);
+            branch.setContactNumber(bData.contact);
+            branch.setEmail(bData.email);
+            branch = branchRepository.save(branch);
             result.add(branch);
         }
         if (result.isEmpty()) {
@@ -296,33 +295,49 @@ public class DataInitializer implements CommandLineRunner {
         Branch b4 = branches.size() > 3 ? branches.get(3) : b1;
         Branch b5 = branches.size() > 4 ? branches.get(4) : b1;
 
-        record VehicleSeed(String model, String regNo, String color, int mileage, Branch branch, Long preferredId) {}
+        record VehicleSeed(String model, String regNo, String color, int mileage, Branch branch, Long preferredId,
+                           String transmission, String capacity, String fuel, BigDecimal dailyRate) {}
 
         List<VehicleSeed> targetCatalog = List.of(
             // Toyota (3)
-            new VehicleSeed("Toyota Prius 2024", "WP CA-1020", "Pearl White", 35000, b1, 1L),
-            new VehicleSeed("Toyota Axio Hybrid", "CP KA-3040", "Silver", 42000, b2, 3L),
-            new VehicleSeed("Toyota RAV4 Prime", "WP NC-3344", "Midnight Blue", 18000, b4, 16L),
+            new VehicleSeed("Toyota Prius 2024", "WP CA-1020", "Pearl White", 35000, b1, 1L,
+                    "Automatic (CVT)", "5 Seats", "Hybrid 24 km/L", new BigDecimal("12500.00")),
+            new VehicleSeed("Toyota Axio Hybrid", "CP KA-3040", "Silver", 42000, b2, 3L,
+                    "Automatic (CVT)", "5 Seats", "Hybrid 22 km/L", new BigDecimal("10500.00")),
+            new VehicleSeed("Toyota RAV4 Prime", "WP NC-3344", "Midnight Blue", 18000, b4, 16L,
+                    "Automatic (e-CVT)", "5 Seats", "Plug-in Hybrid", new BigDecimal("18500.00")),
 
             // Suzuki (3)
-            new VehicleSeed("Suzuki Swift Sport", "SP GA-4050", "Burning Red", 19000, b3, 4L),
-            new VehicleSeed("Suzuki Vitara AllGrip", "NP JC-5566", "Cool Black", 25000, b5, 17L),
-            new VehicleSeed("Suzuki Jimny 4x4", "WP SJ-2024", "Kinetic Yellow", 12000, b1, null),
+            new VehicleSeed("Suzuki Swift Sport", "SP GA-4050", "Burning Red", 19000, b3, 4L,
+                    "Automatic (6-Speed)", "4 Seats", "Smart Hybrid", new BigDecimal("8500.00")),
+            new VehicleSeed("Suzuki Vitara AllGrip", "NP JC-5566", "Cool Black", 25000, b5, 17L,
+                    "Automatic", "5 Seats", "Boosterjet Petrol", new BigDecimal("11500.00")),
+            new VehicleSeed("Suzuki Jimny 4x4", "WP SJ-2024", "Kinetic Yellow", 12000, b1, null,
+                    "Manual (5-Speed)", "4 Seats", "1.5L Petrol", new BigDecimal("13000.00")),
 
             // Honda (3)
-            new VehicleSeed("Honda Vezel e:HEV", "WP CB-2030", "Crystal Black", 28000, b1, 2L),
-            new VehicleSeed("Honda Civic Turbo", "CP KB-1122", "Rallye Red", 21000, b2, 15L),
-            new VehicleSeed("Honda CR-V Elegance", "WP HC-7788", "Platinum White", 16000, b4, null),
+            new VehicleSeed("Honda Vezel e:HEV", "WP CB-2030", "Crystal Black", 28000, b1, 2L,
+                    "Automatic (e-CVT)", "5 Seats", "Hybrid i-MMD", new BigDecimal("14500.00")),
+            new VehicleSeed("Honda Civic Turbo", "CP KB-1122", "Rallye Red", 21000, b2, 15L,
+                    "Automatic (CVT)", "5 Seats", "VTEC Turbo", new BigDecimal("15000.00")),
+            new VehicleSeed("Honda CR-V Elegance", "WP HC-7788", "Platinum White", 16000, b4, null,
+                    "Automatic", "7 Seats", "Turbo Petrol", new BigDecimal("19500.00")),
 
             // Tesla (3)
-            new VehicleSeed("Tesla Model 3 Dual Motor", "WP TM-3001", "Deep Metallic Blue", 8000, b1, 5L),
-            new VehicleSeed("Tesla Model Y Long Range", "WP TY-3002", "Solid Black", 9500, b2, 7L),
-            new VehicleSeed("Tesla Model S Plaid", "WP TS-3003", "Red Multi-Coat", 11000, b3, null),
+            new VehicleSeed("Tesla Model 3 Dual Motor", "WP TM-3001", "Deep Metallic Blue", 8000, b1, 5L,
+                    "Single-Speed EV", "5 Seats", "Electric (490 km)", new BigDecimal("32000.00")),
+            new VehicleSeed("Tesla Model Y Long Range", "WP TY-3002", "Solid Black", 9500, b2, 7L,
+                    "Single-Speed EV", "5 Seats", "Electric (533 km)", new BigDecimal("35000.00")),
+            new VehicleSeed("Tesla Model S Plaid", "WP TS-3003", "Red Multi-Coat", 11000, b3, null,
+                    "Single-Speed EV", "5 Seats", "Tri-Motor Electric", new BigDecimal("45000.00")),
 
             // Benz (3)
-            new VehicleSeed("Benz C-Class C200", "WP BC-5001", "Obsidian Black", 14000, b1, 6L),
-            new VehicleSeed("Benz E-Class E300", "WP BE-5002", "Iridium Silver", 17500, b2, 8L),
-            new VehicleSeed("Benz GLC 300 4MATIC", "WP BG-5003", "Polar White", 13000, b3, 14L)
+            new VehicleSeed("Benz C-Class C200", "WP BC-5001", "Obsidian Black", 14000, b1, 6L,
+                    "Automatic (9G-TRONIC)", "5 Seats", "Turbo Petrol", new BigDecimal("28000.00")),
+            new VehicleSeed("Benz E-Class E300", "WP BE-5002", "Iridium Silver", 17500, b2, 8L,
+                    "Automatic (9G-TRONIC)", "5 Seats", "EQ Boost Petrol", new BigDecimal("34000.00")),
+            new VehicleSeed("Benz GLC 300 4MATIC", "WP BG-5003", "Polar White", 13000, b3, 14L,
+                    "Automatic (9G-TRONIC)", "5 Seats", "Mild Hybrid Petrol", new BigDecimal("38000.00"))
         );
 
         List<Vehicle> result = new ArrayList<>();
@@ -343,6 +358,10 @@ public class DataInitializer implements CommandLineRunner {
             v.setColor(seed.color);
             v.setMileage(seed.mileage);
             v.setBranch(seed.branch != null ? seed.branch : b1);
+            v.setTransmission(seed.transmission);
+            v.setCapacity(seed.capacity);
+            v.setFuel(seed.fuel);
+            v.setDailyRate(seed.dailyRate);
             if (v.getStatus() == null) {
                 v.setStatus("AVAILABLE");
             }
@@ -360,7 +379,10 @@ public class DataInitializer implements CommandLineRunner {
 
             Promotion p1 = new Promotion();
             p1.setTitle("Summer Park Super Saver");
+            p1.setCouponId("SUMMER15");
             p1.setCouponCode("SUMMER15");
+            p1.setVehicleSeason("SUMMER");
+            p1.setVehicleCategory("SEDAN");
             p1.setDiscountRate(new BigDecimal("15.00"));
             p1.setStartDate(now.minusDays(15));
             p1.setEndDate(now.plusDays(90));
@@ -369,7 +391,10 @@ public class DataInitializer implements CommandLineRunner {
 
             Promotion p2 = new Promotion();
             p2.setTitle("Weekend Escape Discount");
+            p2.setCouponId("ESCAPE10");
             p2.setCouponCode("ESCAPE10");
+            p2.setVehicleSeason("PEAK");
+            p2.setVehicleCategory("SUV");
             p2.setDiscountRate(new BigDecimal("10.00"));
             p2.setStartDate(now.minusDays(10));
             p2.setEndDate(now.plusDays(60));
@@ -378,7 +403,10 @@ public class DataInitializer implements CommandLineRunner {
 
             Promotion p3 = new Promotion();
             p3.setTitle("DriveFlow VIP Promo");
+            p3.setCouponId("DRIVEFLOW20");
             p3.setCouponCode("DRIVEFLOW20");
+            p3.setVehicleSeason("ALL_SEASONS");
+            p3.setVehicleCategory("LUXURY");
             p3.setDiscountRate(new BigDecimal("20.00"));
             p3.setStartDate(now.minusDays(5));
             p3.setEndDate(now.plusDays(120));
@@ -387,7 +415,10 @@ public class DataInitializer implements CommandLineRunner {
 
             Promotion p4 = new Promotion();
             p4.setTitle("Sri Lanka Highway Explorer");
+            p4.setCouponId("LANKARIDE");
             p4.setCouponCode("LANKARIDE");
+            p4.setVehicleSeason("HOLIDAY");
+            p4.setVehicleCategory("ALL");
             p4.setDiscountRate(new BigDecimal("25.00"));
             p4.setStartDate(now.minusDays(2));
             p4.setEndDate(now.plusDays(180));

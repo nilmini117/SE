@@ -3,6 +3,8 @@ package com.driveflow.demo_driveflow.vehicle;
 import com.driveflow.demo_driveflow.branch.BranchRepository;
 import com.driveflow.demo_driveflow.users.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -49,7 +51,7 @@ public class VehicleController {
             @RequestParam(value = "isStaff", required = false) Boolean isStaffParam,
             Model model,
             Authentication authentication) {
-        boolean isStaff = (isStaffParam != null && isStaffParam) || isStaff(authentication);
+        boolean isStaff = isStaff(authentication);
 
         String cleanSearch = (search != null) ? search.trim() : "";
         String cleanStatus = (status != null && !status.isBlank()) ? status.trim().toUpperCase() : (isStaff ? "ALL" : "AVAILABLE");
@@ -120,6 +122,17 @@ public class VehicleController {
             map.put("color", v.getColor());
             map.put("mileage", v.getMileage());
             map.put("status", v.getStatus());
+            map.put("imageUrl", v.getImageUrl());
+            map.put("image", v.getImageUrl());
+            map.put("isRegistered", v.getIsRegistered());
+            map.put("isUnderMaintenance", v.isUnderMaintenance());
+            map.put("serviceEndDate", v.getServiceEndDate());
+            map.put("formattedServiceEndDate", v.getFormattedServiceEndDate());
+            map.put("dailyRate", v.getDailyRate());
+            map.put("daily_rate", v.getDailyRate());
+            map.put("transmission", v.getTransmission());
+            map.put("capacity", v.getCapacity());
+            map.put("fuel", v.getFuel());
             map.put("branchName", v.getBranch() != null ? v.getBranch().getBranchName() : "Main Branch");
             map.put("branchCity", v.getBranch() != null ? v.getBranch().getCity() : "Colombo");
             map.put("branchId", v.getBranch() != null ? v.getBranch().getBranchId() : null);
@@ -128,7 +141,20 @@ public class VehicleController {
         }).toList();
     }
 
-    @PostMapping("/api/register")
+    @PostMapping(value = "/api/register", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> registerVehicleApiMultipart(
+            @ModelAttribute VehicleRegistrationDto dto,
+            @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image) {
+        try {
+            Vehicle saved = vehicleService.registerVehicle(dto, image);
+            return org.springframework.http.ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return org.springframework.http.ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping(value = "/api/register")
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> registerVehicleApi(@RequestBody VehicleRegistrationDto dto) {
         try {
@@ -140,8 +166,16 @@ public class VehicleController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF')")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> deleteVehicleApiRoot(@PathVariable Long id) {
+    public org.springframework.http.ResponseEntity<?> deleteVehicleApiRoot(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !isStaff(authentication)) {
+            return org.springframework.http.ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to delete vehicles."
+            ));
+        }
         try {
             vehicleService.removeVehicle(id);
             return org.springframework.http.ResponseEntity.ok(Map.of("success", true, "deletedId", id));
@@ -151,13 +185,18 @@ public class VehicleController {
     }
 
     @DeleteMapping("/api/{id}")
+    @PreAuthorize("hasRole('STAFF')")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> deleteVehicleApi(@PathVariable Long id) {
-        return deleteVehicleApiRoot(id);
+    public org.springframework.http.ResponseEntity<?> deleteVehicleApi(@PathVariable Long id, Authentication authentication) {
+        return deleteVehicleApiRoot(id, authentication);
     }
 
     @GetMapping("/new")
-    public String showCreateForm(Model model) {
+    @PreAuthorize("hasRole('STAFF')")
+    public String showCreateForm(Model model, Authentication authentication) {
+        if (!isStaff(authentication)) {
+            return "redirect:/vehicles?error=unauthorized";
+        }
         Vehicle vehicle = new Vehicle();
         vehicle.setQuantity(1);
         vehicle.setStatus("AVAILABLE");
@@ -168,10 +207,17 @@ public class VehicleController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('STAFF')")
     public String registerVehicle(@ModelAttribute Vehicle vehicle,
                                   @RequestParam(value = "branchId", required = false) Long branchId,
+                                  @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile imageFile,
                                   Model model,
-                                  RedirectAttributes redirectAttributes) {
+                                  RedirectAttributes redirectAttributes,
+                                  Authentication authentication) {
+        if (!isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Access denied: Staff role required.");
+            return "redirect:/vehicles";
+        }
         if (vehicle.getBrand() == null || vehicle.getBrand().isBlank()) {
             model.addAttribute("errorMessage", "Vehicle Brand is mandatory. Please select from Toyota, Suzuki, Honda, Tesla, or Benz.");
             model.addAttribute("branches", branchRepository.findAll());
@@ -181,13 +227,17 @@ public class VehicleController {
         if (branchId != null) {
             branchRepository.findById(branchId).ifPresent(vehicle::setBranch);
         }
-        Vehicle saved = vehicleService.registerVehicle(vehicle);
+        Vehicle saved = vehicleService.registerVehicle(vehicle, imageFile);
         redirectAttributes.addFlashAttribute("successMessage", "Vehicle " + saved.getModel() + " (" + saved.getBrand() + ") registered successfully.");
         return "redirect:/vehicles";
     }
 
     @GetMapping("/{id}/edit")
-    public String showEditForm(@PathVariable Long id, Model model) {
+    @PreAuthorize("hasRole('STAFF')")
+    public String showEditForm(@PathVariable Long id, Model model, Authentication authentication) {
+        if (!isStaff(authentication)) {
+            return "redirect:/vehicles?error=unauthorized";
+        }
         model.addAttribute("vehicle", vehicleService.getVehicleById(id));
         model.addAttribute("branches", branchRepository.findAll());
         model.addAttribute("brands", vehicleService.getAllBrands());
@@ -195,11 +245,17 @@ public class VehicleController {
     }
 
     @PostMapping("/{id}")
+    @PreAuthorize("hasRole('STAFF')")
     public String updateVehicle(@PathVariable Long id,
                                 @ModelAttribute Vehicle vehicle,
                                 @RequestParam(value = "branchId", required = false) Long branchId,
                                 Model model,
-                                RedirectAttributes redirectAttributes) {
+                                RedirectAttributes redirectAttributes,
+                                Authentication authentication) {
+        if (!isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Access denied: Staff role required.");
+            return "redirect:/vehicles";
+        }
         if (vehicle.getQuantity() == null || vehicle.getQuantity() < 1) {
             model.addAttribute("errorMessage", "Quantity must be at least 1.");
             model.addAttribute("branches", branchRepository.findAll());
@@ -215,7 +271,12 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}/delete")
-    public String deleteVehicle(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+    @PreAuthorize("hasRole('STAFF')")
+    public String deleteVehicle(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        if (!isStaff(authentication)) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Access denied: Staff role required.");
+            return "redirect:/vehicles";
+        }
         try {
             vehicleService.removeVehicle(id);
             redirectAttributes.addFlashAttribute("successMessage", "Vehicle #VH-" + id + " has been deleted successfully.");
@@ -226,7 +287,8 @@ public class VehicleController {
     }
 
     @PostMapping("/{id}/delete")
-    public String deleteVehiclePost(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        return deleteVehicle(id, redirectAttributes);
+    @PreAuthorize("hasRole('STAFF')")
+    public String deleteVehiclePost(@PathVariable Long id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        return deleteVehicle(id, redirectAttributes, authentication);
     }
 }

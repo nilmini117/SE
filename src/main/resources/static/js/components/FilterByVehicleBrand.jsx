@@ -45,22 +45,27 @@ export function BrandCard({ brand, isSelected, onSelect }) {
         gap: '0.65rem'
       }}
     >
-      {/* 1. Circular Brand Icon */}
+      {/* 1. Circular Brand Icon with Authentic Brand Asset */}
       <div
         style={{
-          width: '48px',
-          height: '48px',
+          width: '52px',
+          height: '52px',
           borderRadius: '50%',
-          background: brand.color || '#f1f5f9',
-          color: brand.textColor || '#0f172a',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontWeight: 800,
-          fontSize: '1.1rem'
+          overflow: 'hidden',
+          padding: '6px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.04)'
         }}
       >
-        {brand.emoji}
+        <img
+          src={brand.logo || `/images/brand_${brand.name.toLowerCase()}.jpg`}
+          alt={brand.name}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
       </div>
 
       {/* 2. Brand Name Heading */}
@@ -92,11 +97,11 @@ export default function FilterByVehicleBrand({
   onSelectBrand = null,
   status = 'AVAILABLE',
   brands = [
-    { name: 'Toyota', emoji: '🔴', color: '#fee2e2', textColor: '#dc2626' },
-    { name: 'Suzuki', emoji: '🔵', color: '#dbeafe', textColor: '#2563eb' },
-    { name: 'Honda', emoji: '🟡', color: '#fef3c7', textColor: '#d97706' },
-    { name: 'Tesla', emoji: '⚡', color: '#e0e7ff', textColor: '#4338ca' },
-    { name: 'Benz', emoji: '⭐', color: '#f1f5f9', textColor: '#0f172a' }
+    { name: 'Toyota', logo: '/images/brand_toyota.jpg', color: '#fee2e2', textColor: '#dc2626' },
+    { name: 'Suzuki', logo: '/images/brand_suzuki.jpg', color: '#dbeafe', textColor: '#2563eb' },
+    { name: 'Honda', logo: '/images/brand_honda.jpg', color: '#fef3c7', textColor: '#d97706' },
+    { name: 'Tesla', logo: '/images/brand_tesla.jpg', color: '#e0e7ff', textColor: '#4338ca' },
+    { name: 'Benz', logo: '/images/brand_benz.jpg', color: '#f1f5f9', textColor: '#0f172a' }
   ]
 }) {
   return (

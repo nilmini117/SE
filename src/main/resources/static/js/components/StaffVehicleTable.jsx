@@ -21,15 +21,66 @@ import { BrandCard } from './FilterByVehicleBrand';
 export default function StaffVehicleTable({
   initialVehicles = null,
   onVehicleDeleted = null,
-  onVehicleAdded = null
+  onVehicleAdded = null,
+  userRole = null,
+  currentUser = null
 }) {
   const BRANDS = [
-    { name: 'Toyota', emoji: '🔴', color: '#fee2e2', textColor: '#dc2626' },
-    { name: 'Suzuki', emoji: '🔵', color: '#dbeafe', textColor: '#2563eb' },
-    { name: 'Honda', emoji: '🟡', color: '#fef3c7', textColor: '#d97706' },
-    { name: 'Tesla', emoji: '⚡', color: '#e0e7ff', textColor: '#4338ca' },
-    { name: 'Benz', emoji: '⭐', color: '#f1f5f9', textColor: '#0f172a' }
+    { name: 'Toyota', logo: '/images/brand_toyota.jpg', color: '#fee2e2', textColor: '#dc2626' },
+    { name: 'Suzuki', logo: '/images/brand_suzuki.jpg', color: '#dbeafe', textColor: '#2563eb' },
+    { name: 'Honda', logo: '/images/brand_honda.jpg', color: '#fef3c7', textColor: '#d97706' },
+    { name: 'Tesla', logo: '/images/brand_tesla.jpg', color: '#e0e7ff', textColor: '#4338ca' },
+    { name: 'Benz', logo: '/images/brand_benz.jpg', color: '#f1f5f9', textColor: '#0f172a' }
   ];
+
+  // Derive effective active session / JWT role (Prop -> User Object -> Window/DOM -> LocalStorage/JWT)
+  const resolveRole = () => {
+    if (userRole) return String(userRole).toUpperCase();
+    if (currentUser?.role) return String(currentUser.role).toUpperCase();
+    if (typeof window !== 'undefined') {
+      if (window.__CURRENT_USER_ROLE) return String(window.__CURRENT_USER_ROLE).toUpperCase();
+      if (window.currentUser?.role) return String(window.currentUser.role).toUpperCase();
+      const metaRole = document.querySelector('meta[name="user-role"]')?.getAttribute('content');
+      if (metaRole) return metaRole.toUpperCase();
+
+      const storedRole = localStorage.getItem('userRole') || localStorage.getItem('role') || sessionStorage.getItem('role');
+      if (storedRole) return storedRole.toUpperCase();
+
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}');
+        if (storedUser?.role) return String(storedUser.role).toUpperCase();
+      } catch (e) {}
+
+      // JWT parsing fallback from storage
+      const token = localStorage.getItem('token') || localStorage.getItem('jwt') || sessionStorage.getItem('token');
+      if (token && typeof token === 'string' && token.includes('.')) {
+        try {
+          const base64Url = token.split('.')[1];
+          if (base64Url) {
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+            const payload = JSON.parse(jsonPayload);
+            if (payload.role) return String(payload.role).toUpperCase();
+            if (Array.isArray(payload.roles) && payload.roles.length > 0) return String(payload.roles[0]).toUpperCase();
+            if (Array.isArray(payload.authorities) && payload.authorities.length > 0) {
+              const auth = payload.authorities.find(a => {
+                const s = typeof a === 'string' ? a : a?.authority;
+                return s && (s.includes('STAFF') || s.includes('CUSTOMER'));
+              });
+              if (auth) return String(typeof auth === 'string' ? auth : auth.authority).toUpperCase();
+            }
+          }
+        } catch (err) {}
+      }
+    }
+    return null;
+  };
+
+  const rawRole = resolveRole();
+  const normalizedRole = (rawRole || '').replace(/^ROLE_/, '').trim();
+  const isStaff = normalizedRole === 'STAFF';
+  const isCustomer = normalizedRole === 'CUSTOMER';
+  const isPublic = !isStaff && !isCustomer;
 
   const [vehicles, setVehicles] = useState(initialVehicles || []);
   const [loading, setLoading] = useState(!initialVehicles);
@@ -92,8 +143,9 @@ export default function StaffVehicleTable({
     ).length;
   };
 
-  // Open confirmation modal for deletion
+  // Open confirmation modal for deletion (Strictly Staff Only)
   const promptDeleteVehicle = (vehicle) => {
+    if (!isStaff) return;
     setDeleteModal({
       isOpen: true,
       vehicle,
@@ -333,14 +385,17 @@ export default function StaffVehicleTable({
           <table className="df-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569', fontSize: '0.8rem', textTransform: 'uppercase' }}>
-                <th style={{ padding: '0.85rem 1rem' }}>Vehicle ID</th>
+                {isStaff && <th style={{ padding: '0.85rem 1rem' }}>Vehicle ID</th>}
                 <th style={{ padding: '0.85rem 1rem' }}>Reg Number</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Model</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Branch</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Color</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Mileage</th>
                 <th style={{ padding: '0.85rem 1rem' }}>Status</th>
-                <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>ACTIONS</th>
+                {/* 1. Conditional Header Rendering: Do not render ACTIONS header for unauthenticated visitors */}
+                {!isPublic && (
+                  <th style={{ padding: '0.85rem 1rem', textAlign: 'right' }}>ACTIONS</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -352,14 +407,30 @@ export default function StaffVehicleTable({
                     data-testid={`vehicle-row-${vid || v.regNo}`}
                     style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.15s' }}
                   >
-                    <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#334155' }}>
-                      #VH-{vid || '—'}
-                    </td>
+                    {isStaff && (
+                      <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#334155' }}>
+                        #VH-{vid || '—'}
+                      </td>
+                    )}
                     <td style={{ padding: '0.85rem 1rem', fontWeight: 700, color: '#0f172a' }}>
                       {v.regNo}
                     </td>
                     <td style={{ padding: '0.85rem 1rem', fontWeight: 600, color: '#0f172a' }}>
-                      {v.model}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <img
+                          src={v.imageUrl || v.image || '/images/category_economy.jpg'}
+                          alt={v.model}
+                          style={{
+                            width: '42px',
+                            height: '28px',
+                            objectFit: 'cover',
+                            borderRadius: '4px',
+                            border: '1px solid #e2e8f0',
+                            backgroundColor: '#f1f5f9'
+                          }}
+                        />
+                        <span>{v.model}</span>
+                      </div>
                     </td>
                     <td style={{ padding: '0.85rem 1rem', color: '#475569' }}>
                       {v.branchName || 'Colombo Central'}
@@ -380,48 +451,124 @@ export default function StaffVehicleTable({
                       {v.mileage ? v.mileage.toLocaleString() + ' km' : '-'}
                     </td>
                     <td style={{ padding: '0.85rem 1rem' }}>
-                      <span style={{
-                        padding: '0.2rem 0.6rem',
-                        borderRadius: '9999px',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        background: v.status === 'AVAILABLE' ? '#d1fae5' : v.status === 'BOOKED' ? '#fef3c7' : '#fee2e2',
-                        color: v.status === 'AVAILABLE' ? '#065f46' : v.status === 'BOOKED' ? '#92400e' : '#991b1b'
-                      }}>
-                        {v.status || 'AVAILABLE'}
-                      </span>
-                    </td>
-
-                    {/* POPULATED ACTIONS COLUMN WITH RED DELETE BUTTON */}
-                    <td style={{ padding: '0.85rem 1rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm btn-delete-vehicle"
-                        data-testid={`delete-btn-${vid || v.regNo}`}
-                        onClick={() => promptDeleteVehicle(v)}
-                        style={{
-                          backgroundColor: '#dc2626',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '0.4rem 0.85rem',
-                          borderRadius: '6px',
-                          fontSize: '0.82rem',
+                      {(v.status === 'MAINTENANCE' || v.isUnderMaintenance) ? (
+                        <span style={{
+                          padding: '0.25rem 0.65rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
                           fontWeight: 700,
-                          cursor: 'pointer',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          border: '1px solid #fca5a5',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '0.35rem',
-                          boxShadow: '0 1px 2px rgba(220, 38, 38, 0.2)',
-                          transition: 'background 0.2s'
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        Delete
-                      </button>
+                          gap: '0.35rem'
+                        }}>
+                          ⚠️ Under Service until {v.formattedServiceEndDate || (v.serviceEndDate ? String(v.serviceEndDate) : '31/12/2026')}
+                        </span>
+                      ) : (
+                        <span style={{
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '9999px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          background: v.status === 'AVAILABLE' ? '#d1fae5' : v.status === 'BOOKED' ? '#fef3c7' : '#fee2e2',
+                          color: v.status === 'AVAILABLE' ? '#065f46' : v.status === 'BOOKED' ? '#92400e' : '#991b1b'
+                        }}>
+                          {v.status || 'AVAILABLE'}
+                        </span>
+                      )}
                     </td>
+
+                    {/* 2. Conditional Cell Rendering: Do not render the ACTIONS <td> cell entirely for unauthenticated visitors */}
+                    {!isPublic && (
+                      <td style={{ padding: '0.85rem 1rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        {/* Customer View: ONLY "Pick this Car" button renders */}
+                        {isCustomer && (
+                          <a
+                            href={`/bookings/new?vehicleId=${vid}&branchId=${v.branchId || ''}`}
+                            className="btn btn-primary btn-sm btn-pick-car"
+                            data-testid={`pick-car-btn-${vid || v.regNo}`}
+                            style={{
+                              backgroundColor: '#4f46e5',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '0.42rem 0.95rem',
+                              borderRadius: '6px',
+                              fontSize: '0.82rem',
+                              fontWeight: 700,
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.35rem',
+                              boxShadow: '0 2px 4px rgba(79, 70, 229, 0.25)',
+                              transition: 'background 0.2s',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Pick this Car
+                          </a>
+                        )}
+
+                        {/* Staff View: Edit and Delete buttons only render when active session/JWT role is explicitly STAFF */}
+                        {isStaff && (
+                          <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
+                            <a
+                              href={`/vehicles/${vid}/edit`}
+                              className="btn btn-secondary btn-sm btn-edit-vehicle"
+                              data-testid={`edit-btn-${vid || v.regNo}`}
+                              style={{
+                                backgroundColor: '#f1f5f9',
+                                color: '#334155',
+                                border: '1px solid #cbd5e1',
+                                padding: '0.4rem 0.75rem',
+                                borderRadius: '6px',
+                                fontSize: '0.82rem',
+                                fontWeight: 600,
+                                textDecoration: 'none',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                transition: 'background 0.2s'
+                              }}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                              </svg>
+                              Edit
+                            </a>
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm btn-delete-vehicle"
+                              data-testid={`delete-btn-${vid || v.regNo}`}
+                              onClick={() => promptDeleteVehicle(v)}
+                              style={{
+                                backgroundColor: '#dc2626',
+                                color: '#ffffff',
+                                border: 'none',
+                                padding: '0.4rem 0.85rem',
+                                borderRadius: '6px',
+                                fontSize: '0.82rem',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                boxShadow: '0 1px 2px rgba(220, 38, 38, 0.2)',
+                                transition: 'background 0.2s'
+                              }}
+                            >
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              </svg>
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

@@ -18,6 +18,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Autowired
     private RefundRepository refundRepository;
 
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.email.EmailService emailService;
+
     @Override
     public List<Invoice> getAllInvoices() {
         return invoiceRepository.findAll();
@@ -94,7 +97,38 @@ public class PaymentServiceImpl implements PaymentService {
         if (payment.getStatus() == null || payment.getStatus().isBlank()) {
             payment.setStatus("COMPLETED");
         }
-        return paymentRepository.save(payment);
+        Payment saved = paymentRepository.save(payment);
+
+        // Lifecycle Email Trigger: Payment Successful (Digital Receipt in Rs.)
+        if (emailService != null && "COMPLETED".equalsIgnoreCase(saved.getStatus())) {
+            try {
+                if (saved.getInvoice() != null && saved.getInvoice().getBooking() != null) {
+                    com.driveflow.demo_driveflow.booking.Booking booking = saved.getInvoice().getBooking();
+                    Customer cust = booking.getCustomer();
+                    if (cust != null && cust.getEmail() != null && !cust.getEmail().isBlank()) {
+                        String ref = saved.getRefNo() != null ? saved.getRefNo() : ("PAY-" + saved.getPaymentId());
+                        emailService.sendPaymentReceiptEmail(
+                                cust.getEmail(),
+                                custName,
+                                ref,
+                                saved.getInvoice().getInvoiceId(),
+                                booking.getBookingId(),
+                                saved.getAmountPaid(),
+                                saved.getPaymentDate() != null ? saved.getPaymentDate() : java.time.LocalDate.now()
+                        );
+                        emailService.sendNotification(
+                                cust.getEmail(),
+                                "DriveFlow Payment Receipt - Ref: " + ref,
+                                "Dear " + custName + ",\n\nWe have received your payment of Rs. " + saved.getAmountPaid() +
+                                " for invoice #" + saved.getInvoice().getInvoiceId() + " (Booking #" + booking.getBookingId() +
+                                ").\nReference No: " + ref + "\n\nThank you for choosing DriveFlow!\nDriveFlow Accounts"
+                        );
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        return saved;
     }
 
     @Override

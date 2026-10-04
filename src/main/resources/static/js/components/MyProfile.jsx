@@ -93,7 +93,7 @@ export default function MyProfile({ customer = null }) {
               <line x1="12" y1="9" x2="12" y2="13"></line>
               <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
-            Report Incident
+            Contact us
           </a>
           <a
             href="/profile/edit"

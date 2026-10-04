@@ -1,6 +1,5 @@
 package com.driveflow.demo_driveflow.feedback;
 
-import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.users.CustomerRepository;
 import com.driveflow.demo_driveflow.users.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.LinkedHashMap;
 import java.util.List;

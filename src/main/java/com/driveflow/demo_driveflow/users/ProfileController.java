@@ -9,6 +9,8 @@ import com.driveflow.demo_driveflow.payment.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -106,6 +109,9 @@ public class ProfileController {
         return "redirect:/profile";
     }
 
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.otp.OtpService otpService;
+
     @GetMapping("/password")
     public String showChangePasswordForm(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
@@ -114,10 +120,38 @@ public class ProfileController {
         return "profile/password-change";
     }
 
+    @PostMapping("/password/send-otp")
+    public String sendPasswordChangeOtp(Authentication authentication, RedirectAttributes redirectAttributes) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return "redirect:/login";
+        }
+        String email = authentication.getName();
+        if (otpService != null) {
+            otpService.generatePasswordOtp(email);
+        }
+        redirectAttributes.addFlashAttribute("successMessage",
+                "A 6-digit OTP verification code has been sent to " + email + ". It is valid for 10 minutes.");
+        return "redirect:/profile/password";
+    }
+
+    @PostMapping(value = "/api/profile/password/send-otp", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> sendPasswordChangeOtpApi(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Unauthorized"));
+        }
+        String email = authentication.getName();
+        if (otpService != null) {
+            otpService.generatePasswordOtp(email);
+        }
+        return ResponseEntity.ok(Map.of("success", true, "message", "OTP sent to " + email));
+    }
+
     @PostMapping("/password")
     public String changePassword(@RequestParam("oldPassword") String oldPassword,
                                  @RequestParam("newPassword") String newPassword,
                                  @RequestParam("confirmPassword") String confirmPassword,
+                                 @RequestParam(value = "otp", required = false) String otp,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
@@ -129,8 +163,17 @@ public class ProfileController {
             return "redirect:/profile/password";
         }
 
+        // Strict OTP Security: Block password update unless valid 6-digit OTP is verified
+        if (otpService != null) {
+            if (otp == null || !otpService.verifyPasswordOtp(authentication.getName(), otp)) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Security Verification Failed: The 6-digit OTP code is invalid or has expired (10-minute window). Password change is blocked.");
+                return "redirect:/profile/password";
+            }
+        }
+
         try {
-            userService.changePassword(authentication.getName(), oldPassword, newPassword);
+            userService.changePassword(authentication.getName(), oldPassword, newPassword, otp);
             redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully!");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -138,6 +181,36 @@ public class ProfileController {
         }
 
         return "redirect:/profile";
+    }
+
+    @PostMapping(value = "/password/api", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE, produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> changePasswordApi(
+            @RequestBody Map<String, String> body,
+            Authentication authentication) {
+        String email = (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken))
+                ? authentication.getName()
+                : (body != null ? body.get("email") : null);
+
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status", 401, "success", false, "message", "Unauthorized"));
+        }
+        String oldPassword = body != null ? body.get("oldPassword") : null;
+        String newPassword = body != null ? body.get("newPassword") : null;
+        String otp = body != null ? body.get("otp") : null;
+
+        if (otpService != null) {
+            if (otp == null || (!otpService.verifyPasswordOtp(email, otp) && !otpService.verifyOtp(email, otp))) {
+                return ResponseEntity.badRequest().body(Map.of("status", 400, "success", false, "message", "Invalid or expired OTP. Password change blocked."));
+            }
+        }
+
+        try {
+            userService.changePassword(email, oldPassword, newPassword, otp);
+            return ResponseEntity.ok(Map.of("status", 200, "success", true, "message", "Password updated successfully!"));
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body(Map.of("status", 400, "success", false, "message", ex.getMessage()));
+        }
     }
 
     @GetMapping("/invoices/{id}/pay")

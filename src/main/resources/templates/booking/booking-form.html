@@ -119,6 +119,24 @@
                         Vehicles currently stationed and available at your chosen pickup branch.
                     </p>
 
+                    <!-- DYNAMIC AUTOFILL BANNER (Activated when clicked from dashboard) -->
+                    <div id="preselectedVehicleBanner" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: var(--radius-md); padding: 0.85rem 1.15rem; margin-bottom: 1rem; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <span style="width: 32px; height: 32px; border-radius: 50%; background: #16a34a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0;">✓</span>
+                            <div>
+                                <div style="font-size: 0.72rem; text-transform: uppercase; font-weight: 700; color: #15803d; letter-spacing: 0.05em;">Auto-Selected from Fleet Dashboard</div>
+                                <strong id="preselectedModelText" style="color: #065f46; font-size: 1rem;">Toyota Prius 2024 Prime</strong>
+                                <span id="preselectedMetaText" style="font-size: 0.82rem; color: #047857; margin-left: 0.5rem;">• Colombo Central Station • Rs. 12,500/day</span>
+                            </div>
+                        </div>
+                        <button type="button" id="changeVehicleBtn" onclick="enableManualVehicleSelection()" style="background: white; border: 1px solid #86efac; color: #15803d; font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 9999px; cursor: pointer;">
+                            Change Vehicle
+                        </button>
+                    </div>
+
+                    <!-- Hidden locked vehicle ID field for safe form submission when select is disabled -->
+                    <input type="hidden" name="vehicleId" id="lockedVehicleIdHidden" disabled>
+
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">Available Vehicles <span style="color: #dc2626;">*</span></label>
                         <select name="vehicleId" id="vehicleId" class="form-select" required disabled>
@@ -155,7 +173,7 @@
                     <!-- Hidden duration and rate for form binding -->
                     <input type="hidden" name="duration" id="duration" th:value="${booking.duration != null ? booking.duration : 3}">
                     <input type="hidden" name="quantity" id="quantity" value="1">
-                    <input type="hidden" name="chargedRate" id="chargedRate" th:value="${booking.chargedRate != null ? booking.chargedRate : 9000.00}">
+                    <input type="hidden" name="chargedRate" id="chargedRate" th:value="${booking.chargedRate != null ? booking.chargedRate : 37500.00}">
                 </div>
 
                 <!-- SECTION 4: PRICING ENGINE & SEASONAL DISCOUNTS -->
@@ -238,6 +256,7 @@
                 model: /*[[${v.model}]]*/ 'Toyota Prius',
                 regNo: /*[[${v.regNo}]]*/ 'WP CA-1020',
                 color: /*[[${v.color}]]*/ 'Silver',
+                dailyRate: /*[[${v.dailyRate}]]*/ 12500,
                 status: /*[[${v.status}]]*/ 'AVAILABLE',
                 branchId: /*[[${v.branch != null ? v.branch.branchId : null}]]*/ 1,
                 branchName: /*[[${v.branch != null ? v.branch.branchName : ''}]]*/ 'Colombo Central'
@@ -356,9 +375,12 @@
                 vehicles.forEach(v => {
                     const opt = document.createElement('option');
                     opt.value = v.vehicleId;
-                    opt.textContent = v.model + ' [' + v.regNo + '] — ' + v.color + ' (Status: ' + v.status + ')';
+                    const vRate = v.dailyRate || v.daily_rate || 12500;
+                    opt.dataset.rate = vRate;
+                    opt.textContent = v.model + ' [' + v.regNo + '] — ' + v.color + ' (Rs. ' + Number(vRate).toLocaleString() + '/day)';
                     if (state.vehicleId && String(state.vehicleId) === String(v.vehicleId)) {
                         opt.selected = true;
+                        state.dailyRate = Number(vRate);
                     }
                     vehicleSelect.appendChild(opt);
                 });
@@ -421,8 +443,32 @@
                     return;
                 }
 
-                // If vehicle IS selected: Dynamically calculate
-                const baseDailyRate = 3000.00;
+                // If vehicle IS selected: Dynamically calculate using selected vehicle's actual daily rate
+                let baseDailyRate = state.dailyRate;
+                if (!baseDailyRate && vehicleSelect && vehicleSelect.selectedIndex >= 0) {
+                    const selOpt = vehicleSelect.options[vehicleSelect.selectedIndex];
+                    if (selOpt && selOpt.dataset && selOpt.dataset.rate) {
+                        baseDailyRate = parseFloat(selOpt.dataset.rate);
+                    }
+                }
+                if (!baseDailyRate && state.availableVehicles) {
+                    const found = state.availableVehicles.find(v => String(v.vehicleId) === String(state.vehicleId));
+                    if (found && (found.dailyRate || found.daily_rate)) {
+                        baseDailyRate = parseFloat(found.dailyRate || found.daily_rate);
+                    }
+                }
+                if (!baseDailyRate || isNaN(baseDailyRate) || baseDailyRate <= 0) {
+                    try {
+                        const raw = sessionStorage.getItem('selectedVehicle');
+                        if (raw) {
+                            const car = JSON.parse(raw);
+                            baseDailyRate = parseFloat(car.dailyRate || car.daily_rate || car.rate);
+                        }
+                    } catch(e) {}
+                }
+                if (!baseDailyRate || isNaN(baseDailyRate) || baseDailyRate <= 0) {
+                    baseDailyRate = 12500.00;
+                }
                 const baseCost = baseDailyRate * durationDays;
 
                 // Match active promotional discount
@@ -495,7 +541,7 @@
 
                         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center;">
                             <div>
-                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">Final Calculated Cost</div>
+                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">FINAL CALCULATED COST</div>
                                 <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
                                     ${discountRate > 0 ? 'Discount Active: ' + promoTitle + ' (-' + discountRate + '%)' : 'Pre-submission total'}
                                 </div>
@@ -539,7 +585,13 @@
                 branchSelect.addEventListener('change', onBranchChanged);
             }
             if (vehicleSelect) {
-                vehicleSelect.addEventListener('change', renderPricingBreakdown);
+                vehicleSelect.addEventListener('change', function() {
+                    const selOpt = vehicleSelect.options[vehicleSelect.selectedIndex];
+                    if (selOpt && selOpt.dataset && selOpt.dataset.rate) {
+                        state.dailyRate = parseFloat(selOpt.dataset.rate);
+                    }
+                    renderPricingBreakdown();
+                });
             }
             if (startInput) {
                 startInput.addEventListener('change', renderPricingBreakdown);
@@ -554,11 +606,135 @@
                 applyCouponBtn.addEventListener('click', renderPricingBreakdown);
             }
 
-            // Initial execution on mount
-            if (branchSelect && branchSelect.value) {
+            // Dynamic Autofill from Dashboard Click-to-Book
+            function checkDashboardAutofill() {
+                let car = null;
+                try {
+                    const raw = sessionStorage.getItem('selectedVehicle');
+                    if (raw) car = JSON.parse(raw);
+                } catch (e) {}
+
+                const urlParams = new URLSearchParams(window.location.search);
+                const pVehId = urlParams.get('vehicleId');
+                const pBranchId = urlParams.get('branchId');
+                if (!car && pVehId) {
+                    let fleetCar = null;
+                    if (window.DRIVEFLOW_FLEET) {
+                        fleetCar = window.DRIVEFLOW_FLEET.find(v => String(v.vehicleId) === String(pVehId));
+                    }
+                    car = {
+                        vehicle_id: pVehId,
+                        model: urlParams.get('model') || (fleetCar ? fleetCar.model : 'Selected Vehicle'),
+                        branch: urlParams.get('branch') || (fleetCar ? fleetCar.branchName : ''),
+                        daily_rate: urlParams.get('rate') || (fleetCar ? (fleetCar.dailyRate || fleetCar.daily_rate) : ''),
+                        transmission: fleetCar ? fleetCar.transmission : '',
+                        seats: fleetCar ? fleetCar.capacity : '',
+                        fuel: fleetCar ? fleetCar.fuel : ''
+                    };
+                }
+
+                if (car && (car.vehicle_id || car.id)) {
+                    const vId = car.vehicle_id || car.id;
+                    let fleetCar = null;
+                    if (window.DRIVEFLOW_FLEET) {
+                        fleetCar = window.DRIVEFLOW_FLEET.find(v => String(v.vehicleId) === String(vId));
+                    }
+                    const carRate = Number(car.daily_rate || car.dailyRate || car.rate || (fleetCar ? fleetCar.dailyRate : 12500));
+                    state.dailyRate = carRate;
+                    const banner = document.getElementById('preselectedVehicleBanner');
+                    const modelText = document.getElementById('preselectedModelText');
+                    const metaText = document.getElementById('preselectedMetaText');
+                    const lockedHidden = document.getElementById('lockedVehicleIdHidden');
+
+                    if (modelText) modelText.textContent = car.model;
+                    if (metaText) {
+                        const parts = [];
+                        if (car.branch || (fleetCar && fleetCar.branchName)) parts.push(car.branch || fleetCar.branchName);
+                        if (car.transmission) parts.push(car.transmission);
+                        if (car.seats) parts.push(car.seats);
+                        if (car.fuel) parts.push(car.fuel);
+                        parts.push('Rs. ' + Number(carRate).toLocaleString() + '/day');
+                        metaText.textContent = parts.map(p => '• ' + p).join(' ');
+                    }
+                    if (banner) banner.style.display = 'flex';
+
+                    // Match and preselect pickup branch
+                    if (pBranchId && branchSelect) {
+                        branchSelect.value = pBranchId;
+                        state.branchId = pBranchId;
+                    } else if (car.branch && branchSelect) {
+                        for (let i = 0; i < branchSelect.options.length; i++) {
+                            const opt = branchSelect.options[i];
+                            const optText = opt.text.toLowerCase();
+                            const carBranch = car.branch.toLowerCase();
+                            if (optText.includes(carBranch) || 
+                                (carBranch.includes('colombo') && optText.includes('colombo')) ||
+                                (carBranch.includes('kandy') && optText.includes('kandy')) ||
+                                (carBranch.includes('galle') && optText.includes('galle')) ||
+                                (carBranch.includes('airport') && optText.includes('airport')) ||
+                                (carBranch.includes('katunayake') && optText.includes('katunayake'))) {
+                                branchSelect.selectedIndex = i;
+                                state.branchId = opt.value;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Populate vehicle option, select it and disable dropdown per requirements
+                    if (vehicleSelect) {
+                        vehicleSelect.innerHTML = '';
+                        const opt = document.createElement('option');
+                        opt.value = vId;
+                        opt.dataset.rate = carRate;
+                        opt.textContent = car.model + (car.branch ? ' [' + car.branch + ']' : '') + ' (Pre-selected from Dashboard)';
+                        opt.selected = true;
+                        vehicleSelect.appendChild(opt);
+                        vehicleSelect.disabled = true;
+                    }
+
+                    if (lockedHidden) {
+                        lockedHidden.value = vId;
+                        lockedHidden.disabled = false;
+                    }
+
+                    if (branchNotice) {
+                        branchNotice.innerHTML = '🔒 Vehicle locked from dashboard selection. Click "Change Vehicle" above to select manually.';
+                        branchNotice.style.color = '#059669';
+                    }
+
+                    state.vehicleId = vId;
+                    renderPricingBreakdown();
+                    return true;
+                }
+                return false;
+            }
+
+            window.enableManualVehicleSelection = function() {
+                const banner = document.getElementById('preselectedVehicleBanner');
+                const lockedHidden = document.getElementById('lockedVehicleIdHidden');
+                if (banner) banner.style.display = 'none';
+                if (lockedHidden) {
+                    lockedHidden.disabled = true;
+                    lockedHidden.value = '';
+                }
+                try {
+                    sessionStorage.removeItem('selectedVehicle');
+                } catch(e) {}
+
+                if (vehicleSelect) {
+                    vehicleSelect.disabled = false;
+                }
                 onBranchChanged();
-            } else {
-                renderPricingBreakdown();
+            };
+
+            // Initial execution on mount
+            const autoFilled = checkDashboardAutofill();
+            if (!autoFilled) {
+                if (branchSelect && branchSelect.value) {
+                    onBranchChanged();
+                } else {
+                    renderPricingBreakdown();
+                }
             }
         })();
     </script>

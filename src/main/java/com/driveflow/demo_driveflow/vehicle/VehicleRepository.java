@@ -15,6 +15,24 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
     List<Vehicle> findByBranch_BranchId(Long branchId);
     List<Vehicle> findByBranch_BranchIdAndStatusIgnoreCase(Long branchId, String status);
 
+    List<Vehicle> findByIsRegisteredTrue();
+    List<Vehicle> findByIsRegisteredTrueAndStatusIgnoreCase(String status);
+
+    @Query("SELECT v FROM Vehicle v WHERE (v.isRegistered = true) AND UPPER(v.status) != 'DECOMMISSIONED' ORDER BY v.vehicleId ASC")
+    List<Vehicle> findDashboardVehicles();
+
+    @Query("SELECT v FROM Vehicle v WHERE (v.isRegistered = true) AND UPPER(v.status) = 'AVAILABLE' ORDER BY v.vehicleId ASC")
+    List<Vehicle> findAvailableDashboardVehicles();
+
+    @Query("SELECT v FROM Vehicle v WHERE " +
+           "(v.isRegistered = true) AND " +
+           "(:search IS NULL OR :search = '' OR LOWER(v.model) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(v.regNo) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "( ((:status IS NULL OR :status = '' OR :status = 'ALL') AND (v.status IS NULL OR UPPER(v.status) != 'DECOMMISSIONED')) OR " +
+           "  (UPPER(:status) = 'DECOMMISSIONED' AND UPPER(v.status) = 'DECOMMISSIONED') OR " +
+           "  (UPPER(:status) != 'ALL' AND UPPER(:status) != 'DECOMMISSIONED' AND UPPER(v.status) = UPPER(:status)) ) " +
+           "ORDER BY v.vehicleId ASC")
+    List<Vehicle> searchDashboardVehicles(@Param("search") String search, @Param("status") String status);
+
     @Query("SELECT v FROM Vehicle v WHERE v.branch.branchId = :branchId AND UPPER(v.status) = 'AVAILABLE'")
     List<Vehicle> findAvailableByBranchId(@Param("branchId") Long branchId);
 

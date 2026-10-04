@@ -13,6 +13,8 @@ import com.driveflow.demo_driveflow.payment.InvoiceRepository;
 import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import com.driveflow.demo_driveflow.vehicle.VehicleRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,8 @@ import java.util.Optional;
 
 @Service
 public class BookingServiceImpl implements BookingService {
+
+    private static final Logger log = LoggerFactory.getLogger(BookingServiceImpl.class);
 
     @Autowired
     private BookingRepository bookingRepository;
@@ -41,6 +45,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Autowired
     private PricingEngineService pricingEngineService;
+
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.email.EmailService emailService;
 
     private void ensureInvoiceForBooking(Booking booking) {
         if (booking == null || booking.getBookingId() == null) return;
@@ -229,7 +236,29 @@ public class BookingServiceImpl implements BookingService {
         // Payment fields should only unlock after the booking status transitions to APPROVED by staff.
         booking.setStatus("PENDING");
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Lifecycle Email Trigger: Booking Placed (Status: PENDING)
+        if (emailService != null) {
+            try {
+                Customer cust = saved.getCustomer();
+                String toEmail = (cust != null) ? cust.getEmail() : null;
+                String custName = (cust != null) ? (cust.getFirstName() + (cust.getLastName() != null ? " " + cust.getLastName() : "")) : "Customer";
+                String vehicleDetails = (saved.getVehicle() != null) ? saved.getVehicle().getDisplayName() : "Reserved Vehicle";
+                emailService.sendBookingPlacedEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, saved.getBookingDate(), saved.getEndDate());
+                emailService.sendNotification(
+                        toEmail,
+                        "DriveFlow Reservation Submitted: #BK-" + saved.getBookingId(),
+                        "Dear " + custName + ",\n\nYour reservation #BK-" + saved.getBookingId() + " for " + vehicleDetails +
+                        " has been submitted successfully and is pending confirmation.\nPickup Date: " + saved.getBookingDate() +
+                        "\nReturn Date: " + saved.getEndDate() + "\n\nBest regards,\nDriveFlow Team"
+                );
+            } catch (Exception ex) {
+                log.warn("Failed to dispatch Booking Placed email: {}", ex.getMessage());
+            }
+        }
+
+        return saved;
     }
 
     @Override
@@ -250,6 +279,7 @@ public class BookingServiceImpl implements BookingService {
         Booking saved = bookingRepository.save(booking);
         // Unlocks invoice so customer can proceed with payment
         ensureInvoiceForBooking(saved);
+        triggerBookingConfirmationEmail(saved);
     }
 
     @Override
@@ -272,6 +302,11 @@ public class BookingServiceImpl implements BookingService {
         if (!BookingStatus.isValid(cleanStatus)) {
             throw new IllegalArgumentException("Invalid booking status: " + cleanStatus);
         }
+
+        String oldStatus = booking.getStatus();
+        boolean willBeConfirmed = "CONFIRMED".equalsIgnoreCase(cleanStatus) || "APPROVED".equalsIgnoreCase(cleanStatus);
+        boolean wasConfirmed = "CONFIRMED".equalsIgnoreCase(oldStatus) || "APPROVED".equalsIgnoreCase(oldStatus);
+
         booking.setStatus(cleanStatus);
 
         if ("CONFIRMED".equalsIgnoreCase(cleanStatus) || "APPROVED".equalsIgnoreCase(cleanStatus)) {
@@ -314,7 +349,39 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+        if (willBeConfirmed && !wasConfirmed) {
+            triggerBookingConfirmationEmail(saved);
+        }
+        return saved;
+    }
+
+    private void triggerBookingConfirmationEmail(Booking booking) {
+        if (booking == null || emailService == null) return;
+        try {
+            Customer customer = booking.getCustomer();
+            if (customer != null && customer.getEmail() != null && !customer.getEmail().isBlank()) {
+                String toEmail = customer.getEmail();
+                String customerName = customer.getFirstName();
+                if (customer.getLastName() != null && !customer.getLastName().isBlank()) {
+                    customerName = (customerName != null ? customerName + " " : "") + customer.getLastName();
+                }
+                String bookingRef = "#BK-" + booking.getBookingId();
+                LocalDate pickupDate = booking.getBookingDate();
+                String vehicleDetails = (booking.getVehicle() != null) ? booking.getVehicle().getDisplayName() : "Reserved Vehicle";
+
+                emailService.sendBookingConfirmationEmail(toEmail, customerName, bookingRef, pickupDate, vehicleDetails);
+                emailService.sendBookingDecisionEmail(toEmail, customerName, booking.getBookingId(), vehicleDetails, "APPROVED", booking.getStaffMessage());
+                emailService.sendNotification(
+                        toEmail,
+                        "DriveFlow Booking Confirmation: " + bookingRef,
+                        "Dear " + customerName + ",\n\nYour booking " + bookingRef + " for " + vehicleDetails +
+                        " has been confirmed! Scheduled pickup: " + pickupDate + ".\n\nThank you,\nDriveFlow Team"
+                );
+            }
+        } catch (Exception ex) {
+            // Avoid blocking if email fails
+        }
     }
 
     @Override
@@ -356,7 +423,26 @@ public class BookingServiceImpl implements BookingService {
             });
         } catch (Exception ignored) {}
 
-        bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Lifecycle Email Trigger: Booking Decision (CANCELLED)
+        if (emailService != null) {
+            try {
+                Customer cust = saved.getCustomer();
+                String toEmail = (cust != null) ? cust.getEmail() : null;
+                String custName = (cust != null) ? (cust.getFirstName() + (cust.getLastName() != null ? " " + cust.getLastName() : "")) : "Customer";
+                String vehicleDetails = (saved.getVehicle() != null) ? saved.getVehicle().getDisplayName() : "Reserved Vehicle";
+                emailService.sendBookingDecisionEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, "CANCELLED", saved.getStaffMessage());
+                emailService.sendNotification(
+                        toEmail,
+                        "DriveFlow Booking Status Update: #BK-" + saved.getBookingId(),
+                        "Dear " + custName + ",\n\nYour booking #BK-" + saved.getBookingId() + " has been cancelled.\nReason: " +
+                        saved.getStaffMessage() + "\n\nBest regards,\nDriveFlow Team"
+                );
+            } catch (Exception ex) {
+                log.warn("Failed to dispatch booking cancellation email: {}", ex.getMessage());
+            }
+        }
     }
 
     @Override
@@ -429,7 +515,28 @@ public class BookingServiceImpl implements BookingService {
             vehicleRepository.save(vehicle);
         }
 
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Lifecycle Email Trigger: Vehicle Returned (Thank You & Feedback CTA)
+        if (emailService != null) {
+            try {
+                Customer cust = saved.getCustomer();
+                String toEmail = (cust != null) ? cust.getEmail() : null;
+                String custName = (cust != null) ? (cust.getFirstName() + (cust.getLastName() != null ? " " + cust.getLastName() : "")) : "Valued Driver";
+                String vehicleDetails = (saved.getVehicle() != null) ? saved.getVehicle().getDisplayName() : "Returned Vehicle";
+                emailService.sendVehicleReturnedThankYouEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, "/feedback");
+                emailService.sendNotification(
+                        toEmail,
+                        "DriveFlow Vehicle Return Confirmation: #BK-" + saved.getBookingId(),
+                        "Dear " + custName + ",\n\nYour vehicle (" + vehicleDetails + ") for booking #BK-" + saved.getBookingId() +
+                        " has been successfully returned. Thank you for choosing DriveFlow!\n\nBest regards,\nDriveFlow Team"
+                );
+            } catch (Exception ex) {
+                log.warn("Failed to dispatch Vehicle Returned Thank You email: {}", ex.getMessage());
+            }
+        }
+
+        return saved;
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.driveflow.demo_driveflow.feedback;
 
-import com.driveflow.demo_driveflow.booking.Booking;
 import com.driveflow.demo_driveflow.booking.BookingService;
 import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.users.CustomerRepository;
@@ -24,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;

@@ -2,7 +2,6 @@ package com.driveflow.demo_driveflow.booking;
 
 import com.driveflow.demo_driveflow.booking.exception.ActiveBookingLimitExceededException;
 import com.driveflow.demo_driveflow.booking.exception.BookingCancellationNotAllowedException;
-import com.driveflow.demo_driveflow.booking.exception.BookingImmutabilityException;
 import com.driveflow.demo_driveflow.booking.exception.BranchSelectionRequiredException;
 import com.driveflow.demo_driveflow.booking.pricing.PricingBreakdown;
 import com.driveflow.demo_driveflow.booking.pricing.PricingEngineService;
@@ -137,7 +136,7 @@ public class BookingController {
         return "booking/booking-list";
     }
 
-    @GetMapping("/new")
+    @GetMapping({"/new", "/booking"})
     public String showCreateForm(
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
             @RequestParam(value = "branchId", required = false) Long branchId,

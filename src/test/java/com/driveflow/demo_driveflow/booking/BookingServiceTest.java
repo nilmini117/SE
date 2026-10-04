@@ -50,6 +50,9 @@ public class BookingServiceTest {
     @Mock
     private PricingEngineService pricingEngineService;
 
+    @Mock
+    private com.driveflow.demo_driveflow.email.EmailService emailService;
+
     @InjectMocks
     private BookingServiceImpl bookingService;
 
@@ -345,5 +348,55 @@ public class BookingServiceTest {
 
         assertEquals("COMPLETED", updated.getStatus());
         verify(bookingRepository, times(1)).save(booking);
+    }
+
+    @Test
+    @DisplayName("Notification Trigger: Approving a booking automatically dispatches confirmation email to customer")
+    void testApproveBooking_TriggersConfirmationEmail() {
+        Booking booking = new Booking();
+        booking.setBookingId(601L);
+        booking.setStatus("PENDING");
+        booking.setCustomer(customer);
+        booking.setVehicle(vehicle);
+        booking.setBookingDate(LocalDate.now().plusDays(2));
+
+        when(bookingRepository.findById(601L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookingService.approveBooking(601L);
+
+        assertEquals("CONFIRMED", booking.getStatus());
+        verify(emailService, times(1)).sendBookingConfirmationEmail(
+                eq("kasun.silva@driveflow.com"),
+                eq("Kasun Silva"),
+                eq("#BK-601"),
+                eq(booking.getBookingDate()),
+                anyString()
+        );
+    }
+
+    @Test
+    @DisplayName("Notification Trigger: Updating booking status to CONFIRMED dispatches confirmation email to customer")
+    void testUpdateBookingStatus_ToConfirmed_TriggersConfirmationEmail() {
+        Booking booking = new Booking();
+        booking.setBookingId(602L);
+        booking.setStatus("PENDING");
+        booking.setCustomer(customer);
+        booking.setVehicle(vehicle);
+        booking.setBookingDate(LocalDate.now().plusDays(3));
+
+        when(bookingRepository.findById(602L)).thenReturn(Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        bookingService.updateBookingStatus(602L, "CONFIRMED");
+
+        assertEquals("CONFIRMED", booking.getStatus());
+        verify(emailService, times(1)).sendBookingConfirmationEmail(
+                eq("kasun.silva@driveflow.com"),
+                eq("Kasun Silva"),
+                eq("#BK-602"),
+                eq(booking.getBookingDate()),
+                anyString()
+        );
     }
 }

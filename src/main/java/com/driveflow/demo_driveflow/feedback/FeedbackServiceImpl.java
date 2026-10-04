@@ -193,4 +193,13 @@ public class FeedbackServiceImpl implements FeedbackService {
     public Feedback save(Feedback feedback) {
         return feedbackRepository.save(feedback);
     }
+
+    @Override
+    public List<Feedback> getApprovedOrAcceptedFeedback() {
+        return feedbackRepository.findAll().stream()
+                .filter(f -> f.getApprovalStatus() != null &&
+                        ("APPROVED".equalsIgnoreCase(f.getApprovalStatus().trim()) ||
+                         "ACCEPTED".equalsIgnoreCase(f.getApprovalStatus().trim())))
+                .toList();
+    }
 }

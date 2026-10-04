@@ -25,7 +25,17 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     Optional<Promotion> findByCouponCodeIgnoreCaseAndStatusIgnoreCase(String couponCode, String status);
 
+    Optional<Promotion> findByCouponIdIgnoreCaseAndStatusIgnoreCase(String couponId, String status);
+
+    Optional<Promotion> findByCouponIdIgnoreCase(String couponId);
+
     @Query("SELECT p FROM Promotion p WHERE UPPER(p.status) = 'ACTIVE' " +
-           "AND (LOWER(p.couponCode) = LOWER(:code) OR LOWER(p.title) LIKE LOWER(CONCAT('%', :code, '%')))")
+           "AND (LOWER(p.couponCode) = LOWER(:code) OR LOWER(p.couponId) = LOWER(:code) OR LOWER(p.title) LIKE LOWER(CONCAT('%', :code, '%')))")
     List<Promotion> findMatchingPromotions(@Param("code") String code);
+
+    @Query("SELECT p FROM Promotion p WHERE UPPER(p.status) = 'ACTIVE' " +
+           "AND (:season IS NULL OR UPPER(p.vehicleSeason) = UPPER(:season) OR UPPER(p.vehicleSeason) = 'ALL_SEASONS') " +
+           "AND (p.startDate IS NULL OR p.startDate <= :today) " +
+           "AND (p.endDate IS NULL OR p.endDate >= :today)")
+    List<Promotion> findActivePromotionsBySeason(@Param("season") String season, @Param("today") LocalDate today);
 }

@@ -250,6 +250,30 @@ public class MaintenanceController {
         }
     }
 
+    @PostMapping(value = {"/companies", "/api/maintenance/companies"}, consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE, produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> createCompanyJson(
+            @jakarta.validation.Valid @org.springframework.web.bind.annotation.RequestBody MaintenanceCompany company) {
+        MaintenanceCompany created = maintenanceCompanyService.createCompany(company);
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(created);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<java.util.Map<String, Object>> handleValidationExceptions(
+            org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        java.util.Map<String, String> fieldErrors = new java.util.HashMap<>();
+        for (org.springframework.validation.FieldError error : ex.getBindingResult().getFieldErrors()) {
+            fieldErrors.put(error.getField(), error.getDefaultMessage());
+        }
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("status", org.springframework.http.HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("message", "Validation failed for maintenance company payload");
+        body.put("errors", fieldErrors);
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(body);
+    }
+
     @GetMapping("/companies/{id}/edit")
     public String showEditCompanyForm(@PathVariable Long id, Model model) {
         model.addAttribute("company", maintenanceCompanyService.getCompanyById(id));

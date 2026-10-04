@@ -243,7 +243,7 @@
                 <th>Color</th>
                 <th>Mileage</th>
                 <th>Status</th>
-                <th style="text-align: right;">Actions</th>
+                <th sec:authorize="isAuthenticated()" style="text-align: right;">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -273,26 +273,29 @@
                     <span th:if="${v.status == 'DECOMMISSIONED'}" class="badge badge-secondary">Decommissioned</span>
                     <span th:if="${v.status != 'AVAILABLE' and v.status != 'BOOKED' and v.status != 'MAINTENANCE' and v.status != 'UNAVAILABLE' and v.status != 'DECOMMISSIONED'}" class="badge badge-info" th:text="${v.status}">Status</span>
                 </td>
-                <td class="vehicle-actions-cell" style="text-align: right; white-space: nowrap;">
-                    <!-- Customer View Action -->
+                <td sec:authorize="isAuthenticated()" class="vehicle-actions-cell" style="text-align: right; white-space: nowrap;">
+                    <!-- Customer View Action: ONLY "Pick this Car" for CUSTOMER -->
                     <a th:href="@{/bookings/new(vehicleId=${v.vehicleId}, branchId=${v.branch != null ? v.branch.branchId : ''})}" 
-                       class="btn btn-primary btn-sm" 
+                       class="btn btn-primary btn-sm btn-pick-car" 
                        sec:authorize="hasRole('CUSTOMER')" 
                        th:if="${v.status == 'AVAILABLE'}"
                        style="margin-right: 0.35rem;">Pick this Car</a>
 
-                    <!-- Edit Action Button -->
-                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" 
-                       class="btn btn-secondary btn-sm"
-                       style="margin-right: 0.35rem;">Edit</a>
+                    <!-- Staff View Actions: Edit and Delete render ONLY when explicitly STAFF -->
+                    <th:block sec:authorize="hasRole('STAFF')">
+                        <!-- Edit Action Button -->
+                        <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" 
+                           class="btn btn-secondary btn-sm btn-edit-vehicle"
+                           style="margin-right: 0.35rem;">Edit</a>
 
-                    <!-- Red Delete Action Button -->
-                    <button type="button"
-                       class="btn btn-danger btn-sm btn-delete-vehicle"
-                       th:attr="data-id=${v.vehicleId}, data-regno=${v.regNo}, data-brand=${v.brand}, data-model=${v.model}"
-                       style="background-color: #dc2626; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
-                        Delete
-                    </button>
+                        <!-- Red Delete Action Button -->
+                        <button type="button"
+                           class="btn btn-danger btn-sm btn-delete-vehicle"
+                           th:attr="data-id=${v.vehicleId}, data-regno=${v.regNo}, data-brand=${v.brand}, data-model=${v.model}"
+                           style="background-color: #dc2626; color: white; border: none; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                            Delete
+                        </button>
+                    </th:block>
                 </td>
             </tr>
             </tbody>

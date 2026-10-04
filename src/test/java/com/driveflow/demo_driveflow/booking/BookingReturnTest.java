@@ -1,6 +1,5 @@
 package com.driveflow.demo_driveflow.booking;
 
-import com.driveflow.demo_driveflow.branch.Branch;
 import com.driveflow.demo_driveflow.feedback.Feedback;
 import com.driveflow.demo_driveflow.feedback.FeedbackRepository;
 import com.driveflow.demo_driveflow.feedback.FeedbackServiceImpl;

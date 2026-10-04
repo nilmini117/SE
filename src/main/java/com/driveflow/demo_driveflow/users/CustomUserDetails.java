@@ -31,6 +31,18 @@ public class CustomUserDetails implements UserDetails {
         return systemId;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
     public String getFullName() {
         if (firstName == null && lastName == null) return email;
         return ((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "")).trim();

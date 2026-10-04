@@ -111,6 +111,26 @@
                     </div>
                 </div>
 
+                <!-- 6-Digit Security OTP Verification Section -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.25rem; margin-top: 1.25rem; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div>
+                            <strong style="color: #0f172a; font-size: 0.92rem; display: block;">Security Code Verification <span style="color: #dc2626;">*</span></strong>
+                            <span style="color: #64748b; font-size: 0.82rem;">A 6-digit OTP will be dispatched to your email (valid for 10 minutes).</span>
+                        </div>
+                        <button type="button" id="sendOtpBtn" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.45rem 0.9rem; border: 1px solid #cbd5e1; background: #ffffff; cursor: pointer;">
+                            📧 Send Security Code
+                        </button>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <input type="text" id="otp" th:field="*{otp}" maxlength="6" pattern="^[0-9]{6}$" class="form-control" 
+                               placeholder="6-digit OTP (e.g. 123456)" style="letter-spacing: 4px; font-weight: 700; font-size: 1.05rem; max-width: 220px;" required>
+                        <div id="otpError" class="field-error" style="color: #dc2626; font-size: 0.8rem; margin-top: 0.3rem; display: none;"></div>
+                        <div id="otpSuccessMsg" style="color: #059669; font-size: 0.82rem; margin-top: 0.3rem; display: none; font-weight: 600;"></div>
+                    </div>
+                </div>
+
                 <div style="margin-top: 1.75rem;">
                     <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem; font-size: 1rem; font-weight: 600;">
                         Complete Customer Registration &rarr;
@@ -135,17 +155,24 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('registrationForm');
+    const emailInput = document.getElementById('email');
     const nicInput = document.getElementById('nicNumber');
     const mobileInput = document.getElementById('mobileNumber');
     const drivingLicenseInput = document.getElementById('drivingLicense');
     const passwordInput = document.getElementById('password');
     const confirmPasswordInput = document.getElementById('confirmPassword');
 
+    const emailError = document.getElementById('emailError');
     const nicError = document.getElementById('nicError');
     const mobileError = document.getElementById('mobileError');
     const drivingLicenseError = document.getElementById('drivingLicenseError');
     const passwordError = document.getElementById('passwordError');
     const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+    const otpInput = document.getElementById('otp');
+    const otpError = document.getElementById('otpError');
+    const otpSuccessMsg = document.getElementById('otpSuccessMsg');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
 
     // Strict Validation Rules:
     // 1. nic_number: exactly 12 characters long and contain only integers. Block any alphabetic or special characters.
@@ -250,6 +277,22 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Strict Email Validation
+    const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+    function validateEmail() {
+        const val = emailInput ? emailInput.value.trim() : '';
+        if (!val) {
+            showError(emailInput, emailError, 'Email address is required.');
+            return false;
+        }
+        if (!EMAIL_REGEX.test(val)) {
+            showError(emailInput, emailError, 'Please enter a valid email address');
+            return false;
+        }
+        clearError(emailInput, emailError);
+        return true;
+    }
+
     function clearError(inputEl, errorEl) {
         if (errorEl) {
             errorEl.textContent = '';
@@ -294,20 +337,130 @@ document.addEventListener('DOMContentLoaded', function () {
     confirmPasswordInput.addEventListener('input', validateConfirmPassword);
     confirmPasswordInput.addEventListener('blur', validateConfirmPassword);
 
+    if (emailInput) {
+        emailInput.addEventListener('input', validateEmail);
+        emailInput.addEventListener('blur', validateEmail);
+    }
+
+    function validateOtp() {
+        if (!otpInput) return true;
+        const val = otpInput.value.trim();
+        if (!val) {
+            showError(otpInput, otpError, '6-digit OTP verification code is required.');
+            return false;
+        }
+        if (!/^\d{6}$/.test(val)) {
+            showError(otpInput, otpError, 'OTP must be exactly 6 numeric digits.');
+            return false;
+        }
+        clearError(otpInput, otpError);
+        return true;
+    }
+
+    if (otpInput) {
+        otpInput.addEventListener('input', function () {
+            this.value = this.value.replace(/[^\d]/g, '');
+            if (this.value.length === 6) {
+                validateOtp();
+            }
+        });
+        otpInput.addEventListener('blur', validateOtp);
+    }
+
+    let cooldown = 0;
+    let timer = null;
+    let otpRequested = false;
+
+    function updateButton() {
+        if (cooldown > 0) {
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.textContent = '📧 Resend OTP in ' + cooldown + 's';
+            sendOtpBtn.style.cursor = 'not-allowed';
+            sendOtpBtn.style.background = '#f1f5f9';
+            sendOtpBtn.style.color = '#94a3b8';
+        } else {
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.textContent = otpRequested ? '📧 Resend OTP' : '📧 Send OTP to My Email';
+            sendOtpBtn.style.cursor = 'pointer';
+            sendOtpBtn.style.background = '#ffffff';
+            sendOtpBtn.style.color = '#334155';
+        }
+    }
+
+    function startCooldown(seconds) {
+        cooldown = seconds;
+        otpRequested = true;
+        updateButton();
+        if (timer) clearInterval(timer);
+        timer = setInterval(function () {
+            cooldown--;
+            if (cooldown <= 0) {
+                clearInterval(timer);
+                cooldown = 0;
+            }
+            updateButton();
+        }, 1000);
+    }
+
+    if (sendOtpBtn) {
+        sendOtpBtn.addEventListener('click', async function () {
+            if (cooldown > 0) return;
+            const email = emailInput ? emailInput.value.trim() : '';
+            if (!email || !EMAIL_REGEX.test(email)) {
+                showError(emailInput, emailError, 'Please enter a valid email address before requesting an OTP code.');
+                if (emailInput) emailInput.focus();
+                return;
+            }
+            sendOtpBtn.disabled = true;
+            sendOtpBtn.textContent = 'Sending OTP...';
+            if (otpSuccessMsg) otpSuccessMsg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/otp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok) {
+                    startCooldown(60);
+                    if (otpSuccessMsg) {
+                        otpSuccessMsg.textContent = '✅ ' + (data.message || 'Security code dispatched to ' + email + '.');
+                        otpSuccessMsg.style.display = 'block';
+                    }
+                    clearError(otpInput, otpError);
+                    if (otpInput) otpInput.focus();
+                } else {
+                    sendOtpBtn.disabled = false;
+                    updateButton();
+                    showError(otpInput, otpError, data.message || 'Failed to dispatch security code.');
+                }
+            } catch (err) {
+                sendOtpBtn.disabled = false;
+                updateButton();
+                showError(otpInput, otpError, 'Network error while requesting OTP. Please try again.');
+            }
+        });
+    }
+
     // Form submission gatekeeper
     form.addEventListener('submit', function (e) {
+        const isEmailValid = validateEmail();
         const isNicValid = validateNic();
         const isMobileValid = validateMobile();
         const isDrivingLicenseValid = validateDrivingLicense();
         const isPasswordValid = validatePassword();
         const isConfirmValid = validateConfirmPassword();
+        const isOtpValid = validateOtp();
 
-        if (!isNicValid || !isMobileValid || !isDrivingLicenseValid || !isPasswordValid || !isConfirmValid) {
+        if (!isEmailValid || !isNicValid || !isMobileValid || !isDrivingLicenseValid || !isPasswordValid || !isConfirmValid || !isOtpValid) {
             e.preventDefault();
             e.stopPropagation();
 
             // Focus on first invalid input
-            if (!isNicValid) {
+            if (!isEmailValid) {
+                emailInput.focus();
+            } else if (!isNicValid) {
                 nicInput.focus();
             } else if (!isMobileValid) {
                 mobileInput.focus();
@@ -317,6 +470,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 passwordInput.focus();
             } else if (!isConfirmValid) {
                 confirmPasswordInput.focus();
+            } else if (!isOtpValid && otpInput) {
+                otpInput.focus();
             }
         }
     });

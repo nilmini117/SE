@@ -43,6 +43,20 @@ public class VehicleRegistrationDto {
 
     private Long branchId;
 
+    private String transmission;
+
+    private String capacity;
+
+    private String fuel;
+
+    private java.math.BigDecimal dailyRate;
+
+    private String imageUrl;
+
+    private Boolean isRegistered = true;
+
+    private java.time.LocalDate serviceEndDate;
+
     public Vehicle toEntity() {
         Vehicle vehicle = new Vehicle();
         vehicle.setBrand(this.brand);
@@ -52,6 +66,21 @@ public class VehicleRegistrationDto {
         vehicle.setMileage(this.mileage);
         vehicle.setStatus(this.status);
         vehicle.setQuantity(this.quantity);
+        vehicle.setTransmission(this.transmission);
+        vehicle.setCapacity(this.capacity);
+        vehicle.setFuel(this.fuel);
+        vehicle.setDailyRate(this.dailyRate);
+        if (this.imageUrl != null && !this.imageUrl.isBlank()) {
+            vehicle.setImageUrl(this.imageUrl);
+        }
+        if (this.isRegistered != null) {
+            vehicle.setIsRegistered(this.isRegistered);
+        } else {
+            vehicle.setIsRegistered(true);
+        }
+        if (this.serviceEndDate != null) {
+            vehicle.setServiceEndDate(this.serviceEndDate);
+        }
         return vehicle;
     }
 }

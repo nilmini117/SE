@@ -1,6 +1,7 @@
 package com.driveflow.demo_driveflow.users;
 
 import com.driveflow.demo_driveflow.email.EmailService;
+import com.driveflow.demo_driveflow.otp.OtpService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +36,9 @@ public class UserServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private OtpService otpService;
+
     @InjectMocks
     private UserServiceImpl userService;
 
@@ -51,6 +56,7 @@ public class UserServiceTest {
         validDto.setConfirmPassword("DriveFlow2026");
         validDto.setDob(LocalDate.of(2000, 1, 1));
         validDto.setDrivingLicense("B123456");
+        validDto.setOtp("123456");
     }
 
     @Test
@@ -150,6 +156,7 @@ public class UserServiceTest {
         when(userRepository.existsByNic("200012345678")).thenReturn(false);
         when(customerRepository.existsByDrivingLicense("B123456")).thenReturn(false);
         when(passwordEncoder.encode(any())).thenReturn("hashed_password");
+        when(otpService.verifyOtp("alice@driveflow.com", "123456")).thenReturn(true);
         when(customerRepository.save(any(Customer.class))).thenAnswer(invocation -> {
             Customer c = invocation.getArgument(0);
             c.setSystemId(99L);
@@ -167,7 +174,107 @@ public class UserServiceTest {
         // Verify that database insertion occurred
         verify(customerRepository, times(1)).save(any(Customer.class));
 
+        // Verify that OTP was cleared after consumption
+        verify(otpService, times(1)).clearOtp("alice@driveflow.com");
+
         // Verify that post-registration automated welcome email was triggered
         verify(emailService, times(1)).sendWelcomeEmail("alice@driveflow.com", "Alice Wonder");
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException and abort registration when OTP is missing or blank")
+    void shouldThrowException_WhenOtpIsMissingOrBlank() {
+        when(userRepository.existsByEmail("alice@driveflow.com")).thenReturn(false);
+        when(userRepository.existsByNic("200012345678")).thenReturn(false);
+        when(customerRepository.existsByDrivingLicense("B123456")).thenReturn(false);
+        validDto.setOtp("");
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.registerCustomer(validDto);
+        });
+
+        assertTrue(ex.getMessage().contains("Invalid or expired OTP"));
+        verify(customerRepository, never()).save(any());
+        verify(emailService, never()).sendWelcomeEmail(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException and abort registration when OTP is invalid or expired")
+    void shouldThrowException_WhenOtpIsInvalidOrExpired() {
+        when(userRepository.existsByEmail("alice@driveflow.com")).thenReturn(false);
+        when(userRepository.existsByNic("200012345678")).thenReturn(false);
+        when(customerRepository.existsByDrivingLicense("B123456")).thenReturn(false);
+        validDto.setOtp("999999");
+        when(otpService.verifyOtp("alice@driveflow.com", "999999")).thenReturn(false);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.registerCustomer(validDto);
+        });
+
+        assertTrue(ex.getMessage().contains("Invalid or expired OTP"));
+        verify(customerRepository, never()).save(any());
+        verify(emailService, never()).sendWelcomeEmail(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException and prevent password change when OTP is invalid")
+    void shouldThrowException_WhenChangingPasswordWithInvalidOtp() {
+        when(otpService.verifyOtp("alice@driveflow.com", "999999")).thenReturn(false);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.changePassword("alice@driveflow.com", "OldPassword123", "NewPassword123", "999999");
+        });
+
+        assertTrue(ex.getMessage().contains("Invalid or expired OTP"));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should update password when OTP is valid")
+    void shouldChangePassword_WhenOtpIsValid() {
+        User user = new User();
+        user.setEmail("alice@driveflow.com");
+        user.setPassword("hashedOldPassword");
+
+        when(otpService.verifyOtp("alice@driveflow.com", "123456")).thenReturn(true);
+        when(userRepository.findByEmail("alice@driveflow.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("OldPassword123", "hashedOldPassword")).thenReturn(true);
+        when(passwordEncoder.encode("NewPassword123")).thenReturn("hashedNewPassword");
+
+        userService.changePassword("alice@driveflow.com", "OldPassword123", "NewPassword123", "123456");
+
+        assertEquals("hashedNewPassword", user.getPassword());
+        verify(userRepository, times(1)).save(user);
+        verify(otpService, times(1)).clearOtp("alice@driveflow.com");
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException and prevent password reset when OTP is invalid")
+    void shouldThrowException_WhenResettingPasswordWithInvalidOtp() {
+        when(otpService.verifyOtp("alice@driveflow.com", "000000")).thenReturn(false);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+            userService.resetPassword("alice@driveflow.com", "NewPassword123", "000000");
+        });
+
+        assertTrue(ex.getMessage().contains("Invalid or expired OTP"));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should reset password when OTP is valid")
+    void shouldResetPassword_WhenOtpIsValid() {
+        User user = new User();
+        user.setEmail("alice@driveflow.com");
+
+        when(otpService.verifyOtp("alice@driveflow.com", "123456")).thenReturn(true);
+        when(userRepository.findByEmail("alice@driveflow.com")).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("NewPassword123")).thenReturn("hashedNewPassword");
+
+        userService.resetPassword("alice@driveflow.com", "NewPassword123", "123456");
+
+        assertEquals("hashedNewPassword", user.getPassword());
+        verify(userRepository, times(1)).save(user);
+        verify(otpService, times(1)).clearOtp("alice@driveflow.com");
     }
 }

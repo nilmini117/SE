@@ -69,8 +69,8 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
     if (!formData.companyName.trim()) err.companyName = 'Company name is mandatory.';
     if (!formData.email.trim()) {
       err.email = 'Notification email is mandatory.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      err.email = 'Please provide a valid email format.';
+    } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(formData.email.trim())) {
+      err.email = 'Please enter a valid email address';
     }
     if (!formData.contactNumber || !/^[0-9]{10}$/.test(formData.contactNumber.trim())) {
       err.contactNumber = 'Contact number must be exactly 10 digits long.';
@@ -267,11 +267,19 @@ export default function MaintenanceCompanyCrud({ csrfToken = '' }) {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  style={{ width: '100%', padding: '0.55rem', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.88rem' }}
+                  onChange={e => {
+                    const newEmail = e.target.value;
+                    setFormData({ ...formData, email: newEmail });
+                    if (newEmail.trim() && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(newEmail.trim())) {
+                      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+                    } else if (errors.email) {
+                      setErrors(prev => ({ ...prev, email: '' }));
+                    }
+                  }}
+                  style={{ width: '100%', padding: '0.55rem', border: errors.email ? '1px solid #dc2626' : '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.88rem' }}
                   placeholder="e.g. service@apexfleet.com"
                 />
-                {errors.email && <span style={{ color: '#dc2626', fontSize: '0.75rem' }}>{errors.email}</span>}
+                {errors.email && <span style={{ color: '#dc2626', fontSize: '0.75rem', display: 'block', marginTop: '0.25rem' }}>{errors.email}</span>}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>

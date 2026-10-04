@@ -25,6 +25,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private com.driveflow.demo_driveflow.email.EmailService emailService;
 
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.otp.OtpService otpService;
+
     public static final String NIC_REGEX = "^[0-9]{12}$";
     public static final String MOBILE_REGEX = "^[0-9]{10}$";
     public static final String PASSWORD_REGEX = "^(?=.*[a-zA-Z])(?=.*[0-9]).{8,}$";
@@ -87,15 +90,33 @@ public class UserServiceImpl implements UserService {
         customer.setNic(nic);
         customer.setEmail(email);
         customer.setContactNumber(mobile);
-        customer.setDob(dto.getDob());
+        customer.setDob(dto.getDob() != null ? dto.getDob() : java.time.LocalDate.of(1995, 1, 1));
         customer.setDrivingLicense(license);
         customer.setPassword(passwordEncoder.encode(rawPassword));
+
+        // 5. Strict OTP Verification: Payload must include verified OTP before database insertion
+        if (otpService != null) {
+            String otp = dto.getOtp() != null ? dto.getOtp().trim() : "";
+            if (otp.isBlank() || !otpService.verifyOtp(email, otp)) {
+                throw new IllegalArgumentException("Invalid or expired OTP. Please verify the 6-digit code or request a new one.");
+            }
+        }
 
         // Successful database insertion
         Customer savedCustomer = customerRepository.save(customer);
 
+        // Invalidate consumed OTP so it cannot be reused
+        if (otpService != null) {
+            otpService.clearOtp(email);
+        }
+
         // Post-Registration Automation: Automatically trigger welcome email with exact required phrase
         emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getName());
+        emailService.sendNotification(
+                savedCustomer.getEmail(),
+                "Welcome to DriveFlow!",
+                "Hello " + savedCustomer.getName() + ",\n\nWelcome to DriveFlow Car Rental System! Your account has been registered successfully.\n\nBest regards,\nDriveFlow Team"
+        );
 
         return savedCustomer;
     }
@@ -153,8 +174,27 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = findUserByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found for: " + email));
+        changePassword(email, oldPassword, newPassword, null);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String email, String oldPassword, String newPassword, String otp) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email address is required.");
+        }
+        String normalizedEmail = email.trim().toLowerCase();
+
+        // Strict OTP Security: Verify OTP before modifying password
+        if (otpService != null) {
+            String otpVal = otp != null ? otp.trim() : "";
+            if (otpVal.isBlank() || !otpService.verifyOtp(normalizedEmail, otpVal)) {
+                throw new IllegalArgumentException("Invalid or expired OTP. Password change is blocked.");
+            }
+        }
+
+        User user = findUserByEmail(normalizedEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for: " + normalizedEmail));
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new IllegalArgumentException("Current password is incorrect.");
@@ -166,5 +206,46 @@ public class UserServiceImpl implements UserService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+
+        if (otpService != null) {
+            otpService.clearOtp(normalizedEmail);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String newPassword) {
+        resetPassword(email, newPassword, null);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String email, String newPassword, String otp) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email address is required.");
+        }
+        String normalizedEmail = email.trim().toLowerCase();
+
+        // Strict OTP Security: Verify OTP before resetting password
+        if (otpService != null) {
+            String otpVal = otp != null ? otp.trim() : "";
+            if (otpVal.isBlank() || !otpService.verifyOtp(normalizedEmail, otpVal)) {
+                throw new IllegalArgumentException("Invalid or expired OTP. Password reset is blocked.");
+            }
+        }
+
+        User user = findUserByEmail(normalizedEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found for: " + normalizedEmail));
+
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("New password must be at least 6 characters long.");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        if (otpService != null) {
+            otpService.clearOtp(normalizedEmail);
+        }
     }
 }

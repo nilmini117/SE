@@ -22,7 +22,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -200,5 +199,33 @@ public class MaintenanceControllerTest {
         assertEquals(HttpServletResponse.SC_BAD_REQUEST, response.getStatus());
         assertTrue(bindingResult.hasFieldErrors("contactNumber"));
         verify(maintenanceCompanyService, never()).updateCompany(any(), any());
+    }
+
+    @Test
+    @DisplayName("Definition of Done: createCompany rejects payload with 400 Bad Request when email domain is fake")
+    void createCompany_shouldFail_whenEmailDomainIsFake() {
+        MaintenanceCompany company = new MaintenanceCompany();
+        company.setCompanyName("Fake Auto Repair");
+        company.setEmail("service@thisdomaindoesnotexist123.com");
+        company.setContactNumber("0112894567");
+
+        jakarta.validation.Validator val = jakarta.validation.Validation.buildDefaultValidatorFactory().getValidator();
+        java.util.Set<jakarta.validation.ConstraintViolation<MaintenanceCompany>> violations = val.validate(company);
+
+        BindingResult bindingResult = new BeanPropertyBindingResult(company, "company");
+        for (var v : violations) {
+            bindingResult.rejectValue(v.getPropertyPath().toString(), "error." + v.getPropertyPath().toString(), v.getMessage());
+        }
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        Model model = new ConcurrentModel();
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = maintenanceController.createCompany(company, bindingResult, response, model, redirectAttributes);
+
+        assertEquals("maintenance/company-form", view);
+        assertEquals(HttpServletResponse.SC_BAD_REQUEST, response.getStatus());
+        assertTrue(bindingResult.hasFieldErrors("email"));
+        verify(maintenanceCompanyService, never()).createCompany(any());
     }
 }

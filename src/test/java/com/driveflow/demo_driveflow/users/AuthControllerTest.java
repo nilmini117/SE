@@ -219,4 +219,58 @@ public class AuthControllerTest {
 
         verify(userService, never()).registerCustomer(any());
     }
+
+    @Test
+    @DisplayName("Definition of Done: Should reject registration with 400 Bad Request when email domain is fake or inactive (MX lookup check)")
+    void shouldRejectRegistration_WhenEmailDomainIsFakeOrInactive() throws Exception {
+        String payload = """
+            {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "user@thisdomaindoesnotexist123.com",
+                "nic_number": "199512345678",
+                "mobile_number": "0771234567",
+                "drivingLicense": "B123456",
+                "password": "SecurePass123",
+                "confirmPassword": "SecurePass123"
+            }
+            """;
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.errors.email").exists());
+
+        verify(userService, never()).registerCustomer(any());
+    }
+
+    @Test
+    @DisplayName("Should reject registration with 400 Bad Request when email format is syntactically invalid")
+    void shouldRejectRegistration_WhenEmailFormatIsInvalid() throws Exception {
+        String payload = """
+            {
+                "firstName": "John",
+                "lastName": "Doe",
+                "email": "not-a-valid-email",
+                "nic_number": "199512345678",
+                "mobile_number": "0771234567",
+                "drivingLicense": "B123456",
+                "password": "SecurePass123",
+                "confirmPassword": "SecurePass123"
+            }
+            """;
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.errors.email").exists());
+
+        verify(userService, never()).registerCustomer(any());
+    }
 }

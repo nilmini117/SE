@@ -27,7 +27,7 @@ public class MaintenanceCompany {
     private String companyName;
 
     @NotBlank(message = "Company email is mandatory.")
-    @Email(message = "Please provide a valid company email address.")
+    @com.driveflow.demo_driveflow.validation.ValidDomainEmail(message = "Please provide a valid company email address with an active domain.")
     @Column(name = "email", nullable = false)
     private String email;
 

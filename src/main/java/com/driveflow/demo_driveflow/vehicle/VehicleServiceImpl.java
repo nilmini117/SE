@@ -72,12 +72,23 @@ public class VehicleServiceImpl implements VehicleService {
     @Autowired(required = false)
     private com.driveflow.demo_driveflow.maintenance.MaintenanceRepository maintenanceRepository;
 
+    @Autowired(required = false)
+    private FileStorageService fileStorageService;
+
+    @Override
+    public List<Vehicle> getDashboardVehicles() {
+        return vehicleRepository.findAvailableDashboardVehicles();
+    }
+
     @Override
     public Vehicle registerVehicle(Vehicle vehicle) {
         // Strict Business Rule: Enforce hardcoded defaults for vehicle registration.
         // Ignore any incoming values for status and quantity from the client payload.
         vehicle.setStatus("AVAILABLE");
         vehicle.setQuantity(1);
+        if (vehicle.getIsRegistered() == null) {
+            vehicle.setIsRegistered(true);
+        }
 
         if (vehicle.getBrand() == null || vehicle.getBrand().isBlank()) {
             if (vehicle.getModel() != null && vehicle.getModel().contains(" ")) {
@@ -91,12 +102,42 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public Vehicle registerVehicle(Vehicle vehicle, org.springframework.web.multipart.MultipartFile imageFile) {
+        if (imageFile != null && !imageFile.isEmpty() && fileStorageService != null) {
+            try {
+                String storedUrl = fileStorageService.storeVehicleImage(imageFile);
+                if (storedUrl != null) {
+                    vehicle.setImageUrl(storedUrl);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload vehicle image: " + e.getMessage(), e);
+            }
+        }
+        return registerVehicle(vehicle);
+    }
+
+    @Override
     public Vehicle registerVehicle(VehicleRegistrationDto dto) {
         Vehicle vehicle = dto.toEntity();
         if (dto.getBranchId() != null && branchRepository != null) {
             branchRepository.findById(dto.getBranchId()).ifPresent(vehicle::setBranch);
         }
         return registerVehicle(vehicle);
+    }
+
+    @Override
+    public Vehicle registerVehicle(VehicleRegistrationDto dto, org.springframework.web.multipart.MultipartFile imageFile) {
+        if (imageFile != null && !imageFile.isEmpty() && fileStorageService != null) {
+            try {
+                String storedUrl = fileStorageService.storeVehicleImage(imageFile);
+                if (storedUrl != null) {
+                    dto.setImageUrl(storedUrl);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload vehicle image: " + e.getMessage(), e);
+            }
+        }
+        return registerVehicle(dto);
     }
 
     @Override
@@ -107,6 +148,30 @@ public class VehicleServiceImpl implements VehicleService {
         existing.setMileage(updatedVehicle.getMileage());
         existing.setStatus(updatedVehicle.getStatus());
         existing.setRegNo(updatedVehicle.getRegNo());
+        if (updatedVehicle.getBrand() != null && !updatedVehicle.getBrand().isBlank()) {
+            existing.setBrand(updatedVehicle.getBrand());
+        }
+        if (updatedVehicle.getTransmission() != null) {
+            existing.setTransmission(updatedVehicle.getTransmission());
+        }
+        if (updatedVehicle.getCapacity() != null) {
+            existing.setCapacity(updatedVehicle.getCapacity());
+        }
+        if (updatedVehicle.getFuel() != null) {
+            existing.setFuel(updatedVehicle.getFuel());
+        }
+        if (updatedVehicle.getDailyRate() != null) {
+            existing.setDailyRate(updatedVehicle.getDailyRate());
+        }
+        if (updatedVehicle.getImageUrl() != null && !updatedVehicle.getImageUrl().isBlank()) {
+            existing.setImageUrl(updatedVehicle.getImageUrl());
+        }
+        if (updatedVehicle.getServiceEndDate() != null) {
+            existing.setServiceEndDate(updatedVehicle.getServiceEndDate());
+        }
+        if (updatedVehicle.getIsRegistered() != null) {
+            existing.setIsRegistered(updatedVehicle.getIsRegistered());
+        }
         int qty = (updatedVehicle.getQuantity() != null && updatedVehicle.getQuantity() >= 1) ? updatedVehicle.getQuantity() : 1;
         existing.setQuantity(qty);
         if (updatedVehicle.getBranch() != null) {
