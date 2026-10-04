@@ -26,10 +26,12 @@ public class FeedbackApiController {
     private StaffRepository staffRepository;
 
     private boolean isStaff(Authentication authentication) {
-        if (authentication == null) return false;
+        if (authentication == null)
+            return false;
         boolean hasStaffRole = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("STAFF"));
-        if (hasStaffRole) return true;
+        if (hasStaffRole)
+            return true;
         return staffRepository.findByEmail(authentication.getName()).isPresent();
     }
 
@@ -54,7 +56,8 @@ public class FeedbackApiController {
 
     /**
      * PUT Endpoint to alter feedback text.
-     * Strict requirement: A staff-role JWT/session attempting to alter feedback text is rejected with 403 Forbidden.
+     * Strict requirement: A staff-role JWT/session attempting to alter feedback
+     * text is rejected with 403 Forbidden.
      */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateFeedbackText(
@@ -63,20 +66,23 @@ public class FeedbackApiController {
             Authentication authentication) {
         if (authentication != null && isStaff(authentication)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("status", 403, "error", "Forbidden", "message", "Staff members have strictly read-only access to feedback text."));
+                    .body(Map.of("status", 403, "error", "Forbidden", "message",
+                            "Staff members have strictly read-only access to feedback text."));
         }
 
         Feedback existing = feedbackService.getFeedbackById(id);
         if (existing.isApproved()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("status", 400, "error", "Bad Request", "message", "Approved feedback is locked from editing."));
+                    .body(Map.of("status", 400, "error", "Bad Request", "message",
+                            "Approved feedback is locked from editing."));
         }
 
         if (authentication != null) {
             String email = authentication.getName();
             if (existing.getCustomer() == null || !existing.getCustomer().getEmail().equalsIgnoreCase(email)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body(Map.of("status", 403, "error", "Forbidden", "message", "You are not authorized to edit this feedback."));
+                        .body(Map.of("status", 403, "error", "Forbidden", "message",
+                                "You are not authorized to edit this feedback."));
             }
         }
 

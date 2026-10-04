@@ -84,8 +84,7 @@ public class IncidentControllerTest {
         customerAuth = new UsernamePasswordAuthenticationToken(
                 "customer@driveflow.com",
                 "password",
-                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER"))
-        );
+                List.of(new SimpleGrantedAuthority("ROLE_CUSTOMER")));
     }
 
     @Test
@@ -128,17 +127,15 @@ public class IncidentControllerTest {
         when(bookingRepository.findActiveBookingsByCustomerId(10L)).thenReturn(List.of(activeBooking));
 
         mockMvc.perform(post("/incidents/report")
-                        .principal(customerAuth)
-                        .param("description", "Minor tire pressure warning during road trip")
-                        .param("severity", "LOW"))
+                .principal(customerAuth)
+                .param("description", "Minor tire pressure warning during road trip")
+                .param("severity", "LOW"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/profile#incidents"));
 
-        verify(incidentService, times(1)).logIncident(argThat(incident ->
-                incident.getCustomer() != null &&
+        verify(incidentService, times(1)).logIncident(argThat(incident -> incident.getCustomer() != null &&
                 incident.getCustomer().getSystemId().equals(10L) &&
                 incident.getVehicle() != null &&
-                incident.getVehicle().getVehicleId().equals(101L)
-        ));
+                incident.getVehicle().getVehicleId().equals(101L)));
     }
 }

@@ -6,8 +6,10 @@ import lombok.*;
 /**
  * Data Transfer Object for vehicle registration / creation payload.
  * Accepts brand, model, registration number, color, mileage, etc.
- * Note: Status and Quantity inputs are accepted in the DTO schema to handle client payloads,
- * but business logic strictly enforces status = AVAILABLE and quantity = 1 upon persistence.
+ * Note: Status and Quantity inputs are accepted in the DTO schema to handle
+ * client payloads,
+ * but business logic strictly enforces status = AVAILABLE and quantity = 1 upon
+ * persistence.
  */
 @Getter
 @Setter
@@ -52,7 +54,7 @@ public class VehicleRegistrationDto {
     private java.math.BigDecimal dailyRate;
 
     private String imageUrl;
-
+    @Builder.Default
     private Boolean isRegistered = true;
 
     private java.time.LocalDate serviceEndDate;

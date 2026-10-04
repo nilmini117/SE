@@ -107,6 +107,13 @@ public class PaymentServiceImpl implements PaymentService {
                     Customer cust = booking.getCustomer();
                     if (cust != null && cust.getEmail() != null && !cust.getEmail().isBlank()) {
                         String ref = saved.getRefNo() != null ? saved.getRefNo() : ("PAY-" + saved.getPaymentId());
+
+                        // Resolve customer name from the Customer entity (fallback if empty)
+                        String custName = "Valued Customer";
+                        if (cust.getName() != null && !cust.getName().isBlank()) {
+                            custName = cust.getName();
+                        }
+
                         emailService.sendPaymentReceiptEmail(
                                 cust.getEmail(),
                                 custName,
@@ -114,18 +121,20 @@ public class PaymentServiceImpl implements PaymentService {
                                 saved.getInvoice().getInvoiceId(),
                                 booking.getBookingId(),
                                 saved.getAmountPaid(),
-                                saved.getPaymentDate() != null ? saved.getPaymentDate() : java.time.LocalDate.now()
-                        );
+                                saved.getPaymentDate() != null ? saved.getPaymentDate() : java.time.LocalDate.now());
                         emailService.sendNotification(
                                 cust.getEmail(),
                                 "DriveFlow Payment Receipt - Ref: " + ref,
-                                "Dear " + custName + ",\n\nWe have received your payment of Rs. " + saved.getAmountPaid() +
-                                " for invoice #" + saved.getInvoice().getInvoiceId() + " (Booking #" + booking.getBookingId() +
-                                ").\nReference No: " + ref + "\n\nThank you for choosing DriveFlow!\nDriveFlow Accounts"
-                        );
+                                "Dear " + custName + ",\n\nWe have received your payment of Rs. "
+                                        + saved.getAmountPaid() +
+                                        " for invoice #" + saved.getInvoice().getInvoiceId() + " (Booking #"
+                                        + booking.getBookingId() +
+                                        ").\nReference No: " + ref
+                                        + "\n\nThank you for choosing DriveFlow!\nDriveFlow Accounts");
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         return saved;
@@ -199,21 +208,27 @@ public class PaymentServiceImpl implements PaymentService {
             CompanySalesProjection projection = paymentRepository.getCompanySalesSummarySql();
             if (projection != null) {
                 totalRevenue = projection.getTotalRevenue() != null ? projection.getTotalRevenue() : BigDecimal.ZERO;
-                totalMaintenanceCosts = projection.getTotalMaintenanceCosts() != null ? projection.getTotalMaintenanceCosts() : BigDecimal.ZERO;
+                totalMaintenanceCosts = projection.getTotalMaintenanceCosts() != null
+                        ? projection.getTotalMaintenanceCosts()
+                        : BigDecimal.ZERO;
             }
         } catch (Exception e) {
             // Fallback to separate repository calculations
             try {
                 BigDecimal rev = paymentRepository.calculateTotalRevenue();
-                if (rev != null) totalRevenue = rev;
-            } catch (Exception ignored) {}
+                if (rev != null)
+                    totalRevenue = rev;
+            } catch (Exception ignored) {
+            }
 
             try {
                 if (maintenanceRepository != null) {
                     BigDecimal mnt = maintenanceRepository.calculateTotalMaintenanceCosts();
-                    if (mnt != null) totalMaintenanceCosts = mnt;
+                    if (mnt != null)
+                        totalMaintenanceCosts = mnt;
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         // Real net income calculation: SUM(revenue) - SUM(maintenance_costs)
@@ -221,7 +236,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         // Fetch detailed records for the data tables
         List<Payment> approvedPayments = paymentRepository.findAllApprovedPayments();
-        List<com.driveflow.demo_driveflow.maintenance.Maintenance> maintenanceRecords = java.util.Collections.emptyList();
+        List<com.driveflow.demo_driveflow.maintenance.Maintenance> maintenanceRecords = java.util.Collections
+                .emptyList();
         if (maintenanceRepository != null) {
             maintenanceRecords = maintenanceRepository.findAll();
         }
@@ -239,10 +255,10 @@ public class PaymentServiceImpl implements PaymentService {
                 .routingNumber("071000288")
                 .swiftCode("CBCLKLX")
                 .branchName("Colombo Central Main Hub")
-                .depositInstructions("Please quote Customer Invoice ID (#INV-XXXX) or Booking ID (#BK-XXXX) in payment reference.")
+                .depositInstructions(
+                        "Please quote Customer Invoice ID (#INV-XXXX) or Booking ID (#BK-XXXX) in payment reference.")
                 .approvedPayments(approvedPayments)
                 .maintenanceRecords(maintenanceRecords)
                 .build();
     }
 }
-

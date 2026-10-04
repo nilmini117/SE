@@ -21,10 +21,12 @@ import java.util.*;
  * Controller for the dedicated "Invoices & Payments" customer portal tab.
  * 
  * Rules:
- * 1. Renders the migrated "My Rental Bookings" table component strictly for bookings
- *    that have been approved/confirmed by staff (Status: CONFIRMED or APPROVED).
- * 2. Integrates the payment gateway form (requiring a 16-digit credit card, 3-digit CVV, and MM/YY expiry)
- *    directly into this view for confirmed bookings.
+ * 1. Renders the migrated "My Rental Bookings" table component strictly for
+ * bookings
+ * that have been approved/confirmed by staff (Status: CONFIRMED or APPROVED).
+ * 2. Integrates the payment gateway form (requiring a 16-digit credit card,
+ * 3-digit CVV, and MM/YY expiry)
+ * directly into this view for confirmed bookings.
  */
 @Controller
 public class CustomerInvoicePaymentController {
@@ -47,13 +49,14 @@ public class CustomerInvoicePaymentController {
     /**
      * Dedicated "Invoices & Payments" top-level portal tab.
      */
-    @GetMapping({"/invoices-payments", "/customer/invoices-payments", "/customer/invoices", "/profile/invoices"})
+    @GetMapping({ "/invoices-payments", "/customer/invoices-payments", "/customer/invoices", "/profile/invoices" })
     public String viewInvoicesAndPayments(
             @RequestParam(value = "selectedBookingId", required = false) Long selectedBookingId,
             Model model,
             Authentication authentication) {
 
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
 
@@ -104,7 +107,8 @@ public class CustomerInvoicePaymentController {
     }
 
     /**
-     * Form submission for the integrated Payment Gateway in the Invoices & Payments tab.
+     * Form submission for the integrated Payment Gateway in the Invoices & Payments
+     * tab.
      */
     @PostMapping("/invoices-payments/pay")
     public String processPayment(
@@ -117,7 +121,8 @@ public class CustomerInvoicePaymentController {
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
 
@@ -130,18 +135,21 @@ public class CustomerInvoicePaymentController {
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
 
         Booking booking = bookingService.getBookingById(bookingId);
-        if (booking == null || booking.getCustomer() == null || !booking.getCustomer().getSystemId().equals(customer.getSystemId())) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Unauthorized: Booking does not belong to your account.");
+        if (booking == null || booking.getCustomer() == null
+                || !booking.getCustomer().getSystemId().equals(customer.getSystemId())) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Unauthorized: Booking does not belong to your account.");
             return "redirect:/invoices-payments";
         }
 
-        // Rule: Customers can only pay for bookings approved/confirmed by staff, active, or returned
+        // Rule: Customers can only pay for bookings approved/confirmed by staff,
+        // active, or returned
         String status = booking.getStatus();
         if (status == null || (!status.equalsIgnoreCase("CONFIRMED") && !status.equalsIgnoreCase("APPROVED") &&
                 !status.equalsIgnoreCase("ACTIVE") && !status.equalsIgnoreCase("RETURNED"))) {
             redirectAttributes.addFlashAttribute("errorMessage",
                     "Payment Rejected: Reservation #BK-" + bookingId + " is currently " + status
-                    + " and must be approved by staff before payment can be accepted.");
+                            + " and must be approved by staff before payment can be accepted.");
             return "redirect:/invoices-payments";
         }
 
@@ -193,7 +201,8 @@ public class CustomerInvoicePaymentController {
 
         if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
             redirectAttributes.addFlashAttribute("infoMessage",
-                    "Invoice #INV-" + invoice.getInvoiceId() + " for Booking #BK-" + bookingId + " has already been settled.");
+                    "Invoice #INV-" + invoice.getInvoiceId() + " for Booking #BK-" + bookingId
+                            + " has already been settled.");
             return "redirect:/invoices-payments";
         }
 
@@ -214,18 +223,21 @@ public class CustomerInvoicePaymentController {
 
         redirectAttributes.addFlashAttribute("successMessage",
                 "Payment of $" + String.format("%.2f", invoice.getTotalAmt()) + " processed successfully! " +
-                "Booking #BK-" + bookingId + " (Invoice #INV-" + invoice.getInvoiceId() + ") is now fully PAID. Transaction Ref: " + cc.getRefNo());
+                        "Booking #BK-" + bookingId + " (Invoice #INV-" + invoice.getInvoiceId()
+                        + ") is now fully PAID. Transaction Ref: " + cc.getRefNo());
 
         return "redirect:/invoices-payments";
     }
 
     /**
-     * REST endpoint returning confirmed bookings and payment states for React dashboard.
+     * REST endpoint returning confirmed bookings and payment states for React
+     * dashboard.
      */
     @GetMapping("/api/customer/confirmed-bookings")
     @ResponseBody
     public ResponseEntity<List<ConfirmedBookingPaymentDto>> getConfirmedBookingsApi(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             return ResponseEntity.status(401).build();
         }
 
@@ -250,7 +262,8 @@ public class CustomerInvoicePaymentController {
             Authentication authentication) {
 
         Map<String, Object> response = new HashMap<>();
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
             response.put("success", false);
             response.put("message", "Authentication required");
             return ResponseEntity.status(401).body(response);
@@ -273,6 +286,12 @@ public class CustomerInvoicePaymentController {
             if (!cvv.trim().matches("^\\d{3,4}$")) {
                 response.put("success", false);
                 response.put("message", "Invalid CVV: must be a 3-digit security code");
+                return ResponseEntity.badRequest().body(response);
+            }
+            // Validates MM/YY or MM/YYYY format
+            if (!expiry.trim().matches("^(0[1-9]|1[0-2])/?([0-9]{2}|[0-9]{4})$")) {
+                response.put("success", false);
+                response.put("message", "Invalid expiry date: must be in MM/YY or MM/YYYY format");
                 return ResponseEntity.badRequest().body(response);
             }
 
@@ -323,17 +342,16 @@ public class CustomerInvoicePaymentController {
 
     private List<ConfirmedBookingPaymentDto> buildConfirmedBookingDtos(List<Booking> bookings) {
         List<ConfirmedBookingPaymentDto> dtoList = new ArrayList<>();
-        if (bookings == null) return dtoList;
+        if (bookings == null)
+            return dtoList;
 
         for (Booking b : bookings) {
             String status = b.getStatus();
             // Render bookings that are CONFIRMED, APPROVED, ACTIVE, or RETURNED
-            if (status != null && (
-                    "CONFIRMED".equalsIgnoreCase(status.trim()) ||
+            if (status != null && ("CONFIRMED".equalsIgnoreCase(status.trim()) ||
                     "APPROVED".equalsIgnoreCase(status.trim()) ||
                     "ACTIVE".equalsIgnoreCase(status.trim()) ||
-                    "RETURNED".equalsIgnoreCase(status.trim())
-            )) {
+                    "RETURNED".equalsIgnoreCase(status.trim()))) {
                 Optional<Invoice> invOpt = invoiceRepository.findByBooking(b);
                 Invoice inv = invOpt.orElse(null);
                 if (inv == null) {
@@ -346,7 +364,8 @@ public class CustomerInvoicePaymentController {
                         newInv.setInvoiceDate(LocalDate.now());
                         newInv.setStatus("UNPAID");
                         inv = paymentService.generateInvoice(newInv);
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
 
                 boolean isPaid = inv != null && "PAID".equalsIgnoreCase(inv.getStatus());
@@ -364,7 +383,8 @@ public class CustomerInvoicePaymentController {
                         .duration(b.getDuration())
                         .chargedRate(b.getChargedRate())
                         .bookingStatus(cleanStatus)
-                        .staffMessage(b.getStaffMessage() != null ? b.getStaffMessage() : ("RETURNED".equals(cleanStatus) ? "Vehicle returned" : "Staff Confirmed"))
+                        .staffMessage(b.getStaffMessage() != null ? b.getStaffMessage()
+                                : ("RETURNED".equals(cleanStatus) ? "Vehicle returned" : "Staff Confirmed"))
                         .invoiceId(inv != null ? inv.getInvoiceId() : null)
                         .invoiceStatus(inv != null ? inv.getStatus() : "UNPAID")
                         .rentalAmount(inv != null ? inv.getRentalAmt() : b.getChargedRate())
