@@ -38,14 +38,15 @@ public class PricingEngineServiceImpl implements PricingEngineService {
         int durationDays = days > 0 ? (int) days : 1;
 
         BigDecimal baseDailyRate = DEFAULT_BASE_DAILY_RATE;
+        Vehicle vehicle = null;
 
         // Check if vehicle has any custom status or rate
         if (vehicleId != null) {
             Optional<Vehicle> vehicleOpt = vehicleRepository.findById(vehicleId);
             if (vehicleOpt.isPresent()) {
-                Vehicle v = vehicleOpt.get();
-                if (v.getDailyRate() != null && v.getDailyRate().compareTo(BigDecimal.ZERO) > 0) {
-                    baseDailyRate = v.getDailyRate();
+                vehicle = vehicleOpt.get();
+                if (vehicle.getDailyRate() != null && vehicle.getDailyRate().compareTo(BigDecimal.ZERO) > 0) {
+                    baseDailyRate = vehicle.getDailyRate();
                 }
             }
         }
@@ -55,29 +56,57 @@ public class PricingEngineServiceImpl implements PricingEngineService {
         // Fetch seasonal promotions or coupon IDs linked to the vehicle
         Promotion appliedPromo = null;
         String couponIdToRecord = null;
+        boolean couponSpecified = (couponCode != null && !couponCode.trim().isBlank());
+        boolean couponValid = false;
+        String couponMessage = null;
 
         // 1. If customer entered a coupon ID / promotion code, evaluate it
-        if (couponCode != null && !couponCode.trim().isBlank()) {
+        if (couponSpecified) {
             String cleanCode = couponCode.trim();
             Optional<Promotion> couponPromoOpt = promotionRepository.findByCouponIdIgnoreCaseAndStatusIgnoreCase(cleanCode, "ACTIVE");
             if (couponPromoOpt.isEmpty()) {
                 couponPromoOpt = promotionRepository.findByCouponCodeIgnoreCaseAndStatusIgnoreCase(cleanCode, "ACTIVE");
             }
-            if (couponPromoOpt.isPresent()) {
-                appliedPromo = couponPromoOpt.get();
-                couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : cleanCode;
-            } else {
+            if (couponPromoOpt.isEmpty()) {
+                // Check if coupon exists but is inactive / expired
+                Optional<Promotion> anyPromo = promotionRepository.findByCouponIdIgnoreCase(cleanCode);
+                if (anyPromo.isEmpty()) {
+                    anyPromo = promotionRepository.findByCouponCodeIgnoreCase(cleanCode);
+                }
+                if (anyPromo.isPresent()) {
+                    Promotion p = anyPromo.get();
+                    if (!"ACTIVE".equalsIgnoreCase(p.getStatus())) {
+                        couponMessage = "Coupon '" + cleanCode + "' is currently " + (p.getStatus() != null ? p.getStatus().toLowerCase() : "inactive") + ".";
+                    }
+                }
+            }
+            if (couponPromoOpt.isEmpty() && couponMessage == null) {
                 // Try matching by title
                 List<Promotion> matched = promotionRepository.findMatchingPromotions(cleanCode);
                 if (!matched.isEmpty()) {
-                    appliedPromo = matched.get(0);
-                    couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : cleanCode;
+                    couponPromoOpt = Optional.of(matched.get(0));
                 }
+            }
+            if (couponPromoOpt.isPresent()) {
+                Promotion promo = couponPromoOpt.get();
+                try {
+                    validateCouponForVehicle(promo, vehicle);
+                    appliedPromo = promo;
+                    couponIdToRecord = appliedPromo.getCouponId() != null ? appliedPromo.getCouponId() : cleanCode;
+                    couponValid = true;
+                    BigDecimal rate = appliedPromo.getDiscountRate() != null ? appliedPromo.getDiscountRate() : BigDecimal.ZERO;
+                    couponMessage = "Coupon '" + couponIdToRecord + "' applied successfully! (" + rate.stripTrailingZeros().toPlainString() + "% OFF)";
+                } catch (RuntimeException ex) {
+                    couponValid = false;
+                    couponMessage = ex.getMessage();
+                }
+            } else if (couponMessage == null) {
+                couponMessage = "Invalid coupon code '" + cleanCode + "'. Please check the code and try again.";
             }
         }
 
-        // 2. If no coupon was matched, fetch any active seasonal promotion for the vehicle or general fleet
-        if (appliedPromo == null) {
+        // 2. If no coupon was specified, fetch any active seasonal promotion for the vehicle or general fleet
+        if (appliedPromo == null && !couponSpecified) {
             List<Promotion> activePromos;
             if (vehicleId != null) {
                 activePromos = promotionRepository.findActivePromotionsForVehicle(vehicleId, LocalDate.now());
@@ -161,7 +190,26 @@ public class PricingEngineServiceImpl implements PricingEngineService {
                 .discountAmount(discountAmount)
                 .finalTotalCost(finalTotalCost)
                 .promotionApplied(promoApplied)
+                .couponValid(couponValid)
+                .couponMessage(couponMessage)
                 .paymentBreakdownArray(paymentArray)
                 .build();
+    }
+
+    @Override
+    public void validateCouponForVehicle(Promotion promotion, Vehicle vehicle) {
+        if (promotion == null || vehicle == null) {
+            return;
+        }
+        // Check if the coupon is universal OR matches the specific car type
+        if (promotion.getCategory().equalsIgnoreCase("ALL") || 
+            promotion.getCategory().equalsIgnoreCase("ALL_FLEET") ||
+            promotion.getCategory().equalsIgnoreCase(vehicle.getCategory())) {
+            
+            // Apply the discount calculation
+            
+        } else {
+            throw new RuntimeException("This coupon is not valid for this vehicle category.");
+        }
     }
 }

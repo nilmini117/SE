@@ -187,6 +187,27 @@ public class Vehicle {
         return isRegistered != null ? isRegistered : true;
     }
 
+    @Transient
+    private String category;
+
+    public String getCategory() {
+        if (category != null && !category.isBlank()) {
+            return category.toUpperCase();
+        }
+        String m = (model != null ? model : "").toLowerCase();
+        String f = (fuel != null ? fuel : "").toLowerCase();
+        if (m.contains("tesla") || f.contains("electric")) return "ELECTRIC";
+        if (m.contains("benz") || m.contains("c-class") || m.contains("e-class") || m.contains("glc")) return "LUXURY";
+        if (m.contains("prado") || m.contains("jimny") || m.contains("rav4") || m.contains("suv") || m.contains("cr-v") || m.contains("vitara")) return "SUV";
+        if (m.contains("prius") || m.contains("hybrid") || m.contains("vezel") || m.contains("axio") || f.contains("hybrid")) return "HYBRID";
+        if (m.contains("swift")) return "HATCHBACK";
+        return "SEDAN";
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public String getCategoryBadge() {
         String m = (model != null ? model : "").toLowerCase();
         if (m.contains("tesla")) return "Electric Vehicle";

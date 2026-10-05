@@ -113,15 +113,22 @@ public class ProfileController {
     private com.driveflow.demo_driveflow.otp.OtpService otpService;
 
     @GetMapping("/password")
-    public String showChangePasswordForm(Authentication authentication) {
+    public String showChangePasswordForm(Authentication authentication, Model model) {
+        if (authentication == null) {
+            authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        }
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
+        model.addAttribute("email", authentication.getName());
         return "profile/password-change";
     }
 
     @PostMapping("/password/send-otp")
     public String sendPasswordChangeOtp(Authentication authentication, RedirectAttributes redirectAttributes) {
+        if (authentication == null) {
+            authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        }
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
@@ -136,15 +143,36 @@ public class ProfileController {
 
     @PostMapping(value = "/api/profile/password/send-otp", produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<Map<String, Object>> sendPasswordChangeOtpApi(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("success", false, "message", "Unauthorized"));
+    public ResponseEntity<Map<String, Object>> sendPasswordChangeOtpApi(
+            @RequestBody(required = false) Map<String, String> body,
+            Authentication authentication) {
+        if (authentication == null) {
+            authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         }
-        String email = authentication.getName();
+        String email = null;
+        if (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            email = authentication.getName();
+        } else if (body != null && body.containsKey("email")) {
+            email = body.get("email");
+        }
+
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "status", HttpStatus.UNAUTHORIZED.value(),
+                    "success", false,
+                    "message", "Unauthorized or session expired. Please sign in again."));
+        }
+
+        String trimmedEmail = email.trim();
         if (otpService != null) {
-            otpService.generatePasswordOtp(email);
+            otpService.generatePasswordOtp(trimmedEmail);
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "OTP sent to " + email));
+
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("status", HttpStatus.OK.value());
+        response.put("success", true);
+        response.put("message", "A 6-digit OTP verification code has been dispatched to " + trimmedEmail + " (valid for 10 minutes).");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/password")
@@ -154,6 +182,9 @@ public class ProfileController {
                                  @RequestParam(value = "otp", required = false) String otp,
                                  Authentication authentication,
                                  RedirectAttributes redirectAttributes) {
+        if (authentication == null) {
+            authentication = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        }
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return "redirect:/login";
         }
@@ -163,17 +194,13 @@ public class ProfileController {
             return "redirect:/profile/password";
         }
 
-        // Strict OTP Security: Block password update unless valid 6-digit OTP is verified
-        if (otpService != null) {
-            if (otp == null || !otpService.verifyPasswordOtp(authentication.getName(), otp)) {
-                redirectAttributes.addFlashAttribute("errorMessage",
-                        "Security Verification Failed: The 6-digit OTP code is invalid or has expired (10-minute window). Password change is blocked.");
-                return "redirect:/profile/password";
-            }
+        if (otp == null || otp.isBlank()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "6-digit OTP verification code is required.");
+            return "redirect:/profile/password";
         }
 
         try {
-            userService.changePassword(authentication.getName(), oldPassword, newPassword, otp);
+            userService.changePassword(authentication.getName(), oldPassword, newPassword, otp.trim());
             redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully!");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
@@ -257,6 +284,8 @@ public class ProfileController {
             @PathVariable Long id,
             @RequestParam("bankName") String bankName,
             @RequestParam("cardNo") String cardNo,
+            @RequestParam(value = "expiry", required = false) String expiry,
+            @RequestParam(value = "cvv", required = false) String cvv,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -291,6 +320,15 @@ public class ProfileController {
             return "redirect:/profile";
         }
 
+        // Validate expiry date: strictly 12 months (01-12)
+        if (expiry != null && !expiry.isBlank()) {
+            if (!expiry.trim().matches("^(0[1-9]|1[0-2])\\/\\d{2}$")) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Invalid Expiration Date: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).");
+                return "redirect:/profile/invoices/" + id + "/pay";
+            }
+        }
+
         CreditCardPay cc = new CreditCardPay();
         cc.setBankName(bankName != null && !bankName.isBlank() ? bankName : "Card Payment");
         cc.setCardNo(cardNo);
@@ -306,7 +344,7 @@ public class ProfileController {
         paymentService.updateInvoice(invoice.getInvoiceId(), invoice);
 
         redirectAttributes.addFlashAttribute("successMessage",
-                "Payment of $" + invoice.getTotalAmt() + " processed successfully! Invoice #INV-" + id + " is now marked as PAID.");
+                "Payment of Rs. " + invoice.getTotalAmt() + " processed successfully! Invoice #INV-" + id + " is now marked as PAID.");
         return "redirect:/profile";
     }
 }

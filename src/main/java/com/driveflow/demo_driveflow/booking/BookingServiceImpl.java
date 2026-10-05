@@ -49,6 +49,9 @@ public class BookingServiceImpl implements BookingService {
     @Autowired(required = false)
     private com.driveflow.demo_driveflow.email.EmailService emailService;
 
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.booking.observer.BookingManager bookingManager;
+
     private void ensureInvoiceForBooking(Booking booking) {
         if (booking == null || booking.getBookingId() == null) return;
         try {
@@ -191,7 +194,11 @@ public class BookingServiceImpl implements BookingService {
             }
 
             // Check date overlap for active bookings
-            LocalDate start = booking.getBookingDate() != null ? booking.getBookingDate() : LocalDate.now();
+            LocalDate minStartDate = LocalDate.now().plusDays(1);
+            if (booking.getBookingDate() == null || booking.getBookingDate().isBefore(minStartDate)) {
+                throw new IllegalArgumentException("The booking start date must be at least one day from today.");
+            }
+            LocalDate start = booking.getBookingDate();
             LocalDate end = booking.getEndDate() != null ? booking.getEndDate() : start.plusDays(1);
             long overlapping = bookingRepository.countOverlappingActiveBookings(vehicle.getVehicleId(), start, end);
             if (overlapping > 0) {
@@ -204,8 +211,9 @@ public class BookingServiceImpl implements BookingService {
         }
 
         // 4. Booking Dates & Duration:
-        if (booking.getBookingDate() == null) {
-            booking.setBookingDate(LocalDate.now());
+        LocalDate minStartDate = LocalDate.now().plusDays(1);
+        if (booking.getBookingDate() == null || booking.getBookingDate().isBefore(minStartDate)) {
+            throw new IllegalArgumentException("The booking start date must be at least one day from today.");
         }
         if (booking.getEndDate() == null) {
             booking.setEndDate(booking.getBookingDate().plusDays(1));
@@ -258,6 +266,16 @@ public class BookingServiceImpl implements BookingService {
             }
         }
 
+        // Observer Pattern: Automatically notify registered observers upon successful booking
+        if (bookingManager != null) {
+            String bookingRef = "#BK-" + saved.getBookingId();
+            String regNo = (saved.getVehicle() != null && saved.getVehicle().getRegNo() != null)
+                    ? saved.getVehicle().getRegNo() : "N/A";
+            String userEmail = (saved.getCustomer() != null && saved.getCustomer().getEmail() != null)
+                    ? saved.getCustomer().getEmail() : "N/A";
+            bookingManager.confirmNewBooking(bookingRef, regNo, userEmail);
+        }
+
         return saved;
     }
 
@@ -280,6 +298,16 @@ public class BookingServiceImpl implements BookingService {
         // Unlocks invoice so customer can proceed with payment
         ensureInvoiceForBooking(saved);
         triggerBookingConfirmationEmail(saved);
+
+        // Observer Pattern: Notify observers upon booking approval / confirmation
+        if (bookingManager != null) {
+            String bookingRef = "#BK-" + saved.getBookingId();
+            String regNo = (saved.getVehicle() != null && saved.getVehicle().getRegNo() != null)
+                    ? saved.getVehicle().getRegNo() : "N/A";
+            String userEmail = (saved.getCustomer() != null && saved.getCustomer().getEmail() != null)
+                    ? saved.getCustomer().getEmail() : "N/A";
+            bookingManager.confirmNewBooking(bookingRef, regNo, userEmail);
+        }
     }
 
     @Override
@@ -352,6 +380,14 @@ public class BookingServiceImpl implements BookingService {
         Booking saved = bookingRepository.save(booking);
         if (willBeConfirmed && !wasConfirmed) {
             triggerBookingConfirmationEmail(saved);
+            if (bookingManager != null) {
+                String bookingRef = "#BK-" + saved.getBookingId();
+                String regNo = (saved.getVehicle() != null && saved.getVehicle().getRegNo() != null)
+                        ? saved.getVehicle().getRegNo() : "N/A";
+                String userEmail = (saved.getCustomer() != null && saved.getCustomer().getEmail() != null)
+                        ? saved.getCustomer().getEmail() : "N/A";
+                bookingManager.confirmNewBooking(bookingRef, regNo, userEmail);
+            }
         }
         return saved;
     }
@@ -380,7 +416,7 @@ public class BookingServiceImpl implements BookingService {
                 );
             }
         } catch (Exception ex) {
-            // Avoid blocking if email fails
+            log.warn("Failed to dispatch booking confirmation email: {}", ex.getMessage());
         }
     }
 
@@ -524,12 +560,16 @@ public class BookingServiceImpl implements BookingService {
                 String toEmail = (cust != null) ? cust.getEmail() : null;
                 String custName = (cust != null) ? (cust.getFirstName() + (cust.getLastName() != null ? " " + cust.getLastName() : "")) : "Valued Driver";
                 String vehicleDetails = (saved.getVehicle() != null) ? saved.getVehicle().getDisplayName() : "Returned Vehicle";
-                emailService.sendVehicleReturnedThankYouEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, "/feedback");
+                boolean isEarlyReturn = saved.getEndDate() != null && java.time.LocalDate.now().isBefore(saved.getEndDate());
+                emailService.sendVehicleReturnedThankYouEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, "/feedback", isEarlyReturn);
+                String refundNotice = isEarlyReturn
+                        ? "\n\nImportant Refund Notice: Since you returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff."
+                        : "";
                 emailService.sendNotification(
                         toEmail,
                         "DriveFlow Vehicle Return Confirmation: #BK-" + saved.getBookingId(),
                         "Dear " + custName + ",\n\nYour vehicle (" + vehicleDetails + ") for booking #BK-" + saved.getBookingId() +
-                        " has been successfully returned. Thank you for choosing DriveFlow!\n\nBest regards,\nDriveFlow Team"
+                        " has been successfully returned." + refundNotice + "\n\nThank you for choosing DriveFlow!\n\nBest regards,\nDriveFlow Team"
                 );
             } catch (Exception ex) {
                 log.warn("Failed to dispatch Vehicle Returned Thank You email: {}", ex.getMessage());
@@ -554,5 +594,22 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public boolean hasCompletedBooking(Long customerId) {
         return !getCompletedBookingsForCustomer(customerId).isEmpty();
+    }
+
+    @Override
+    public void validatePromotionForVehicle(com.driveflow.demo_driveflow.promotion.Promotion promotion, com.driveflow.demo_driveflow.vehicle.Vehicle vehicle) {
+        if (promotion == null || vehicle == null) {
+            return;
+        }
+        // Check if the coupon is universal OR matches the specific car type
+        if (promotion.getCategory().equalsIgnoreCase("ALL") || 
+            promotion.getCategory().equalsIgnoreCase("ALL_FLEET") ||
+            promotion.getCategory().equalsIgnoreCase(vehicle.getCategory())) {
+            
+            // Apply the discount calculation
+            
+        } else {
+            throw new RuntimeException("This coupon is not valid for this vehicle category.");
+        }
     }
 }

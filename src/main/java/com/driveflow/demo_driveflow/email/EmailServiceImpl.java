@@ -161,10 +161,13 @@ public class EmailServiceImpl implements EmailService {
                 "<div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;'>" +
                 "<div style='background: #0369a1; color: #ffffff; padding: 20px 24px;'>" +
                 "<h2 style='margin: 0; font-size: 1.3rem;'>DriveFlow Car Rental System</h2>" +
-                "<p style='margin: 4px 0 0 0; font-size: 0.85rem; color: #bae6fd;'>Reservation Placed - Awaiting Staff Review</p>" +
+                "<p style='margin: 4px 0 0 0; font-size: 0.85rem; color: #bae6fd;'>Booking Success &bull; Reservation Placed - Awaiting Staff Review</p>" +
                 "</div>" +
                 "<div style='padding: 24px;'>" +
                 "<p style='font-size: 1rem; margin-top: 0;'>Dear <strong>" + displayName + "</strong>,</p>" +
+                "<div style='background: #ecfdf5; border-left: 4px solid #10b981; padding: 12px 16px; border-radius: 4px; margin: 16px 0; color: #065f46; font-weight: bold;'>" +
+                "&#10004; Booking Placed Successfully! Your reservation is awaiting staff review and approval." +
+                "</div>" +
                 "<p>We have successfully received your vehicle reservation request. Our fleet management team is reviewing vehicle readiness.</p>" +
                 "<table style='width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9rem;'>" +
                 "<tr style='background: #f8fafc; border-bottom: 1px solid #e2e8f0;'><td style='padding: 10px; font-weight: bold; width: 40%;'>Booking ID:</td><td style='padding: 10px; color: #0284c7; font-weight: bold;'>#BK-" + bookingId + "</td></tr>" +
@@ -278,9 +281,23 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVehicleReturnedThankYouEmail(String toEmail, String customerName, Long bookingId,
                                                 String vehicleDetails, String feedbackUrl) {
+        sendVehicleReturnedThankYouEmail(toEmail, customerName, bookingId, vehicleDetails, feedbackUrl, false);
+    }
+
+    @Override
+    public void sendVehicleReturnedThankYouEmail(String toEmail, String customerName, Long bookingId,
+                                                String vehicleDetails, String feedbackUrl, boolean isEarlyReturn) {
         String subject = "[DriveFlow] Vehicle Check-In Complete - Thank You for Driving with Us!";
         String displayName = (customerName != null && !customerName.isBlank()) ? customerName : "Customer";
         String link = (feedbackUrl != null && !feedbackUrl.isBlank()) ? feedbackUrl : "/feedback";
+
+        String earlyReturnBanner = isEarlyReturn
+                ? "<div style='background: #ecfdf5; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin: 18px 0;'>" +
+                  "<strong style='color: #065f46; font-size: 0.95rem;'>Refund Policy Notice:</strong>" +
+                  "<p style='margin: 6px 0 0 0; color: #047857; font-size: 0.9rem; line-height: 1.45;'>" +
+                  "Since you have returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff." +
+                  "</p></div>"
+                : "";
 
         String html = "<!DOCTYPE html>" +
                 "<html><head><meta charset='UTF-8'></head>" +
@@ -298,6 +315,7 @@ public class EmailServiceImpl implements EmailService {
                 "<tr style='border-bottom: 1px solid #e2e8f0;'><td style='padding: 10px; font-weight: bold;'>Returned Vehicle:</td><td style='padding: 10px;'>" + vehicleDetails + "</td></tr>" +
                 "<tr style='background: #f8fafc; border-bottom: 1px solid #e2e8f0;'><td style='padding: 10px; font-weight: bold;'>Status:</td><td style='padding: 10px;'><span style='background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;'>RETURNED</span></td></tr>" +
                 "</table>" +
+                earlyReturnBanner +
                 "<div style='background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 18px; margin: 20px 0; text-align: center;'>" +
                 "<h3 style='margin: 0 0 8px 0; color: #6b21a8; font-size: 1.05rem;'>How was your ride?</h3>" +
                 "<p style='margin: 0 0 16px 0; font-size: 0.88rem; color: #7e22ce;'>The Feedback module for this rental is now unlocked. We would love to hear about your experience.</p>" +
@@ -310,6 +328,46 @@ public class EmailServiceImpl implements EmailService {
                 "</div></div></body></html>";
 
         dispatchHtmlEmail(toEmail, subject, html, "Vehicle Returned Thank You");
+    }
+
+    @Override
+    public void sendReturnVehicleOtpEmail(String toEmail, String customerName, Long bookingId,
+                                         String otp, int expiryMinutes, boolean isEarlyReturn) {
+        String subject = "[DriveFlow] Authorization Code for Vehicle Return - Booking #BK-" + bookingId;
+        String displayName = (customerName != null && !customerName.isBlank()) ? customerName : "Driver";
+
+        String earlyReturnHtml = isEarlyReturn
+                ? "<div style='background: #ecfdf5; border-left: 4px solid #10b981; padding: 14px 16px; border-radius: 6px; margin: 18px 0;'>" +
+                  "<strong style='color: #065f46; font-size: 0.95rem;'>Early Return Refund Policy:</strong>" +
+                  "<p style='margin: 6px 0 0 0; color: #047857; font-size: 0.9rem; line-height: 1.45;'>" +
+                  "If you return the vehicle before the scheduled end date, refund money can be collected from the branch front desk after giving the car key to the staff." +
+                  "</p></div>"
+                : "";
+
+        String html = "<!DOCTYPE html>" +
+                "<html><head><meta charset='UTF-8'></head>" +
+                "<body style='font-family: Arial, sans-serif; background-color: #f8fafc; padding: 20px; color: #1e293b;'>" +
+                "<div style='max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;'>" +
+                "<div style='background: #2563eb; color: #ffffff; padding: 20px 24px;'>" +
+                "<h2 style='margin: 0; font-size: 1.3rem;'>DriveFlow Security Verification</h2>" +
+                "<p style='margin: 4px 0 0 0; font-size: 0.85rem; color: #dbeafe;'>Vehicle Return Authorization Code</p>" +
+                "</div>" +
+                "<div style='padding: 24px;'>" +
+                "<p style='font-size: 1rem; margin-top: 0;'>Dear <strong>" + displayName + "</strong>,</p>" +
+                "<p>You have initiated the vehicle return process for reservation <strong>#BK-" + bookingId + "</strong>. Please enter the following 6-digit authorization code to verify and complete your return:</p>" +
+                "<div style='background: #eff6ff; border: 1px dashed #3b82f6; border-radius: 8px; padding: 18px; margin: 20px 0; text-align: center;'>" +
+                "<span style='font-family: monospace; font-size: 2.2rem; font-weight: bold; letter-spacing: 8px; color: #1d4ed8;'>" + otp + "</span>" +
+                "<div style='margin-top: 8px; font-size: 0.8rem; color: #64748b;'>Expires in " + expiryMinutes + " minutes. Do not share this code with anyone.</div>" +
+                "</div>" +
+                earlyReturnHtml +
+                "<p style='font-size: 0.88rem; color: #64748b;'>If you did not initiate this vehicle return request, please contact our support desk immediately.</p>" +
+                "<p style='margin-bottom: 0;'>Best Regards,<br><strong>DriveFlow Fleet Operations</strong></p>" +
+                "</div>" +
+                "<div style='background: #f8fafc; padding: 12px 24px; font-size: 0.75rem; color: #64748b; text-align: center; border-top: 1px solid #e2e8f0;'>" +
+                "© " + LocalDate.now().getYear() + " DriveFlow Car Rental System. All rights reserved." +
+                "</div></div></body></html>";
+
+        dispatchHtmlEmail(toEmail, subject, html, "Vehicle Return OTP");
     }
 
     @Override

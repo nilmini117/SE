@@ -27,4 +27,5 @@ public interface BookingService {
     Booking getLastCompletedBookingForCustomer(Long customerId);
     boolean hasCompletedBooking(Long customerId);
     PricingBreakdown calculatePricing(Long vehicleId, Long branchId, LocalDate startDate, LocalDate endDate, String couponCode);
+    void validatePromotionForVehicle(com.driveflow.demo_driveflow.promotion.Promotion promotion, com.driveflow.demo_driveflow.vehicle.Vehicle vehicle);
 }

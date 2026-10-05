@@ -16,4 +16,6 @@ public interface PricingEngineService {
      * @return Itemized PricingBreakdown with final calculated payment array
      */
     PricingBreakdown calculatePricing(Long vehicleId, Long pickupBranchId, LocalDate startDate, LocalDate endDate, String couponCode);
+
+    void validateCouponForVehicle(com.driveflow.demo_driveflow.promotion.Promotion promotion, com.driveflow.demo_driveflow.vehicle.Vehicle vehicle);
 }

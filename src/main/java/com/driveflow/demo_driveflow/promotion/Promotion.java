@@ -49,6 +49,7 @@ public class Promotion {
     @Column(name = "status")
     private String status; // ACTIVE, EXPIRED
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
@@ -95,5 +96,13 @@ public class Promotion {
         if (this.couponId == null) {
             this.couponId = couponCode;
         }
+    }
+
+    public String getCategory() {
+        return (vehicleCategory != null && !vehicleCategory.isBlank()) ? vehicleCategory : "ALL";
+    }
+
+    public void setCategory(String category) {
+        this.vehicleCategory = category;
     }
 }

@@ -8,4 +8,6 @@ public interface PromotionService {
     Promotion createPromotion(Promotion promotion);
     Promotion updatePromotion(Long id, Promotion promotion);
     void removePromotion(Long id);
+    Promotion getPromotionByIdentifier(String identifier);
+    List<Promotion> getActivePromotions();
 }

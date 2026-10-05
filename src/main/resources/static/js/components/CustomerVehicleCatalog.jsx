@@ -201,6 +201,24 @@ export default function CustomerVehicleCatalog({
                 }}
               >
                 <div>
+                  {/* Vehicle Image Preview Banner */}
+                  <div style={{
+                    width: '100%',
+                    height: '160px',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    marginBottom: '0.85rem',
+                    backgroundColor: '#f1f5f9',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <img
+                      src={car.imageUrl || car.image || '/images/category_economy.jpg'}
+                      alt={car.model}
+                      onError={(e) => { e.target.onerror = null; e.target.src = '/images/category_economy.jpg'; }}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
                     <span style={{
                       padding: '0.15rem 0.6rem',

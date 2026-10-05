@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrandCard } from './FilterByVehicleBrand';
+import RegisterVehicleForm from './RegisterVehicleForm';
 
 /**
  * DriveFlow Staff Vehicle Management & Fleet Table Component (React)
@@ -86,6 +87,7 @@ export default function StaffVehicleTable({
   const [loading, setLoading] = useState(!initialVehicles);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     vehicle: null,
@@ -356,14 +358,64 @@ export default function StaffVehicleTable({
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {selectedBrand && (
             <span style={{ fontSize: '0.85rem', color: '#4f46e5', fontWeight: 600 }}>
               Filtered: {selectedBrand} ({displayedVehicles.length} cars)
             </span>
           )}
+          {isStaff && (
+            <button
+              type="button"
+              id="btn-toggle-register-form"
+              data-testid="toggle-register-vehicle-btn"
+              onClick={() => setShowRegisterForm(prev => !prev)}
+              style={{
+                backgroundColor: showRegisterForm ? '#64748b' : '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.5rem 1rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                transition: 'background-color 0.15s'
+              }}
+            >
+              <span>{showRegisterForm ? '✕' : '+'}</span>
+              <span>{showRegisterForm ? 'Close Registration' : 'Register Vehicle'}</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Embedded Register Vehicle Form Panel */}
+      {isStaff && showRegisterForm && (
+        <div style={{ marginBottom: '2rem' }}>
+          <RegisterVehicleForm
+            onSuccess={(newVehicle) => {
+              setVehicles(prev => {
+                const vid = newVehicle.vehicleId || newVehicle.id;
+                const filtered = prev.filter(x => (x.vehicleId || x.id) !== vid);
+                return [newVehicle, ...filtered];
+              });
+              setShowRegisterForm(false);
+              setNotification({
+                type: 'success',
+                message: `Vehicle ${newVehicle.model || 'New'} with uploaded photo registered successfully!`
+              });
+              if (onVehicleAdded) {
+                onVehicleAdded(newVehicle);
+              }
+            }}
+            onCancel={() => setShowRegisterForm(false)}
+          />
+        </div>
+      )}
 
       {/* 3. STAFF VEHICLE LIST TABLE WITH POPULATED ACTIONS COLUMN */}
       <div className="df-table-container" style={{

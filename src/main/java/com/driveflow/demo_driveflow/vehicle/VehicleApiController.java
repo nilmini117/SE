@@ -9,6 +9,9 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,54 @@ public class VehicleApiController {
             return staffRepository.findByEmail(authentication.getName()).isPresent();
         }
         return false;
+    }
+
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<?> registerVehicleMultipart(
+            @ModelAttribute VehicleRegistrationDto dto,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            Authentication authentication) {
+        if (authentication != null && !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to register vehicles."
+            ));
+        }
+        try {
+            MultipartFile upload = image != null ? image : (file != null ? file : imageFile);
+            Vehicle saved = vehicleService.registerVehicle(dto, upload);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Failed to register vehicle: " + e.getMessage()
+            ));
+        }
+    }
+
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> registerVehicleJson(
+            @RequestBody VehicleRegistrationDto dto,
+            Authentication authentication) {
+        if (authentication != null && !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to register vehicles."
+            ));
+        }
+        try {
+            Vehicle saved = vehicleService.registerVehicle(dto);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Failed to register vehicle: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping
@@ -79,6 +130,38 @@ public class VehicleApiController {
         }
         try {
             Vehicle updated = vehicleService.updateVehicle(id, vehicle);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Vehicle #" + id + " has been successfully updated.",
+                    "vehicle", updated
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "error", "Failed to update vehicle #" + id + ": " + e.getMessage()
+            ));
+        }
+    }
+
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PreAuthorize("hasRole('STAFF')")
+    public ResponseEntity<?> updateVehicleMultipart(
+            @PathVariable Long id,
+            @ModelAttribute Vehicle vehicle,
+            @RequestParam(value = "image", required = false) MultipartFile image,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            Authentication authentication) {
+        if (authentication == null || !isStaff(authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                    "status", 403,
+                    "error", "Forbidden",
+                    "message", "Access denied: Only staff members are permitted to modify vehicles."
+            ));
+        }
+        try {
+            MultipartFile upload = image != null ? image : (file != null ? file : imageFile);
+            Vehicle updated = vehicleService.updateVehicle(id, vehicle, upload);
             return ResponseEntity.ok(Map.of(
                     "success", true,
                     "message", "Vehicle #" + id + " has been successfully updated.",

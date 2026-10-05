@@ -25,6 +25,8 @@ public class PricingBreakdown {
     private BigDecimal discountAmount;
     private BigDecimal finalTotalCost;
     private boolean promotionApplied;
+    private boolean couponValid;
+    private String couponMessage;
 
     @Builder.Default
     private List<PaymentBreakdownItem> paymentBreakdownArray = new ArrayList<>();

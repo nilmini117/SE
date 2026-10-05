@@ -161,12 +161,17 @@
                         <div class="form-group">
                             <label class="form-label" style="font-weight: 600;">Pickup Date <span style="color: #dc2626;">*</span></label>
                             <input type="date" name="bookingDate" id="bookingDate" class="form-control"
-                                   th:value="${booking.bookingDate}" required>
+                                   th:value="${booking.bookingDate}"
+                                   th:min="${minStartDate != null ? minStartDate : #temporals.format(#temporals.createToday().plusDays(1), 'yyyy-MM-dd')}" required>
+                            <small style="display: block; margin-top: 0.35rem; font-size: 0.8rem; color: var(--slate-500);">
+                                📅 Bookings must start at least 1 day in advance (tomorrow or later).
+                            </small>
                         </div>
                         <div class="form-group">
                             <label class="form-label" style="font-weight: 600;">Return Date <span style="color: #dc2626;">*</span></label>
                             <input type="date" name="endDate" id="endDate" class="form-control"
-                                   th:value="${booking.endDate}" required>
+                                   th:value="${booking.endDate}"
+                                   th:min="${minStartDate != null ? minStartDate : #temporals.format(#temporals.createToday().plusDays(1), 'yyyy-MM-dd')}" required>
                         </div>
                     </div>
 
@@ -211,15 +216,20 @@
                     </div>
 
                     <!-- Coupon Code Input -->
-                    <div style="display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 1.25rem; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 0.6rem; align-items: flex-end; margin-bottom: 0.5rem; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 220px;">
                             <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Coupon ID or Promotion Code (Optional)</label>
-                            <input type="text" name="couponCode" id="couponCode" class="form-control" placeholder="e.g. SUMMER15, ESCAPE10, DRIVEFLOW20">
+                            <input type="text" name="couponCode" id="couponCode" class="form-control"
+                                   th:value="${initialCouponCode != null ? initialCouponCode : ''}"
+                                   placeholder="e.g. SUMMER15, ESCAPE10, DRIVEFLOW20">
                         </div>
                         <button type="button" class="btn btn-secondary" id="applyCouponBtn" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; font-weight: 600;">
                             Apply Coupon
                         </button>
                     </div>
+
+                    <!-- Direct Feedback Banner for Coupon Code Validation -->
+                    <div id="couponStatusNotice" style="display: none; margin-bottom: 1.25rem; font-size: 0.85rem; border-radius: var(--radius-sm); padding: 0.6rem 0.95rem; font-weight: 600; align-items: center; gap: 0.5rem;"></div>
 
                     <!-- Itemized Numeric Breakdown Container -->
                     <div id="pricingBreakdownContainer" style="background: white; border: 1px solid #cbd5e1; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-sm);">
@@ -267,7 +277,8 @@
             /*[# th:each="p : ${activePromotions}"]*/
             {
                 title: /*[[${p.title}]]*/ '',
-                couponCode: /*[[${p.couponCode}]]*/ '',
+                couponId: /*[[${p.couponId}]]*/ '',
+                couponCode: /*[[${p.couponCode != null ? p.couponCode : p.couponId}]]*/ '',
                 discountRate: /*[[${p.discountRate}]]*/ 0
             },
             /*[/]*/
@@ -291,26 +302,31 @@
             const chargedRateHidden = document.getElementById('chargedRate');
             const pricingContainer = document.getElementById('pricingBreakdownContainer');
 
-            // Set min dates to today
-            const todayStr = new Date().toISOString().split('T')[0];
+            // Set min start date to at least 1 day from today (tomorrow)
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
             if (startInput) {
-                if (!startInput.value) startInput.value = todayStr;
-                startInput.min = todayStr;
+                startInput.min = tomorrowStr;
+                if (!startInput.value || startInput.value < tomorrowStr) {
+                    startInput.value = tomorrowStr;
+                }
             }
             if (endInput) {
-                if (!endInput.value) {
-                    const defaultEnd = new Date();
+                endInput.min = tomorrowStr;
+                if (!endInput.value || endInput.value < tomorrowStr) {
+                    const defaultEnd = new Date(tomorrow);
                     defaultEnd.setDate(defaultEnd.getDate() + 3);
                     endInput.value = defaultEnd.toISOString().split('T')[0];
                 }
-                endInput.min = todayStr;
             }
 
             // Central Reactive State Store
             const state = {
                 branchId: branchSelect ? branchSelect.value : '',
                 vehicleId: vehicleSelect ? vehicleSelect.value : '',
-                startDate: startInput ? startInput.value : todayStr,
+                startDate: startInput ? startInput.value : tomorrowStr,
                 endDate: endInput ? endInput.value : '',
                 couponCode: couponInput ? couponInput.value : '',
                 availableVehicles: []
@@ -564,12 +580,107 @@
                 fetch('/bookings/calculate-pricing?' + params.toString())
                     .then(res => res.ok ? res.json() : null)
                     .then(serverBreakdown => {
-                        if (serverBreakdown && serverBreakdown.finalTotalCost) {
-                            if (chargedRateHidden) chargedRateHidden.value = serverBreakdown.finalTotalCost;
-                            if (durationHidden) durationHidden.value = serverBreakdown.durationDays;
+                        if (serverBreakdown) {
+                            if (chargedRateHidden && serverBreakdown.finalTotalCost) {
+                                chargedRateHidden.value = serverBreakdown.finalTotalCost;
+                            }
+                            if (durationHidden && serverBreakdown.durationDays) {
+                                durationHidden.value = serverBreakdown.durationDays;
+                            }
+                            updateCouponAndPricingUI(serverBreakdown);
                         }
                     })
                     .catch(() => {});
+            }
+
+            function updateCouponAndPricingUI(data) {
+                const notice = document.getElementById('couponStatusNotice');
+                const hasEnteredCode = couponInput && couponInput.value.trim().length > 0;
+
+                if (notice) {
+                    if (hasEnteredCode) {
+                        if (data.couponValid) {
+                            notice.style.display = 'flex';
+                            notice.style.background = '#ecfdf5';
+                            notice.style.border = '1px solid #a7f3d0';
+                            notice.style.color = '#065f46';
+                            notice.innerHTML = `<span>✅</span> <span>${data.couponMessage || 'Coupon applied successfully!'}</span>`;
+                        } else {
+                            notice.style.display = 'flex';
+                            notice.style.background = '#fef2f2';
+                            notice.style.border = '1px solid #fecaca';
+                            notice.style.color = '#991b1b';
+                            notice.innerHTML = `<span>⚠️</span> <span>${data.couponMessage || 'Invalid coupon code. Please try again.'}</span>`;
+                        }
+                    } else {
+                        notice.style.display = 'none';
+                        notice.innerHTML = '';
+                    }
+                }
+
+                if (!state.vehicleId) return;
+
+                const baseDailyRate = Number(data.baseDailyRate || 12500);
+                const durationDays = Number(data.durationDays || 1);
+                const baseCost = Number(data.baseCost || (baseDailyRate * durationDays));
+                const discountRate = Number(data.discountRate || 0);
+                const discountAmount = Number(data.discountAmount || 0);
+                const finalTotal = Number(data.finalTotalCost || (baseCost - discountAmount));
+                const promoTitle = data.promotionTitle || 'Seasonal Discount';
+                const couponId = data.couponId || (hasEnteredCode ? couponInput.value.trim().toUpperCase() : '');
+
+                pricingContainer.innerHTML = `
+                    <div style="background: var(--slate-100); padding: 0.65rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 700; color: var(--slate-800); display: flex; justify-content: space-between; align-items: center;">
+                        <span>Calculated Payment Array & Cost Structure</span>
+                        <span style="font-size: 0.75rem; color: #059669; font-weight: 700; background: #ecfdf5; padding: 0.15rem 0.5rem; border-radius: 9999px;">
+                            ${discountRate > 0 ? '🎉 Promo Applied: -' + discountRate + '%' + (couponId ? ' [' + couponId + ']' : '') : 'Standard Fleet Rate'}
+                        </span>
+                    </div>
+                    <div style="padding: 1.15rem;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                            <tbody>
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: var(--slate-700);">
+                                        Base Rental Rate (Rs. ${baseDailyRate.toLocaleString('en-US', {minimumFractionDigits: 2})} &times; ${durationDays} ${durationDays === 1 ? 'Day' : 'Days'})
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 600; color: var(--slate-900);">
+                                        Rs. ${baseCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ${discountRate > 0 ? `
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: #059669;">
+                                        🏷️ Seasonal Promo: <strong>${promoTitle}</strong> (-${discountRate}%) ${couponId ? '<code style="background:#e0e7ff; color:#4338ca; padding:0.15rem 0.4rem; border-radius:4px; font-weight:700;">' + couponId + '</code>' : ''}
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 700; color: #059669;">
+                                        - Rs. ${discountAmount.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ` : ''}
+                                <tr>
+                                    <td style="padding: 0.55rem 0; color: #d97706; font-size: 0.82rem;">
+                                        🔒 Payment Gate Policy
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 600; color: #d97706; font-size: 0.82rem;">
+                                        Payable After Staff Approval
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid var(--slate-200); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">FINAL CALCULATED COST</div>
+                                <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
+                                    ${discountRate > 0 ? 'Discount Active: ' + promoTitle + ' (-' + discountRate + '%)' : 'Pre-submission total'}
+                                </div>
+                            </div>
+                            <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">
+                                Rs. ${finalTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                            </div>
+                        </div>
+                    </div>
+                `;
             }
 
             // Expose helper for clicking coupon chips
@@ -594,13 +705,31 @@
                 });
             }
             if (startInput) {
-                startInput.addEventListener('change', renderPricingBreakdown);
+                startInput.addEventListener('change', function () {
+                    if (startInput.value && startInput.value < tomorrowStr) {
+                        alert('The booking start date must be at least one day from today.');
+                        startInput.value = tomorrowStr;
+                    }
+                    if (endInput && endInput.value && endInput.value < startInput.value) {
+                        endInput.value = startInput.value;
+                    }
+                    if (endInput && startInput.value) {
+                        endInput.min = startInput.value;
+                    }
+                    renderPricingBreakdown();
+                });
             }
             if (endInput) {
                 endInput.addEventListener('change', renderPricingBreakdown);
             }
             if (couponInput) {
                 couponInput.addEventListener('input', renderPricingBreakdown);
+                couponInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        renderPricingBreakdown();
+                    }
+                });
             }
             if (applyCouponBtn) {
                 applyCouponBtn.addEventListener('click', renderPricingBreakdown);
@@ -727,7 +856,26 @@
                 onBranchChanged();
             };
 
+            // Form submit validation guard
+            const bookingForm = document.getElementById('bookingForm');
+            if (bookingForm) {
+                bookingForm.addEventListener('submit', function (e) {
+                    if (startInput && startInput.value && startInput.value < tomorrowStr) {
+                        e.preventDefault();
+                        alert('The booking start date must be at least one day from today.');
+                        startInput.focus();
+                        return false;
+                    }
+                });
+            }
+
             // Initial execution on mount
+            const urlQuery = new URLSearchParams(window.location.search);
+            const urlCouponCode = urlQuery.get('couponCode');
+            if (urlCouponCode && couponInput && !couponInput.value) {
+                couponInput.value = urlCouponCode;
+            }
+
             const autoFilled = checkDashboardAutofill();
             if (!autoFilled) {
                 if (branchSelect && branchSelect.value) {
@@ -735,6 +883,8 @@
                 } else {
                     renderPricingBreakdown();
                 }
+            } else {
+                renderPricingBreakdown();
             }
         })();
     </script>

@@ -171,11 +171,11 @@ public class CustomerInvoicePaymentController {
             return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
         }
 
-        // Expiry Date Validation (MM/YY)
+        // Expiry Date Validation (MM/YY) - strictly 12 months (01-12)
         String cleanExpiry = (expiry != null) ? expiry.trim() : "";
         if (!cleanExpiry.matches("^(0[1-9]|1[0-2])\\/\\d{2}$")) {
             redirectAttributes.addFlashAttribute("errorMessage",
-                    "Invalid Expiration Date: Please provide a valid MM/YY format (e.g. 12/28).");
+                    "Invalid Expiration Date: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).");
             redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
             return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
         }
@@ -222,7 +222,7 @@ public class CustomerInvoicePaymentController {
         paymentService.updateInvoice(invoice.getInvoiceId(), invoice);
 
         redirectAttributes.addFlashAttribute("successMessage",
-                "Payment of $" + String.format("%.2f", invoice.getTotalAmt()) + " processed successfully! " +
+                "Payment of Rs. " + String.format("%.2f", invoice.getTotalAmt()) + " processed successfully! " +
                         "Booking #BK-" + bookingId + " (Invoice #INV-" + invoice.getInvoiceId()
                         + ") is now fully PAID. Transaction Ref: " + cc.getRefNo());
 
@@ -288,10 +288,10 @@ public class CustomerInvoicePaymentController {
                 response.put("message", "Invalid CVV: must be a 3-digit security code");
                 return ResponseEntity.badRequest().body(response);
             }
-            // Validates MM/YY or MM/YYYY format
+            // Validates MM/YY or MM/YYYY format with month 01-12
             if (!expiry.trim().matches("^(0[1-9]|1[0-2])/?([0-9]{2}|[0-9]{4})$")) {
                 response.put("success", false);
-                response.put("message", "Invalid expiry date: must be in MM/YY or MM/YYYY format");
+                response.put("message", "Invalid expiry date: Month must be between 01 and 12 in MM/YY format");
                 return ResponseEntity.badRequest().body(response);
             }
 

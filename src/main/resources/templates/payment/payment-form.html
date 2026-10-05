@@ -30,7 +30,7 @@
                     <option value="" disabled th:selected="${payment.invoice == null}">-- Select Invoice --</option>
                     <option th:each="inv : ${invoices}"
                             th:value="${inv.invoiceId}"
-                            th:text="'Invoice #' + ${inv.invoiceId} + ' (Total: $' + ${inv.totalAmt} + ', Status: ' + ${inv.status} + ') - ' + (${inv.booking != null and inv.booking.customer != null ? inv.booking.customer.name : 'Unknown'})"
+                            th:text="'Invoice #' + ${inv.invoiceId} + ' (Total: Rs. ' + ${inv.totalAmt} + ', Status: ' + ${inv.status} + ') - ' + (${inv.booking != null and inv.booking.customer != null ? inv.booking.customer.name : 'Unknown'})"
                             th:selected="${payment.invoice != null and payment.invoice.invoiceId == inv.invoiceId}">
                     </option>
                 </select>
@@ -66,7 +66,7 @@
                     <input type="date" th:field="*{paymentDate}" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Amount Paid ($ USD)</label>
+                    <label class="form-label">Amount Paid (Rs.)</label>
                     <input type="number" step="0.01" th:field="*{amountPaid}" class="form-control" placeholder="0.00" min="0" required>
                 </div>
             </div>

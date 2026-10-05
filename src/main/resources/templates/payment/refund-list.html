@@ -61,7 +61,7 @@
                     <span th:if="${r.payment == null}" style="color: var(--slate-400); font-style: italic;">No Payment</span>
                 </td>
                 <td>
-                    <strong style="color: #b45309;" th:text="'$' + ${#numbers.formatDecimal(r.amount != null ? r.amount : 0, 1, 2)}">$0.00</strong>
+                    <strong style="color: #b45309;" th:text="'Rs. ' + ${#numbers.formatDecimal(r.amount != null ? r.amount : 0, 1, 2)}">Rs. 0.00</strong>
                 </td>
                 <td>
                     <span th:if="${r.approvalStatus == 'APPROVED'}" class="badge badge-success">Approved</span>

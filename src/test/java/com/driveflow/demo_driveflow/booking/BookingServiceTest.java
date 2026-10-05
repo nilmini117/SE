@@ -92,8 +92,8 @@ public class BookingServiceTest {
         secondBookingAttempt.setCustomer(customer);
         secondBookingAttempt.setPickupBranch(branch);
         secondBookingAttempt.setVehicle(vehicle);
-        secondBookingAttempt.setBookingDate(LocalDate.now());
-        secondBookingAttempt.setEndDate(LocalDate.now().plusDays(3));
+        secondBookingAttempt.setBookingDate(LocalDate.now().plusDays(1));
+        secondBookingAttempt.setEndDate(LocalDate.now().plusDays(4));
 
         when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
         // Concurrency limit simulation: Database returns 1 active booking for this customer
@@ -123,8 +123,8 @@ public class BookingServiceTest {
         newBooking.setCustomer(customer);
         newBooking.setPickupBranch(branch);
         newBooking.setVehicle(vehicle);
-        newBooking.setBookingDate(LocalDate.now());
-        newBooking.setEndDate(LocalDate.now().plusDays(2));
+        newBooking.setBookingDate(LocalDate.now().plusDays(1));
+        newBooking.setEndDate(LocalDate.now().plusDays(3));
 
         when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
         when(bookingRepository.countActiveBookingsByCustomerId(101L)).thenReturn(0L);
@@ -180,6 +180,74 @@ public class BookingServiceTest {
         );
 
         assertTrue(ex.getMessage().contains("Branch Selection Required"));
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when booking start date is today")
+    void testCreateBooking_ThrowsException_WhenStartDateIsToday() {
+        Booking bookingToday = new Booking();
+        bookingToday.setCustomer(customer);
+        bookingToday.setPickupBranch(branch);
+        bookingToday.setVehicle(vehicle);
+        bookingToday.setBookingDate(LocalDate.now());
+        bookingToday.setEndDate(LocalDate.now().plusDays(2));
+
+        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
+        when(bookingRepository.countActiveBookingsByCustomerId(101L)).thenReturn(0L);
+        when(vehicleRepository.findById(501L)).thenReturn(Optional.of(vehicle));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> bookingService.createBooking(bookingToday)
+        );
+
+        assertTrue(ex.getMessage().contains("The booking start date must be at least one day from today."));
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when booking start date is in the past")
+    void testCreateBooking_ThrowsException_WhenStartDateIsInPast() {
+        Booking bookingPast = new Booking();
+        bookingPast.setCustomer(customer);
+        bookingPast.setPickupBranch(branch);
+        bookingPast.setVehicle(vehicle);
+        bookingPast.setBookingDate(LocalDate.now().minusDays(1));
+        bookingPast.setEndDate(LocalDate.now().plusDays(2));
+
+        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
+        when(bookingRepository.countActiveBookingsByCustomerId(101L)).thenReturn(0L);
+        when(vehicleRepository.findById(501L)).thenReturn(Optional.of(vehicle));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> bookingService.createBooking(bookingPast)
+        );
+
+        assertTrue(ex.getMessage().contains("The booking start date must be at least one day from today."));
+        verify(bookingRepository, never()).save(any(Booking.class));
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when booking start date is null")
+    void testCreateBooking_ThrowsException_WhenStartDateIsNull() {
+        Booking bookingNullDate = new Booking();
+        bookingNullDate.setCustomer(customer);
+        bookingNullDate.setPickupBranch(branch);
+        bookingNullDate.setVehicle(vehicle);
+        bookingNullDate.setBookingDate(null);
+
+        when(branchRepository.findById(1L)).thenReturn(Optional.of(branch));
+        when(bookingRepository.countActiveBookingsByCustomerId(101L)).thenReturn(0L);
+        when(vehicleRepository.findById(501L)).thenReturn(Optional.of(vehicle));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> bookingService.createBooking(bookingNullDate)
+        );
+
+        assertTrue(ex.getMessage().contains("The booking start date must be at least one day from today."));
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 

@@ -121,10 +121,25 @@ public class HomeController {
             map.put("startDate", p.getStartDate());
             map.put("endDate", p.getEndDate());
             map.put("status", p.getStatus());
+            map.put("category", p.getCategory());
             map.put("vehicleCategory", p.getVehicleCategory());
+            map.put("vehicleSeason", p.getVehicleSeason());
             return map;
         }).toList();
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/api/promotions/raw")
+    @ResponseBody
+    public ResponseEntity<List<Promotion>> getActivePromotionsRawApi() {
+        if (promotionRepository == null) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+        List<Promotion> list = promotionRepository.findActivePromotions(LocalDate.now());
+        if (list.isEmpty()) {
+            list = promotionRepository.findByStatusIgnoreCase("ACTIVE");
+        }
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/api/maintenance-companies")

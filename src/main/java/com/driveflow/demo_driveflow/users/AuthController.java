@@ -165,12 +165,18 @@ public class AuthController {
     /**
      * POST /api/auth/otp/send
      * Accepts an email address, generates the OTP via OtpService, and dispatches the email.
+     * If unprovided, falls back to the current authenticated user's email.
      */
-    @PostMapping(value = "/api/auth/otp/send", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = {"/api/auth/otp/send", "/api/profile/password/send-otp"}, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<Map<String, Object>> sendOtp(
             @RequestBody(required = false) Map<String, String> body,
-            @RequestParam(value = "email", required = false) String emailParam) {
+            @RequestParam(value = "email", required = false) String emailParam,
+            Authentication authentication) {
+
+        if (authentication == null) {
+            authentication = SecurityContextHolder.getContext().getAuthentication();
+        }
 
         String email = null;
         if (body != null && body.containsKey("email")) {
@@ -178,6 +184,9 @@ public class AuthController {
         }
         if ((email == null || email.isBlank()) && emailParam != null) {
             email = emailParam;
+        }
+        if ((email == null || email.isBlank()) && authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken)) {
+            email = authentication.getName();
         }
 
         if (email == null || email.isBlank()) {
@@ -189,8 +198,14 @@ public class AuthController {
         }
 
         String trimmedEmail = email.trim();
+        String type = body != null ? body.get("type") : null;
         if (otpService != null) {
-            otpService.generateOtp(trimmedEmail);
+            if ("PASSWORD_CHANGE".equalsIgnoreCase(type) || "PASSWORD_RESET".equalsIgnoreCase(type)
+                    || (authentication != null && authentication.isAuthenticated() && !(authentication instanceof AnonymousAuthenticationToken))) {
+                otpService.generatePasswordOtp(trimmedEmail);
+            } else {
+                otpService.generateOtp(trimmedEmail);
+            }
         }
 
         Map<String, Object> response = new HashMap<>();
@@ -366,15 +381,19 @@ public class AuthController {
             redirectAttributes.addFlashAttribute("errorMessage", "Passwords do not match.");
             return "redirect:/forgot-password?step=verify";
         }
-        if (otpService != null && !otpService.verifyPasswordOtp(email, otp)) {
+        if (otp == null || otp.isBlank()) {
             redirectAttributes.addFlashAttribute("email", email);
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid or expired OTP code (10-minute window). Password reset blocked.");
+            redirectAttributes.addFlashAttribute("errorMessage", "6-digit OTP verification code is required.");
             return "redirect:/forgot-password?step=verify";
         }
         try {
-            userService.resetPassword(email, newPassword, otp);
+            userService.resetPassword(email, newPassword, otp.trim());
             redirectAttributes.addFlashAttribute("successMessage", "Your password has been reset successfully! Please log in.");
             return "redirect:/login";
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("email", email);
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+            return "redirect:/forgot-password?step=verify";
         } catch (Exception ex) {
             redirectAttributes.addFlashAttribute("email", email);
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

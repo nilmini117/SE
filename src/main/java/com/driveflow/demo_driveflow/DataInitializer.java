@@ -91,6 +91,13 @@ public class DataInitializer implements CommandLineRunner {
                 if (jdbcTemplate != null) {
                         try {
                                 jdbcTemplate.execute(
+                                                "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('vehicle') AND name = 'is_registered') " +
+                                                "BEGIN ALTER TABLE vehicle ADD is_registered BIT NOT NULL CONSTRAINT DF_vehicle_is_registered DEFAULT 1 WITH VALUES; END");
+                        } catch (Exception e) {
+                                // Table might not exist or running on in-memory DB in tests
+                        }
+                        try {
+                                jdbcTemplate.execute(
                                                 "ALTER TABLE vehicle DROP CONSTRAINT IF EXISTS chk_vehicle_status;");
                                 jdbcTemplate.execute(
                                                 "ALTER TABLE vehicle ADD CONSTRAINT chk_vehicle_status CHECK (status IN ('AVAILABLE', 'BOOKED', 'MAINTENANCE', 'DECOMMISSIONED', 'UNAVAILABLE'));");

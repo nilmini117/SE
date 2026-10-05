@@ -145,9 +145,12 @@ public class VehicleController {
     @ResponseBody
     public org.springframework.http.ResponseEntity<?> registerVehicleApiMultipart(
             @ModelAttribute VehicleRegistrationDto dto,
-            @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image) {
+            @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
+            @RequestParam(value = "imageFile", required = false) org.springframework.web.multipart.MultipartFile imageFile) {
         try {
-            Vehicle saved = vehicleService.registerVehicle(dto, image);
+            org.springframework.web.multipart.MultipartFile upload = image != null ? image : (file != null ? file : imageFile);
+            Vehicle saved = vehicleService.registerVehicle(dto, upload);
             return org.springframework.http.ResponseEntity.ok(saved);
         } catch (Exception e) {
             return org.springframework.http.ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -211,6 +214,7 @@ public class VehicleController {
     public String registerVehicle(@ModelAttribute Vehicle vehicle,
                                   @RequestParam(value = "branchId", required = false) Long branchId,
                                   @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+                                  @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
                                   Model model,
                                   RedirectAttributes redirectAttributes,
                                   Authentication authentication) {
@@ -227,7 +231,8 @@ public class VehicleController {
         if (branchId != null) {
             branchRepository.findById(branchId).ifPresent(vehicle::setBranch);
         }
-        Vehicle saved = vehicleService.registerVehicle(vehicle, imageFile);
+        org.springframework.web.multipart.MultipartFile upload = imageFile != null ? imageFile : file;
+        Vehicle saved = vehicleService.registerVehicle(vehicle, upload);
         redirectAttributes.addFlashAttribute("successMessage", "Vehicle " + saved.getModel() + " (" + saved.getBrand() + ") registered successfully.");
         return "redirect:/vehicles";
     }
@@ -249,6 +254,8 @@ public class VehicleController {
     public String updateVehicle(@PathVariable Long id,
                                 @ModelAttribute Vehicle vehicle,
                                 @RequestParam(value = "branchId", required = false) Long branchId,
+                                @RequestParam(value = "image", required = false) org.springframework.web.multipart.MultipartFile imageFile,
+                                @RequestParam(value = "file", required = false) org.springframework.web.multipart.MultipartFile file,
                                 Model model,
                                 RedirectAttributes redirectAttributes,
                                 Authentication authentication) {
@@ -265,7 +272,8 @@ public class VehicleController {
         if (branchId != null) {
             branchRepository.findById(branchId).ifPresent(vehicle::setBranch);
         }
-        vehicleService.updateVehicle(id, vehicle);
+        org.springframework.web.multipart.MultipartFile upload = imageFile != null ? imageFile : file;
+        vehicleService.updateVehicle(id, vehicle, upload);
         redirectAttributes.addFlashAttribute("successMessage", "Vehicle #" + id + " updated successfully.");
         return "redirect:/vehicles";
     }

@@ -3,6 +3,7 @@ package com.driveflow.demo_driveflow.booking;
 import com.driveflow.demo_driveflow.feedback.Feedback;
 import com.driveflow.demo_driveflow.feedback.FeedbackRepository;
 import com.driveflow.demo_driveflow.feedback.FeedbackServiceImpl;
+import com.driveflow.demo_driveflow.otp.OtpService;
 import com.driveflow.demo_driveflow.payment.InvoiceRepository;
 import com.driveflow.demo_driveflow.users.Customer;
 import com.driveflow.demo_driveflow.users.CustomerRepository;
@@ -55,6 +56,9 @@ public class BookingReturnTest {
 
     @Mock
     private FeedbackRepository feedbackRepository;
+
+    @Mock
+    private OtpService otpService;
 
     @Mock
     private Authentication authentication;
@@ -208,6 +212,91 @@ public class BookingReturnTest {
         assertEquals("AVAILABLE", body.get("operationalStatus"));
         assertEquals(true, body.get("feedbackUnlocked"));
         assertEquals("/feedback/new?bookingId=701", body.get("feedbackUrl"));
+    }
+
+    @Test
+    @DisplayName("REST API Controller Test: POST /api/bookings/{id}/return/request-otp generates OTP and detects early return refund notice")
+    void testBookingApiController_RequestReturnOtp_EarlyReturn() {
+        BookingApiController controller = new BookingApiController();
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "bookingService", bookingService);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "customerRepository", customerRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "staffRepository", staffRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "otpService", otpService);
+
+        testBooking.setEndDate(LocalDate.now().plusDays(2)); // early return!
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("sunil.perera@example.com");
+        when(customerRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.of(testCustomer));
+        when(staffRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.empty());
+        when(bookingRepository.findById(701L)).thenReturn(Optional.of(testBooking));
+
+        ResponseEntity<?> response = controller.requestReturnOtp(701L, authentication);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertNotNull(body);
+        assertEquals(true, body.get("success"));
+        assertEquals(true, body.get("isEarlyReturn"));
+        assertNotNull(body.get("refundNotice"));
+        assertTrue(body.get("refundNotice").toString().contains("refund money can be collected from the branch front desk"));
+        verify(otpService, times(1)).generateVehicleReturnOtp(eq("sunil.perera@example.com"), anyString(), eq(701L), eq(true));
+    }
+
+    @Test
+    @DisplayName("REST API Controller Test: POST /api/bookings/{id}/return requires OTP when otpService is configured")
+    void testBookingApiController_ReturnVehicle_RequiresOtp() {
+        BookingApiController controller = new BookingApiController();
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "bookingService", bookingService);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "customerRepository", customerRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "staffRepository", staffRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "otpService", otpService);
+
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("sunil.perera@example.com");
+        when(customerRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.of(testCustomer));
+        when(staffRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.empty());
+        when(bookingRepository.findById(701L)).thenReturn(Optional.of(testBooking));
+
+        // Call without OTP payload
+        ResponseEntity<?> response = controller.returnVehicle(701L, null, authentication);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        // Call with invalid OTP
+        when(otpService.verifyVehicleReturnOtp("sunil.perera@example.com", "000000")).thenReturn(false);
+        ResponseEntity<?> responseInvalid = controller.returnVehicle(701L, Map.of("otp", "000000"), authentication);
+        assertEquals(HttpStatus.BAD_REQUEST, responseInvalid.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("REST API Controller Test: POST /api/bookings/{id}/return with valid OTP succeeds and returns early refund policy")
+    void testBookingApiController_ReturnVehicle_WithOtp_EarlyReturn() {
+        BookingApiController controller = new BookingApiController();
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "bookingService", bookingService);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "customerRepository", customerRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "staffRepository", staffRepository);
+        org.springframework.test.util.ReflectionTestUtils.setField(controller, "otpService", otpService);
+
+        testBooking.setEndDate(LocalDate.now().plusDays(3)); // early return
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("sunil.perera@example.com");
+        when(customerRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.of(testCustomer));
+        when(staffRepository.findByEmail("sunil.perera@example.com")).thenReturn(Optional.empty());
+        when(bookingRepository.findById(701L)).thenReturn(Optional.of(testBooking));
+        when(vehicleRepository.save(any(Vehicle.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(otpService.verifyVehicleReturnOtp("sunil.perera@example.com", "123456")).thenReturn(true);
+
+        ResponseEntity<?> response = controller.returnVehicle(701L, Map.of("otp", "123456"), authentication);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertNotNull(body);
+        assertEquals(true, body.get("success"));
+        assertEquals(true, body.get("isEarlyReturn"));
+        assertNotNull(body.get("refundNotice"));
+        assertTrue(body.get("refundNotice").toString().contains("refund money can be collected from the branch front desk"));
     }
 
     @Test

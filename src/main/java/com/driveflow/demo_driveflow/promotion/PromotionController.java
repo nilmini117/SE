@@ -23,6 +23,7 @@ public class PromotionController {
     @GetMapping
     public String listPromotions(Model model) {
         model.addAttribute("promotions", promotionService.getAllPromotions());
+        model.addAttribute("activeTab", "promotions");
         return "promotion/promotion-list";
     }
 

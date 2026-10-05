@@ -32,7 +32,7 @@
         </p>
 
         <form th:action="${vehicle.vehicleId} != null ? @{/vehicles/{id}(id=${vehicle.vehicleId})} : @{/vehicles}"
-              th:object="${vehicle}" method="post">
+              th:object="${vehicle}" method="post" enctype="multipart/form-data">
 
             <div class="form-row">
                 <!-- Field 1: Mandatory Vehicle Brand Dropdown -->
@@ -144,6 +144,36 @@
                 </div>
             </div>
 
+            <!-- Field 9: Vehicle Photo (Local File Upload) -->
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label class="form-label" for="image" style="font-weight: 600;">
+                    Vehicle Photo (Upload File) <span style="color: var(--slate-400); font-weight: 400;">(Optional)</span>
+                </label>
+                <input type="file" id="image" name="image" class="form-control" accept="image/*" style="padding: 0.5rem;" onchange="previewVehicleImage(this)">
+                <small style="color: var(--slate-500); font-size: 0.78rem; display: block; margin-top: 0.25rem;">
+                    Upload a photo of the vehicle (JPG, PNG, WebP) to display across fleet catalogs and booking summaries.
+                </small>
+
+                <!-- New Selected File Preview -->
+                <div id="imagePreviewContainer" style="margin-top: 0.75rem; display: none; align-items: center; gap: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--slate-200);">
+                    <img id="imagePreview" src="" alt="Selected Preview" style="width: 90px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <div>
+                        <strong style="display: block; font-size: 0.85rem; color: var(--slate-800);">Selected Photo Preview:</strong>
+                        <span id="imagePreviewName" style="font-size: 0.8rem; color: var(--slate-600);"></span>
+                    </div>
+                </div>
+
+                <!-- Existing Vehicle Image if available -->
+                <div th:if="${vehicle.imageUrl != null and !vehicle.imageUrl.isEmpty()}" id="currentImageContainer" style="margin-top: 0.75rem; display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--slate-200);">
+                    <img th:src="${vehicle.imageUrl}" alt="Current Vehicle Image" style="width: 90px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #cbd5e1;">
+                    <div>
+                        <strong style="display: block; font-size: 0.85rem; color: var(--slate-800);">Current Vehicle Photo:</strong>
+                        <span style="font-size: 0.8rem; color: var(--slate-600);" th:text="${vehicle.imageUrl}">/uploads/vehicles/...</span>
+                        <small style="display: block; color: var(--slate-500); font-size: 0.75rem;">Uploading a new photo above will replace this file.</small>
+                    </div>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary" style="flex: 1;">Save Vehicle</button>
                 <a th:href="@{/vehicles}" class="btn btn-secondary">Cancel</a>
@@ -151,6 +181,34 @@
         </form>
     </div>
 </main>
+
+<script>
+function previewVehicleImage(input) {
+    var previewContainer = document.getElementById('imagePreviewContainer');
+    var preview = document.getElementById('imagePreview');
+    var nameSpan = document.getElementById('imagePreviewName');
+    var currentContainer = document.getElementById('currentImageContainer');
+
+    if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            nameSpan.textContent = file.name;
+            previewContainer.style.display = 'flex';
+            if (currentContainer) {
+                currentContainer.style.opacity = '0.5';
+            }
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.style.display = 'none';
+        if (currentContainer) {
+            currentContainer.style.opacity = '1';
+        }
+    }
+}
+</script>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
 

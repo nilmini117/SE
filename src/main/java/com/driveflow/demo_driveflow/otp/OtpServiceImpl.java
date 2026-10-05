@@ -409,4 +409,82 @@ public class OtpServiceImpl implements OtpService {
             return;
         otpCache.remove(buildCacheKey(email.trim().toLowerCase(), type));
     }
+
+    @Override
+    public String generateVehicleReturnOtp(String email, String customerName, Long bookingId, boolean isEarlyReturn) {
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email address is required to generate vehicle return OTP.");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+        enforceResendCooldown(normalizedEmail);
+        String otp = generateSecureNumericCode();
+        Instant now = Instant.now();
+        Instant expiresAt = now.plus(EXPIRATION_WINDOW);
+
+        OtpRecord record = new OtpRecord(normalizedEmail, otp, OtpType.VEHICLE_RETURN, now, expiresAt, null);
+        otpCache.put(buildCacheKey(normalizedEmail, OtpType.VEHICLE_RETURN), record);
+        otpCache.put(normalizedEmail, record);
+
+        log.info("🔐 Generated 6-digit vehicle return OTP for {} (expires in {} minutes).", normalizedEmail,
+                OTP_EXPIRY_MINUTES);
+
+        if (emailService != null) {
+            String name = (customerName != null && !customerName.isBlank()) ? customerName : "Driver";
+            emailService.sendReturnVehicleOtpEmail(normalizedEmail, name, bookingId, otp, OTP_EXPIRY_MINUTES, isEarlyReturn);
+            String refundNotice = isEarlyReturn
+                    ? " Important notice: If you return the vehicle before the scheduled end date, refund money can be collected from the branch front desk after giving the car key to the staff."
+                    : "";
+            emailService.sendNotification(normalizedEmail, "DriveFlow Return Verification Code: " + otp,
+                    "Your 6-digit OTP code to authorize vehicle return for booking #BK-" + bookingId + " is: " + otp + "." + refundNotice);
+        }
+
+        return otp;
+    }
+
+    @Override
+    public boolean verifyVehicleReturnOtp(String email, String otp) {
+        if (email == null || otp == null || otp.isBlank()) {
+            return false;
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+        if (isLockedOut(normalizedEmail)) {
+            log.warn("OTP verification blocked: {} is temporarily locked.", normalizedEmail);
+            return false;
+        }
+
+        String key = buildCacheKey(normalizedEmail, OtpType.VEHICLE_RETURN);
+        OtpRecord record = otpCache.get(key);
+        String activeKey = key;
+        if (record == null) {
+            record = otpCache.get(normalizedEmail);
+            activeKey = normalizedEmail;
+        }
+
+        if (record == null) {
+            log.warn("Vehicle return OTP verification failed: no active OTP record found for {}", normalizedEmail);
+            return false;
+        }
+
+        if (record.isExpired()) {
+            log.warn("Vehicle return OTP for {} has EXPIRED", normalizedEmail);
+            otpCache.remove(activeKey);
+            otpCache.remove(normalizedEmail);
+            return false;
+        }
+
+        boolean matches = codesMatch(record.getOtp(), otp);
+        if (matches) {
+            log.info("✅ Vehicle return OTP verified successfully for {}", normalizedEmail);
+            resetAttempts(normalizedEmail);
+            otpCache.remove(activeKey);
+            otpCache.remove(normalizedEmail);
+            return true;
+        }
+
+        log.warn("❌ Vehicle return OTP mismatch for {}", normalizedEmail);
+        registerFailure(normalizedEmail);
+        return false;
+    }
 }

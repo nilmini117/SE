@@ -29,6 +29,8 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
 
     Optional<Promotion> findByCouponIdIgnoreCase(String couponId);
 
+    Optional<Promotion> findByCouponCodeIgnoreCase(String couponCode);
+
     @Query("SELECT p FROM Promotion p WHERE UPPER(p.status) = 'ACTIVE' " +
            "AND (LOWER(p.couponCode) = LOWER(:code) OR LOWER(p.couponId) = LOWER(:code) OR LOWER(p.title) LIKE LOWER(CONCAT('%', :code, '%')))")
     List<Promotion> findMatchingPromotions(@Param("code") String code);

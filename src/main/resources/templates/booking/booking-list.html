@@ -206,7 +206,7 @@
                             🔒 Status Locked (Paid)
                         </span>
 
-                        <!-- If Customer has NOT paid: Staff can Approve (if pending), Decline (ONLY if pending), and Edit Status -->
+                        <!-- If Customer has NOT paid: Staff can Approve (if pending) or Decline (ONLY if pending) -->
                         <span th:if="${bookingInvoices == null or !bookingInvoices.containsKey(b.bookingId) or bookingInvoices.get(b.bookingId).status != 'PAID'}"
                               style="display: inline-flex; align-items: center; gap: 0.35rem;">
                             
@@ -226,21 +226,6 @@
                                 Decline
                             </button>
 
-                            <!-- Edit Status: Allowed for staff ONLY if booking is NOT paid by customer -->
-                            <button type="button"
-                                    class="btn btn-secondary btn-sm"
-                                    style="font-size: 0.78rem; padding: 0.28rem 0.65rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;"
-                                    th:data-id="${b.bookingId}"
-                                    th:data-customer="${b.customer != null ? b.customer.firstName + ' ' + b.customer.lastName : 'Customer'}"
-                                    th:data-vehicle="${b.vehicle != null ? b.vehicle.model : 'Fleet Vehicle'}"
-                                    th:data-status="${b.status}"
-                                    onclick="openEditStatusModal(this.getAttribute('data-id'), this.getAttribute('data-customer'), this.getAttribute('data-vehicle'), this.getAttribute('data-status'))">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                                Edit Status
-                            </button>
                         </span>
                     </span>
                     <!-- Customer Actions -->
@@ -253,6 +238,7 @@
                                 th:data-booking-id="${b.bookingId}"
                                 th:data-vehicle="${b.vehicle != null ? b.vehicle.model : 'Vehicle'}"
                                 th:data-reg="${b.vehicle != null ? b.vehicle.regNo : ''}"
+                                th:data-end-date="${b.endDate}"
                                 onclick="openReturnModal(this)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -352,51 +338,6 @@
     </div>
 </div>
 
-<!-- Edit Booking Status Modal for Staff -->
-<div id="editStatusModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 480px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
-        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700;">
-                    &#9998;
-                </div>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;" id="editStatusModalTitle">Update Booking Status</h3>
-            </div>
-            <button type="button" onclick="closeEditStatusModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
-        </div>
-        
-        <form id="editStatusForm" method="post" action="">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-            <div style="padding: 1.5rem;">
-                <div id="editStatusBookingSummary" style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 1.25rem; background: var(--slate-50); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-200);">
-                    Booking details
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 0.5rem;">
-                    <label class="form-label" style="font-weight: 600; color: var(--slate-800); display: block; margin-bottom: 0.35rem;">
-                        Select New Status <span style="color: var(--danger);">*</span>
-                    </label>
-                    <p style="font-size: 0.8rem; color: var(--slate-500); margin-bottom: 0.5rem;">
-                        Staff Policy: Status can only be changed if the booking has not yet been paid by the customer.
-                    </p>
-                    <select name="status" id="editStatusSelect" class="form-control" required
-                            style="width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); padding: 0.65rem 0.75rem; font-family: inherit; font-size: 0.9rem;">
-                        <option value="PENDING">PENDING - Awaiting Confirmation / Verification</option>
-                        <option value="CONFIRMED">CONFIRMED (APPROVED) - Ready for payment / pickup</option>
-                        <option value="RETURNED">RETURNED - Vehicle returned by customer</option>
-                        <option value="COMPLETED">COMPLETED - Vehicle returned and rental finished</option>
-                        <option value="CANCELLED">CANCELLED - Voided / Cancelled</option>
-                    </select>
-                </div>
-            </div>
-            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" onclick="closeEditStatusModal()" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="font-weight: 600;">Save Status Change</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <!-- Return Vehicle Confirmation Modal for Customers -->
 <div id="returnVehicleModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); z-index: 9999; align-items: center; justify-content: center; padding: 1rem; backdrop-filter: blur(4px);">
     <div style="background: white; border-radius: 14px; max-width: 520px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden;">
@@ -410,7 +351,7 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: white;">Return Vehicle Confirmation</h3>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: white;">Return Vehicle Authorization</h3>
                 </div>
             </div>
             <button type="button" onclick="closeReturnModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 0.25rem;">&times;</button>
@@ -424,13 +365,60 @@
                 <div style="font-size: 0.85rem; color: #475569; margin-top: 0.2rem;">
                     Booking Reference: <strong id="returnModalBookingId">#BK-1</strong> | Reg: <strong id="returnModalReg">WP CA-1020</strong>
                 </div>
+                <div style="font-size: 0.82rem; color: #64748b; margin-top: 0.25rem;">
+                    Scheduled End Date: <span id="returnModalEndDate" style="font-weight: 600; color: #334155;">-</span>
+                </div>
             </div>
 
-            <p style="font-size: 1rem; color: #334155; line-height: 1.5; margin: 0 0 1rem;">
-                <strong>Confirm you are returning this vehicle?</strong>
-            </p>
+            <!-- Early Return Policy Notice (Shown if customer returns vehicle before end date) -->
+            <div id="returnModalEarlyNotice" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; border-left: 4px solid #10b981; border-radius: 8px; padding: 0.9rem 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: flex-start; gap: 0.65rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px;">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                        <div style="font-weight: 700; color: #065f46; font-size: 0.92rem;">Early Return Refund Policy</div>
+                        <div style="color: #047857; font-size: 0.875rem; margin-top: 0.3rem; line-height: 1.45;">
+                            If you return the vehicle before the scheduled end date, refund money can be collected from the branch front desk after giving the car key to the staff.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- OTP Verification Section -->
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1.15rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <label style="font-size: 0.88rem; font-weight: 700; color: #1e293b; margin: 0;">
+                        Authorization OTP Code <span style="color: #ef4444;">*</span>
+                    </label>
+                    <span id="otpCountdown" style="font-size: 0.78rem; color: #64748b; font-weight: 600;"></span>
+                </div>
+                <p style="font-size: 0.8rem; color: #64748b; margin: 0 0 0.85rem 0;">
+                    Please enter the 6-digit authorization code sent to your registered email to authorize this return.
+                </p>
+
+                <div style="display: flex; gap: 0.5rem; align-items: stretch;">
+                    <input type="text"
+                           id="returnOtpInput"
+                           maxlength="6"
+                           placeholder="6-digit code"
+                           style="flex: 1; padding: 0.65rem 0.85rem; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 1.15rem; font-family: monospace; letter-spacing: 4px; font-weight: 700; text-align: center;"
+                           oninput="this.value = this.value.replace(/\D/g, '').substring(0, 6);">
+                    <button type="button"
+                            id="btnSendReturnOtp"
+                            onclick="requestReturnOtp()"
+                            style="padding: 0.65rem 1rem; font-weight: 600; font-size: 0.85rem; white-space: nowrap; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <span id="otpSendSpinner" style="display: none; width: 12px; height: 12px; border: 2px solid white; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                        <span id="otpSendBtnText">Send OTP</span>
+                    </button>
+                </div>
+                <div id="otpSentNotice" style="display: none; font-size: 0.8rem; color: #047857; margin-top: 0.6rem; font-weight: 600;"></div>
+            </div>
 
             <div id="returnModalError" style="display: none; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem;"></div>
+            <div id="returnModalSuccess" style="display: none; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 0.85rem 1rem; border-radius: 8px; font-size: 0.88rem; margin-bottom: 1rem; line-height: 1.45;"></div>
         </div>
 
         <!-- Modal Footer -->
@@ -467,42 +455,43 @@
         }
     }
 
-    function openEditStatusModal(bookingId, customerName, vehicleModel, currentStatus) {
-        var modal = document.getElementById('editStatusModal');
-        var form = document.getElementById('editStatusForm');
-        var title = document.getElementById('editStatusModalTitle');
-        var summary = document.getElementById('editStatusBookingSummary');
-        var select = document.getElementById('editStatusSelect');
-
-        form.action = '/bookings/' + bookingId + '/edit-status';
-        title.textContent = 'Edit Status for #BK-' + bookingId;
-        summary.innerHTML = '<strong>Customer:</strong> ' + customerName + '<br><strong>Vehicle:</strong> ' + vehicleModel + '<br><strong>Current Status:</strong> <span class="badge badge-secondary">' + currentStatus + '</span>';
-        if (select) {
-            select.value = currentStatus;
-        }
-        modal.style.display = 'flex';
-    }
-
-    function closeEditStatusModal() {
-        var modal = document.getElementById('editStatusModal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-
     /* --- Return Vehicle Flow --- */
     var currentReturnBookingId = null;
+    var currentReturnEndDate = null;
+    var otpTimerInterval = null;
 
     function openReturnModal(btn) {
         currentReturnBookingId = btn.getAttribute('data-booking-id');
         var vehicle = btn.getAttribute('data-vehicle') || 'Vehicle';
         var reg = btn.getAttribute('data-reg') || 'N/A';
+        currentReturnEndDate = btn.getAttribute('data-end-date');
 
         document.getElementById('returnModalBookingId').textContent = '#BK-' + currentReturnBookingId;
         document.getElementById('returnModalVehicle').textContent = vehicle;
         document.getElementById('returnModalReg').textContent = reg;
+        document.getElementById('returnModalEndDate').textContent = currentReturnEndDate || 'Not specified';
+        document.getElementById('returnOtpInput').value = '';
         document.getElementById('returnModalError').style.display = 'none';
         document.getElementById('returnModalError').textContent = '';
+        document.getElementById('returnModalSuccess').style.display = 'none';
+        document.getElementById('returnModalSuccess').textContent = '';
+        document.getElementById('otpSentNotice').style.display = 'none';
+        document.getElementById('otpSentNotice').textContent = '';
+
+        // Check if early return (today < endDate)
+        var earlyNotice = document.getElementById('returnModalEarlyNotice');
+        if (currentReturnEndDate) {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            var endDateObj = new Date(currentReturnEndDate + 'T00:00:00');
+            if (today < endDateObj) {
+                earlyNotice.style.display = 'block';
+            } else {
+                earlyNotice.style.display = 'none';
+            }
+        } else {
+            earlyNotice.style.display = 'none';
+        }
 
         var btnConfirm = document.getElementById('btnConfirmReturn');
         btnConfirm.disabled = false;
@@ -512,21 +501,111 @@
 
         var modal = document.getElementById('returnVehicleModal');
         modal.style.display = 'flex';
+
+        // Auto-request OTP on modal open
+        requestReturnOtp();
     }
 
     function closeReturnModal() {
         var modal = document.getElementById('returnVehicleModal');
-        modal.style.display = 'none';
+        if (modal) modal.style.display = 'none';
         currentReturnBookingId = null;
+        if (otpTimerInterval) {
+            clearInterval(otpTimerInterval);
+            otpTimerInterval = null;
+        }
+    }
+
+    function requestReturnOtp() {
+        if (!currentReturnBookingId) return;
+
+        var btn = document.getElementById('btnSendReturnOtp');
+        var spinner = document.getElementById('otpSendSpinner');
+        var btnText = document.getElementById('otpSendBtnText');
+        var notice = document.getElementById('otpSentNotice');
+        var errBox = document.getElementById('returnModalError');
+
+        btn.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.textContent = 'Sending...';
+        notice.style.display = 'none';
+        errBox.style.display = 'none';
+
+        fetch('/api/bookings/' + currentReturnBookingId + '/return/request-otp', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(function(res) {
+            return res.json().then(function(data) {
+                return { status: res.status, ok: res.ok, data: data };
+            });
+        })
+        .then(function(result) {
+            spinner.style.display = 'none';
+            if (result.ok && result.data && result.data.success) {
+                notice.textContent = result.data.message || 'OTP sent to your registered email.';
+                notice.style.display = 'block';
+
+                if (result.data.isEarlyReturn) {
+                    document.getElementById('returnModalEarlyNotice').style.display = 'block';
+                }
+
+                // Start 30-second countdown timer for resend
+                var secondsLeft = 30;
+                btnText.textContent = 'Resend (' + secondsLeft + 's)';
+                if (otpTimerInterval) clearInterval(otpTimerInterval);
+                otpTimerInterval = setInterval(function() {
+                    secondsLeft--;
+                    if (secondsLeft <= 0) {
+                        clearInterval(otpTimerInterval);
+                        otpTimerInterval = null;
+                        btn.disabled = false;
+                        btnText.textContent = 'Resend OTP';
+                    } else {
+                        btnText.textContent = 'Resend (' + secondsLeft + 's)';
+                    }
+                }, 1000);
+
+                setTimeout(function() {
+                    var inp = document.getElementById('returnOtpInput');
+                    if (inp) inp.focus();
+                }, 100);
+            } else {
+                btn.disabled = false;
+                btnText.textContent = 'Send OTP';
+                errBox.textContent = (result.data && result.data.message) ? result.data.message : 'Failed to send OTP code.';
+                errBox.style.display = 'block';
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            spinner.style.display = 'none';
+            btnText.textContent = 'Send OTP';
+            errBox.textContent = 'Network error sending OTP: ' + err.message;
+            errBox.style.display = 'block';
+        });
     }
 
     function executeReturnVehicle() {
         if (!currentReturnBookingId) return;
 
+        var otpInput = document.getElementById('returnOtpInput');
+        var otpCode = otpInput ? otpInput.value.trim() : '';
+        var errBox = document.getElementById('returnModalError');
+        var successBox = document.getElementById('returnModalSuccess');
+
+        if (!otpCode || otpCode.length !== 6) {
+            errBox.textContent = 'Please enter the 6-digit OTP code sent to your registered email.';
+            errBox.style.display = 'block';
+            if (otpInput) otpInput.focus();
+            return;
+        }
+
         var btnConfirm = document.getElementById('btnConfirmReturn');
         var spinner = document.getElementById('returnSpinner');
         var btnText = document.getElementById('returnBtnText');
-        var errBox = document.getElementById('returnModalError');
 
         btnConfirm.disabled = true;
         spinner.style.display = 'inline-block';
@@ -538,7 +617,8 @@
             headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            }
+            },
+            body: JSON.stringify({ otp: otpCode })
         })
         .then(function(res) {
             return res.json().then(function(data) {
@@ -549,10 +629,23 @@
             if (result.ok && result.data && result.data.success) {
                 btnConfirm.style.background = '#059669';
                 spinner.style.display = 'none';
-                btnText.innerHTML = '&#10003; Returned! Redirecting...';
-                setTimeout(function() {
-                    window.location.href = result.data.feedbackUrl || ('/feedback/new?bookingId=' + currentReturnBookingId);
-                }, 800);
+                btnText.innerHTML = '&#10003; Return Confirmed!';
+
+                if (result.data.isEarlyReturn) {
+                    successBox.innerHTML = '<strong>Vehicle Returned Successfully!</strong><br>' +
+                        (result.data.refundNotice || 'Since you have returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff.') +
+                        '<div style="margin-top: 0.5rem; font-weight: bold; color: #047857;">Redirecting to feedback...</div>';
+                    successBox.style.display = 'block';
+                    setTimeout(function() {
+                        window.location.href = result.data.feedbackUrl || ('/feedback/new?bookingId=' + currentReturnBookingId);
+                    }, 2500);
+                } else {
+                    successBox.textContent = 'Vehicle successfully returned! Redirecting...';
+                    successBox.style.display = 'block';
+                    setTimeout(function() {
+                        window.location.href = result.data.feedbackUrl || ('/feedback/new?bookingId=' + currentReturnBookingId);
+                    }, 1000);
+                }
             } else {
                 btnConfirm.disabled = false;
                 spinner.style.display = 'none';
@@ -574,10 +667,6 @@
         var declineModal = document.getElementById('declineModal');
         if (e.target === declineModal) {
             closeDeclineModal();
-        }
-        var editModal = document.getElementById('editStatusModal');
-        if (e.target === editModal) {
-            closeEditStatusModal();
         }
         var retModal = document.getElementById('returnVehicleModal');
         if (e.target === retModal) {

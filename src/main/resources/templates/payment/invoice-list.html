@@ -76,10 +76,9 @@
                     </span>
                     <span th:if="${i.booking == null}" style="color: var(--slate-400); font-style: italic;">Unlinked</span>
                 </td>
-                <td th:text="${i.invoiceDate}">2026-09-12</td>
-                <td th:text="'$' + ${#numbers.formatDecimal(i.rentalAmt != null ? i.rentalAmt : 0, 1, 2)}">$250.00</td>
-                <td th:text="'$' + ${#numbers.formatDecimal(i.lateFee != null ? i.lateFee : 0, 1, 2)}">$0.00</td>
-                <td><strong style="color: var(--primary);" th:text="'$' + ${#numbers.formatDecimal(i.totalAmt != null ? i.totalAmt : 0, 1, 2)}">$250.00</strong></td>
+                <td th:text="'Rs. ' + ${#numbers.formatDecimal(i.rentalAmt != null ? i.rentalAmt : 0, 1, 2)}">Rs. 250.00</td>
+                <td th:text="'Rs. ' + ${#numbers.formatDecimal(i.lateFee != null ? i.lateFee : 0, 1, 2)}">Rs. 0.00</td>
+                <td><strong style="color: var(--primary);" th:text="'Rs. ' + ${#numbers.formatDecimal(i.totalAmt != null ? i.totalAmt : 0, 1, 2)}">Rs. 250.00</strong></td>
                 <td>
                     <span th:if="${i.status == 'PAID'}" class="badge badge-success">Paid</span>
                     <span th:if="${i.status == 'UNPAID' or i.status == 'PENDING'}" class="badge badge-warning">Unpaid</span>

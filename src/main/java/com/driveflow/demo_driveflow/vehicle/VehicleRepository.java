@@ -6,6 +6,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
+    java.util.Optional<Vehicle> findByRegNo(String regNo);
+    java.util.Optional<Vehicle> findByRegNoIgnoreCase(String regNo);
+
     List<Vehicle> findByStatus(String status);
     List<Vehicle> findByStatusIgnoreCase(String status);
 

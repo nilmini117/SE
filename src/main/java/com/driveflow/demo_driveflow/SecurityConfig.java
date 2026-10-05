@@ -50,7 +50,9 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/register",
                                 "/api/profile/password",
+                                "/api/profile/password/send-otp",
                                 "/api/promotions",
+                                "/api/promotions/**",
                                 "/api/maintenance-companies",
                                 "/api/maintenance-partners",
                                 "/api/feedback/approved",
@@ -71,11 +73,11 @@ public class SecurityConfig {
                                 "/api/vehicles", "/api/vehicles/**")
                         .permitAll()
                         // Vehicle management (Staff Only): PUT, DELETE, POST
-                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/vehicles/**", "/vehicles/**")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/vehicles", "/api/vehicles/**", "/vehicles", "/vehicles/**")
                         .hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/vehicles/**", "/vehicles/**")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/vehicles", "/api/vehicles/**", "/vehicles", "/vehicles/**")
                         .hasRole("STAFF")
-                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/vehicles/**", "/vehicles",
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/vehicles", "/api/vehicles/**", "/vehicles",
                                 "/vehicles/**")
                         .hasRole("STAFF")
                         // Customer profile and invoices-payments (authenticated)

@@ -63,6 +63,9 @@ public class BookingController {
     @Autowired
     private PromotionRepository promotionRepository;
 
+    @Autowired(required = false)
+    private com.driveflow.demo_driveflow.otp.OtpService otpService;
+
     private boolean isStaff(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
             return false;
@@ -140,6 +143,7 @@ public class BookingController {
     public String showCreateForm(
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
             @RequestParam(value = "branchId", required = false) Long branchId,
+            @RequestParam(value = "couponCode", required = false) String couponCode,
             Model model,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
@@ -173,8 +177,9 @@ public class BookingController {
 
         Booking booking = new Booking();
         LocalDate today = LocalDate.now();
-        LocalDate defaultEnd = today.plusDays(3);
-        booking.setBookingDate(today);
+        LocalDate minStartDate = today.plusDays(1);
+        LocalDate defaultEnd = minStartDate.plusDays(3);
+        booking.setBookingDate(minStartDate);
         booking.setEndDate(defaultEnd);
         booking.setDuration(3);
         booking.setQuantity(1);
@@ -214,10 +219,12 @@ public class BookingController {
         // Calculate initial pricing breakdown
         Long selBranchId = selectedBranch != null ? selectedBranch.getBranchId() : (branches.isEmpty() ? null : branches.get(0).getBranchId());
         Long selVehId = selectedVehicle != null ? selectedVehicle.getVehicleId() : null;
-        PricingBreakdown initialBreakdown = pricingEngineService.calculatePricing(selVehId, selBranchId, today, defaultEnd, null);
+        PricingBreakdown initialBreakdown = pricingEngineService.calculatePricing(selVehId, selBranchId, minStartDate, defaultEnd, couponCode);
         booking.setChargedRate(initialBreakdown.getFinalTotalCost());
 
         model.addAttribute("booking", booking);
+        model.addAttribute("minStartDate", minStartDate);
+        model.addAttribute("initialCouponCode", couponCode);
         model.addAttribute("selectedBranch", selectedBranch);
         model.addAttribute("selectedVehicle", selectedVehicle);
         model.addAttribute("currentCustomer", currentCustomer);
@@ -320,8 +327,15 @@ public class BookingController {
             return "redirect:/bookings/new?branchId=" + pickupBranchId;
         }
 
-        // Dates & Duration
-        LocalDate start = booking.getBookingDate() != null ? booking.getBookingDate() : LocalDate.now();
+        // Dates & Duration: Booking start date must be at least one day from today
+        LocalDate minStartDate = LocalDate.now().plusDays(1);
+        LocalDate start = booking.getBookingDate();
+        if (start == null || start.isBefore(minStartDate)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Invalid Booking Date: The booking start date must be at least one day from today.");
+            return "redirect:/bookings/new" + (pickupBranchId != null ? "?branchId=" + pickupBranchId : "")
+                    + (vehicleId != null ? "&vehicleId=" + vehicleId : "");
+        }
         LocalDate end = booking.getEndDate() != null ? booking.getEndDate() : start.plusDays(1);
         if (end.isBefore(start)) {
             end = start;
@@ -340,6 +354,11 @@ public class BookingController {
         booking.setChargedRate(pricing.getFinalTotalCost());
         booking.setDuration(pricing.getDurationDays());
         booking.setQuantity(1);
+
+        if (pricing.isPromotionApplied()) {
+            String appliedTag = pricing.getCouponId() != null ? pricing.getCouponId() : couponCode;
+            booking.setStaffMessage("Applied Promo: " + appliedTag + " (" + pricing.getPromotionTitle() + " -" + pricing.getDiscountRate() + "%)");
+        }
 
         // 5. Payment Gate:
         // Do not trigger the payment gateway during the initial booking submission.
@@ -549,6 +568,7 @@ public class BookingController {
     @PostMapping("/{id}/return")
     public String returnVehicle(
             @PathVariable Long id,
+            @RequestParam(name = "otp", required = false) String otp,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -570,12 +590,22 @@ public class BookingController {
                 redirectAttributes.addFlashAttribute("errorMessage", "You are not authorized to return this vehicle.");
                 return "redirect:/invoices-payments";
             }
+
+            if (otpService != null) {
+                if (otp == null || otp.trim().isEmpty() || !otpService.verifyVehicleReturnOtp(email, otp.trim())) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Invalid or missing OTP code. Return verification required.");
+                    return "redirect:/invoices-payments";
+                }
+            }
         }
 
         try {
+            boolean isEarlyReturn = existing.getEndDate() != null && LocalDate.now().isBefore(existing.getEndDate());
             bookingService.returnVehicle(id);
-            redirectAttributes.addFlashAttribute("successMessage",
-                    "Vehicle successfully returned! Inventory is now released to AVAILABLE, and feedback has been unlocked for your trip.");
+            String successMsg = isEarlyReturn
+                    ? "Vehicle successfully returned! Notice: Since you returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff."
+                    : "Vehicle successfully returned! Inventory is now released to AVAILABLE, and feedback has been unlocked for your trip.";
+            redirectAttributes.addFlashAttribute("successMessage", successMsg);
             return "redirect:/feedback/new?bookingId=" + id;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Return Vehicle failed: " + e.getMessage());

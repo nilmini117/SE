@@ -7,6 +7,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -99,5 +100,47 @@ public class PromotionServiceImpl implements PromotionService {
     @Override
     public void removePromotion(Long id) {
         promotionRepository.deleteById(id);
+    }
+
+    @Override
+    public Promotion getPromotionByIdentifier(String identifier) {
+        if (identifier == null || identifier.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Promotion/Coupon identifier is required.");
+        }
+        String clean = identifier.trim();
+
+        // 1. If numeric ID (e.g. 1, 2)
+        try {
+            Long numId = Long.parseLong(clean);
+            Optional<Promotion> byId = promotionRepository.findById(numId);
+            if (byId.isPresent()) {
+                return byId.get();
+            }
+        } catch (NumberFormatException ignored) {}
+
+        // 2. Lookup by coupon ID (e.g. SUMMER15, CPN-1234)
+        Optional<Promotion> byCouponId = promotionRepository.findByCouponIdIgnoreCase(clean);
+        if (byCouponId.isPresent()) {
+            return byCouponId.get();
+        }
+
+        // 3. Lookup by coupon Code
+        Optional<Promotion> byCouponCode = promotionRepository.findByCouponCodeIgnoreCase(clean);
+        if (byCouponCode.isPresent()) {
+            return byCouponCode.get();
+        }
+
+        // 4. Fallback search by title / keyword
+        List<Promotion> matched = promotionRepository.findMatchingPromotions(clean);
+        if (!matched.isEmpty()) {
+            return matched.get(0);
+        }
+
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Coupon or promotion not found: " + identifier);
+    }
+
+    @Override
+    public List<Promotion> getActivePromotions() {
+        return promotionRepository.findActivePromotions(LocalDate.now());
     }
 }

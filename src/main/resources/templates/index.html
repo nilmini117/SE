@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,14 +8,15 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --df-forest-green: #15803d;
+            --df-forest-green: #1c8041;
             --df-green: #16a34a;
             --df-green-hover: #15803d;
             --df-green-light: #ecfdf5;
-            --df-navy: #0f172a;
+            --df-navy: #110538;
             --df-navy-dark: #0a0f1d;
             --df-navy-surface: #1e293b;
             --df-slate: #334155;
@@ -204,27 +206,37 @@
         /* ============================================================== */
         .df-light-hero {
             position: relative;
-            background-image: url('/images/lifestyle_car.jpg');
-            background-size: cover;
-            background-position: center 38%;
-            background-repeat: no-repeat;
+            background-color: #f8fafc;
             border-bottom: 1px solid var(--df-border);
-            padding: 3.8rem 1.5rem 4.2rem;
+            padding: 4.5rem 1.5rem 4.5rem;
             color: var(--df-navy);
             text-align: center;
             overflow: hidden;
         }
 
-        .df-light-hero::before {
-            content: '';
+        .df-hero-bg-image {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(255, 255, 255, 0.60);
-            backdrop-filter: blur(1.5px);
+            background-image: url('/images/lifestyle_car.jpg');
+            background-size: cover;
+            background-position: center 38%;
+            background-repeat: no-repeat;
+            opacity: 0.70; /* 70% background image opacity */
             z-index: 1;
+        }
+
+        .df-hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(0.5px);
+            z-index: 2;
         }
 
         .df-hero-container {
@@ -232,6 +244,10 @@
             margin: 0 auto;
             position: relative;
             z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .df-hero-badge {
@@ -251,29 +267,42 @@
         }
 
         .df-hero-title {
-            font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+            font-size: clamp(2.85rem, 5.5vw, 4.2rem); /* text-5xl / text-6xl enlarged font size */
             font-weight: 800;
-            letter-spacing: -0.03em;
-            margin: 0 0 0.85rem;
+            letter-spacing: -0.035em;
+            margin: 0 auto 0.95rem;
+            text-align: center;
             color: var(--df-navy);
-            line-height: 1.15;
+            line-height: 1.12;
+            max-width: 950px;
         }
 
         .df-hero-subtext {
-            font-size: clamp(1rem, 2vw, 1.15rem);
-            color: var(--df-muted);
+            font-size: clamp(1.1rem, 2.2vw, 1.3rem);
+            color: #000000 !important; /* Pure black text */
+            -webkit-text-fill-color: #000000 !important;
+            font-weight: 700 !important;
             max-width: 720px;
-            margin: 0 auto 2.5rem;
+            margin: 0 auto 0;
+            text-align: center;
             line-height: 1.6;
+            opacity: 1 !important;
+            text-shadow: none !important;
         }
 
-        /* Horizontal Brand Filter Row */
+        .text-black {
+            color: #000000 !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+
+        /* Horizontal Brand Filter Row - Moved further down with mt-16 */
         .df-brands-row {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 1.25rem;
             max-width: 1100px;
-            margin: 0 auto 2.5rem;
+            margin: 3.75rem auto 2.5rem; /* mt-16: larger top margin moving cards further down */
+            width: 100%;
         }
 
         @media (max-width: 900px) {
@@ -372,35 +401,40 @@
             color: #ffffff;
         }
 
-        /* Pill-Shaped Search Bar */
+        /* Pill-Shaped Search Bar - Single Row */
         .df-pill-search-container {
-            max-width: 920px;
+            max-width: 960px;
+            width: 100%;
             margin: 0 auto;
         }
 
         .df-pill-search {
             background: #ffffff;
             border-radius: 9999px;
-            padding: 0.6rem 0.75rem;
+            padding: 0.45rem 0.55rem 0.45rem 1.35rem;
             border: 1px solid var(--df-border);
             box-shadow: 0 12px 32px -6px rgba(15, 23, 42, 0.08);
             display: flex;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            flex-wrap: nowrap; /* Strictly single row */
+            gap: 0.65rem;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .df-search-input-wrap {
-            flex: 2 1 280px;
+            flex: 1 1 auto;
+            min-width: 0;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.5rem 1.25rem;
+            gap: 0.65rem;
+            padding: 0.35rem 0.75rem 0.35rem 0;
             border-right: 1px solid var(--df-border);
         }
 
         .df-search-input-wrap input {
             width: 100%;
+            min-width: 120px;
             border: none;
             outline: none;
             font-family: inherit;
@@ -416,11 +450,13 @@
         }
 
         .df-search-select-wrap {
-            flex: 1 1 200px;
+            flex: 0 0 auto;
+            width: 175px;
             display: flex;
             align-items: center;
-            gap: 0.65rem;
-            padding: 0.5rem 1rem;
+            gap: 0.5rem;
+            padding: 0.35rem 0.5rem;
+            white-space: nowrap;
         }
 
         .df-search-select-wrap select {
@@ -433,21 +469,23 @@
             color: var(--df-navy);
             background: transparent;
             cursor: pointer;
+            text-overflow: ellipsis;
         }
 
         .df-btn-filter-fleet {
+            flex: 0 0 auto;
             background: var(--df-green);
             color: #ffffff;
             border: none;
-            padding: 0.85rem 1.85rem;
+            padding: 0.75rem 1.65rem;
             border-radius: 9999px;
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             font-weight: 700;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.45rem;
             transition: all 0.15s ease;
             box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
             white-space: nowrap;
@@ -486,10 +524,342 @@
         }
 
         /* ============================================================== */
+        /* 2.5 AVAILABLE COUPON CODES & ACTIVE DEALS SECTION              */
+        /* ============================================================== */
+        .df-coupons-section {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 3.5rem 1.5rem 1.25rem 1.5rem;
+        }
+
+        .df-coupons-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            margin-bottom: 1.75rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .df-coupons-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #a7f3d0;
+            border-radius: 9999px;
+            padding: 0.35rem 0.85rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        .df-pulse-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: dfPulse 1.8s infinite;
+        }
+
+        @keyframes dfPulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .df-coupons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .df-coupon-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            align-items: stretch;
+            gap: 1.15rem;
+            box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.05);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .df-coupon-card:hover {
+            transform: translateY(-3px);
+            border-color: #cbd5e1;
+            box-shadow: 0 14px 30px -4px rgba(15, 23, 42, 0.1);
+        }
+
+        .df-coupon-discount-badge {
+            flex-shrink: 0;
+            width: 88px;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            padding: 0.75rem 0.4rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .badge-summer {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+
+        .badge-vip {
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+        }
+
+        .badge-general {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .df-discount-percent {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+
+        .df-discount-sub {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .df-coupon-body {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .df-coupon-pill-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .df-coupon-pill {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 0.2rem 0.55rem;
+            border-radius: 6px;
+        }
+
+        .df-pill-season {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+        }
+
+        .df-pill-category {
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
+
+        .df-coupon-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--df-navy);
+            margin: 0 0 0.4rem 0;
+            line-height: 1.3;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .df-coupon-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        .df-coupon-action-box {
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.55rem;
+            min-width: 145px;
+        }
+
+        .df-coupon-code-dashed {
+            border: 2px dashed #94a3b8;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 0.45rem 0.65rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 0.35rem;
+            transition: all 0.2s ease;
+        }
+
+        .df-coupon-card:hover .df-coupon-code-dashed {
+            border-color: #64748b;
+            background: #ffffff;
+        }
+
+        .df-coupon-code-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+
+        .df-coupon-code-string {
+            font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            color: var(--df-navy);
+        }
+
+        .df-btn-copy-coupon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #334155;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .df-btn-copy-coupon:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            color: #0f172a;
+        }
+
+        .df-btn-copy-coupon.copied {
+            background: #ecfdf5 !important;
+            border-color: #10b981 !important;
+            color: #047857 !important;
+        }
+
+        .df-btn-use-coupon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            background: #0f172a;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 10px;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .df-btn-use-coupon:hover {
+            background: var(--df-green);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .df-coupon-toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 0.85rem 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid #334155;
+            pointer-events: none;
+        }
+
+        .df-coupon-toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .df-coupons-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .df-coupon-card {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .df-coupon-discount-badge {
+                width: 100%;
+                height: 52px;
+                flex-direction: row;
+                gap: 0.5rem;
+            }
+
+            .df-coupon-action-box {
+                width: 100%;
+            }
+
+            .df-coupon-title {
+                white-space: normal;
+            }
+        }
+
+        /* ============================================================== */
         /* 3. FEATURED FLEET (CLICK-TO-BOOK CARD GRID)                    */
         /* ============================================================== */
         .df-fleet-section {
-            padding: 4.5rem 1.5rem;
+            padding: 2.25rem 1.5rem 4.5rem 1.5rem;
             max-width: 1280px;
             margin: 0 auto;
         }
@@ -1043,914 +1413,1357 @@
         }
     </style>
 </head>
+
 <body>
 
-<!-- ============================================================== -->
-<!-- 1. UNIFIED LIGHT-THEMED NAVIGATION BAR                         -->
-<!-- ============================================================== -->
-<nav class="df-nav-header">
-    <div class="df-nav-container">
-        <!-- Brand Logo (Green wheel monogram + navy/green text) -->
-        <a th:href="@{/}" class="df-brand-wrap">
-            <div class="df-brand-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M12 3v6"></path>
-                    <path d="M12 15v6"></path>
-                    <path d="M3 12h6"></path>
-                    <path d="M15 12h6"></path>
+    <!-- ============================================================== -->
+    <!-- 1. UNIFIED LIGHT-THEMED NAVIGATION BAR                         -->
+    <!-- ============================================================== -->
+    <nav class="df-nav-header">
+        <div class="df-nav-container">
+            <!-- Brand Logo (Green wheel monogram + navy/green text) -->
+            <a th:href="@{/}" class="df-brand-wrap">
+                <div class="df-brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 3v6"></path>
+                        <path d="M12 15v6"></path>
+                        <path d="M3 12h6"></path>
+                        <path d="M15 12h6"></path>
+                    </svg>
+                </div>
+                <div class="df-brand-title">Drive<span>Flow</span></div>
+            </a>
+
+            <!-- Main Navigation Links (Strict layout parity) -->
+            <ul class="df-nav-menu">
+                <li>
+                    <a th:href="@{/}" class="active">Dashboard</a>
+                </li>
+                <li>
+                    <a th:href="@{/vehicles}">Vehicles</a>
+                </li>
+                <li>
+                    <a th:href="@{/bookings}">Bookings</a>
+                </li>
+                <li>
+                    <a th:href="@{/incident}">Need to contact us</a>
+                </li>
+                <li>
+                    <a th:href="@{/feedback}">Feedback</a>
+                </li>
+            </ul>
+
+            <!-- Dynamic Auth Actions: Only area that changes between guest and logged-in user -->
+            <div class="df-nav-actions">
+                <!-- Unauthenticated / Guest View -->
+                <div sec:authorize="!isAuthenticated()" style="display: flex; align-items: center; gap: 0.85rem;">
+                    <a th:href="@{/login}" class="df-btn-signin">Sign In</a>
+                    <a th:href="@{/register}" class="df-btn-register">Register</a>
+                </div>
+
+                <!-- Authenticated Customer View -->
+                <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.85rem;">
+                    <a th:href="@{/profile}" class="df-user-badge">
+                        <span class="df-user-avatar">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                        </span>
+                        <span sec:authentication="name"
+                            style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Customer</span>
+                    </a>
+                    <a th:href="@{/logout}" class="df-btn-signin"
+                        style="font-size: 0.82rem; padding: 0.4rem 0.9rem;">Sign Out</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================== -->
+    <!-- 2. LIGHT-THEMED HERO SECTION & BRAND FILTERS                   -->
+    <!-- ============================================================== -->
+    <header class="df-light-hero relative text-center overflow-hidden">
+        <!-- Background image element at 70% opacity -->
+        <div class="df-hero-bg-image opacity-70"></div>
+        <!-- Soft high-contrast overlay -->
+        <div class="df-hero-overlay bg-black/30"></div>
+
+        <div class="df-hero-container text-center">
+            <!-- Badge -->
+            <div class="df-hero-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path
+                        d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2">
+                    </path>
+                    <circle cx="7" cy="17" r="2"></circle>
+                    <path d="M9 17h6"></path>
+                    <circle cx="17" cy="17" r="2"></circle>
                 </svg>
-            </div>
-            <div class="df-brand-title">Drive<span>Flow</span></div>
-        </a>
-
-        <!-- Main Navigation Links (Strict layout parity) -->
-        <ul class="df-nav-menu">
-            <li>
-                <a th:href="@{/}" class="active">Dashboard</a>
-            </li>
-            <li>
-                <a th:href="@{/vehicles}">Vehicles</a>
-            </li>
-            <li>
-                <a th:href="@{/bookings}">Bookings</a>
-            </li>
-            <li>
-                <a th:href="@{/incident}">Need to contact us</a>
-            </li>
-            <li>
-                <a th:href="@{/feedback}">Feedback</a>
-            </li>
-        </ul>
-
-        <!-- Dynamic Auth Actions: Only area that changes between guest and logged-in user -->
-        <div class="df-nav-actions">
-            <!-- Unauthenticated / Guest View -->
-            <div sec:authorize="!isAuthenticated()" style="display: flex; align-items: center; gap: 0.85rem;">
-                <a th:href="@{/login}" class="df-btn-signin">Sign In</a>
-                <a th:href="@{/register}" class="df-btn-register">Register</a>
+                Certified Sri Lankan Park Inventory
             </div>
 
-            <!-- Authenticated Customer View -->
-            <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 0.85rem;">
-                <a th:href="@{/profile}" class="df-user-badge">
-                    <span class="df-user-avatar">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    </span>
-                    <span sec:authentication="name" style="max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Customer</span>
-                </a>
-                <a th:href="@{/logout}" class="df-btn-signin" style="font-size: 0.82rem; padding: 0.4rem 0.9rem;">Sign Out</a>
-            </div>
-        </div>
-    </div>
-</nav>
-
-<!-- ============================================================== -->
-<!-- 2. LIGHT-THEMED HERO SECTION & BRAND FILTERS                   -->
-<!-- ============================================================== -->
-<header class="df-light-hero">
-    <div class="df-hero-container">
-        <!-- Badge -->
-        <div class="df-hero-badge">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
-            Certified Sri Lankan Park Inventory
-        </div>
-
-        <!-- H1 Title & Subtext -->
-        <h1 class="df-hero-title">Find your choice in our park</h1>
-        <p class="df-hero-subtext">Safe drive makes happy journey</p>
-
-        <!-- Horizontal Row of 5 Brand Filter Cards (Toyota, Suzuki, Honda, Tesla, Benz) -->
-        <div class="df-brands-row" id="brandCardsRow">
-            <!-- Brand 1: Toyota -->
-            <div class="df-brand-card" data-brand="Toyota" onclick="selectBrandCard('Toyota', this)">
-                <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #fee2e2;">
-                    <img th:src="@{/images/brand_toyota.png}" src="/images/brand_toyota.png" alt="Toyota" class="df-brand-logo-img">
-                </div>
-                <div class="df-brand-card-name">Toyota</div>
-                <div class="df-brand-card-action">View Cars &rarr;</div>
+            <!-- H1 Title & Subtext (Perfect center & enlarged font size: text-5xl / text-6xl) -->
+            <div class="text-center w-full" style="text-align: center; width: 100%;">
+                <h1 class="df-hero-title text-center text-5xl md:text-6xl">Find your choice in our park</h1>
+                <p class="df-hero-subtext text-center text-black" style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-weight: 700 !important; opacity: 1 !important; text-shadow: none !important;"><span style="color: #000000 !important; -webkit-text-fill-color: #000000 !important; font-weight: 700 !important;">Safe drive makes happy journey</span></p>
             </div>
 
-            <!-- Brand 2: Suzuki -->
-            <div class="df-brand-card" data-brand="Suzuki" onclick="selectBrandCard('Suzuki', this)">
-                <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #dbeafe;">
-                    <img th:src="@{/images/brand_suzuki.png}" src="/images/brand_suzuki.png" alt="Suzuki" class="df-brand-logo-img">
-                </div>
-                <div class="df-brand-card-name">Suzuki</div>
-                <div class="df-brand-card-action">View Cars &rarr;</div>
-            </div>
-
-            <!-- Brand 3: Honda -->
-            <div class="df-brand-card" data-brand="Honda" onclick="selectBrandCard('Honda', this)">
-                <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #fef3c7;">
-                    <img th:src="@{/images/brand_honda.png}" src="/images/brand_honda.png" alt="Honda" class="df-brand-logo-img">
-                </div>
-                <div class="df-brand-card-name">Honda</div>
-                <div class="df-brand-card-action">View Cars &rarr;</div>
-            </div>
-
-            <!-- Brand 4: Tesla -->
-            <div class="df-brand-card" data-brand="Tesla" onclick="selectBrandCard('Tesla', this)">
-                <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #e0e7ff;">
-                    <img th:src="@{/images/brand_tesla.png}" src="/images/brand_tesla.png" alt="Tesla" class="df-brand-logo-img">
-                </div>
-                <div class="df-brand-card-name">Tesla</div>
-                <div class="df-brand-card-action">View Cars &rarr;</div>
-            </div>
-
-            <!-- Brand 5: Benz -->
-            <div class="df-brand-card" data-brand="Benz" onclick="selectBrandCard('Benz', this)">
-                <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #f1f5f9;">
-                    <img th:src="@{/images/brand_benz.png}" src="/images/brand_benz.png" alt="Benz" class="df-brand-logo-img">
-                </div>
-                <div class="df-brand-card-name">Benz</div>
-                <div class="df-brand-card-action">View Cars &rarr;</div>
-            </div>
-        </div>
-
-        <!-- Pill-Shaped Search Bar -->
-        <div class="df-pill-search-container">
-            <div class="df-pill-search">
-                <!-- Text Input -->
-                <div class="df-search-input-wrap">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.3">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="text" id="modelSearchInput" placeholder="Search by model or reg number (e.g. Prius, WP CA)...">
-                </div>
-
-                <!-- Availability Dropdown -->
-                <div class="df-search-select-wrap">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.3">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                    <select id="availabilitySelect">
-                        <option value="ALL">All Availability</option>
-                        <option value="AVAILABLE" selected>Available Only</option>
-                        <option value="BOOKED">Booked</option>
-                    </select>
-                </div>
-
-                <!-- Primary Action Button -->
-                <button type="button" class="df-btn-filter-fleet" id="filterFleetBtn" onclick="applyFleetFilters()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                    </svg>
-                    Filter Fleet
-                </button>
-            </div>
-
-            <!-- Active filter indicator tag -->
-            <div id="activeFilterPill" style="display: none;" class="df-active-filter-badge">
-                <span>Filtering by: <strong id="activeFilterText" style="color: var(--df-forest-green);">Toyota</strong></span>
-                <button type="button" class="df-btn-reset-filters" onclick="clearAllFilters()">Clear Filter &bull; Show All</button>
-            </div>
-        </div>
-    </div>
-</header>
-
-<!-- ============================================================== -->
-<!-- 3. FEATURED FLEET (CLICK-TO-BOOK CARD GRID)                    -->
-<!-- ============================================================== -->
-<section class="df-fleet-section" id="featured-fleet">
-    <!-- Section Header -->
-    <div class="df-section-header">
-        <div class="df-section-title-wrap">
-            <h2>Latest additions to our fleet</h2>
-            <p>Certified, safety-inspected passenger cars. Click any vehicle image or "Book Now" to automatically reserve.</p>
-        </div>
-        <a th:href="@{/vehicles}" class="df-link-browse-all">
-            Browse all fleet vehicles &rarr;
-        </a>
-    </div>
-
-    <!-- 3-Column Vehicle Card Grid -->
-    <div class="df-fleet-grid" id="fleetCardGrid">
-
-        <!-- Dynamic Database Vehicles -->
-        <th:block th:if="${vehicles != null and !vehicles.empty}">
-            <div th:each="v : ${vehicles}"
-                 class="df-fleet-card"
-                 th:data-id="${v.vehicleId}"
-                 th:data-brand="${v.brand}"
-                 th:data-model="${v.model}"
-                 th:data-branch="${v.branch != null ? v.branch.branchName : 'Colombo Central Station'}"
-                 th:data-status="${v.status != null ? v.status : 'AVAILABLE'}"
-                 th:data-rate="${v.dailyRate}"
-                 th:data-transmission="${v.transmission}"
-                 th:data-capacity="${v.capacity}"
-                 th:data-fuel="${v.fuel}"
-                 th:data-image="${v.imageUrl}">
-                <!-- Clickable Vehicle Image Trigger -->
-                <div class="df-card-image-wrap" onclick="handleCardClick(this)" title="Click image to reserve this vehicle">
-                    <img th:src="${v.imageUrl}" th:alt="${v.model}" class="df-card-image">
-                    <div class="df-image-click-hint">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                        Click to Reserve
+            <!-- Horizontal Row of 5 Brand Filter Cards (Moved further down with mt-12 md:mt-16) -->
+            <div class="df-brands-row mt-12 md:mt-16" id="brandCardsRow">
+                <!-- Brand 1: Toyota -->
+                <div class="df-brand-card" data-brand="Toyota" onclick="selectBrandCard('Toyota', this)">
+                    <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #fee2e2;">
+                        <img th:src="@{/images/brand_toyota.png}" src="/images/brand_toyota.png" alt="Toyota"
+                            class="df-brand-logo-img">
                     </div>
-                    <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    <div class="df-brand-card-name">Toyota</div>
+                    <div class="df-brand-card-action">View Cars &rarr;</div>
+                </div>
+
+                <!-- Brand 2: Suzuki -->
+                <div class="df-brand-card" data-brand="Suzuki" onclick="selectBrandCard('Suzuki', this)">
+                    <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #dbeafe;">
+                        <img th:src="@{/images/brand_suzuki.png}" src="/images/brand_suzuki.png" alt="Suzuki"
+                            class="df-brand-logo-img">
+                    </div>
+                    <div class="df-brand-card-name">Suzuki</div>
+                    <div class="df-brand-card-action">View Cars &rarr;</div>
+                </div>
+
+                <!-- Brand 3: Honda -->
+                <div class="df-brand-card" data-brand="Honda" onclick="selectBrandCard('Honda', this)">
+                    <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #fef3c7;">
+                        <img th:src="@{/images/brand_honda.png}" src="/images/brand_honda.png" alt="Honda"
+                            class="df-brand-logo-img">
+                    </div>
+                    <div class="df-brand-card-name">Honda</div>
+                    <div class="df-brand-card-action">View Cars &rarr;</div>
+                </div>
+
+                <!-- Brand 4: Tesla -->
+                <div class="df-brand-card" data-brand="Tesla" onclick="selectBrandCard('Tesla', this)">
+                    <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #e0e7ff;">
+                        <img th:src="@{/images/brand_tesla.png}" src="/images/brand_tesla.png" alt="Tesla"
+                            class="df-brand-logo-img">
+                    </div>
+                    <div class="df-brand-card-name">Tesla</div>
+                    <div class="df-brand-card-action">View Cars &rarr;</div>
+                </div>
+
+                <!-- Brand 5: Benz -->
+                <div class="df-brand-card" data-brand="Benz" onclick="selectBrandCard('Benz', this)">
+                    <div class="df-brand-card-logo" style="background: #ffffff; border: 1px solid #f1f5f9;">
+                        <img th:src="@{/images/brand_benz.png}" src="/images/brand_benz.png" alt="Benz"
+                            class="df-brand-logo-img">
+                    </div>
+                    <div class="df-brand-card-name">Benz</div>
+                    <div class="df-brand-card-action">View Cars &rarr;</div>
+                </div>
+            </div>
+
+            <!-- Pill-Shaped Search Bar - Single Row -->
+            <div class="df-pill-search-container" style="max-width: 960px; width: 100%; margin: 0 auto;">
+                <div class="df-pill-search" style="display: flex; align-items: center; flex-wrap: nowrap; gap: 0.65rem; width: 100%; box-sizing: border-box;">
+                    <!-- Text Input -->
+                    <div class="df-search-input-wrap" style="flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 0.65rem; border-right: 1px solid var(--df-border);">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.3">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
+                        <input type="text" id="modelSearchInput"
+                            placeholder="Search by model or reg number (e.g. Prius, WP CA)...">
+                    </div>
+
+                    <!-- Availability Dropdown -->
+                    <div class="df-search-select-wrap" style="flex: 0 0 auto; width: 175px; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.3">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <select id="availabilitySelect">
+                            <option value="ALL">All Availability</option>
+                            <option value="AVAILABLE" selected>Available Only</option>
+                            <option value="BOOKED">Booked</option>
+                        </select>
+                    </div>
+
+                    <!-- Primary Action Button -->
+                    <button type="button" class="df-btn-filter-fleet" id="filterFleetBtn" onclick="applyFleetFilters()" style="flex: 0 0 auto; white-space: nowrap;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                        </svg>
+                        Filter Fleet
                     </button>
-                    <div class="df-card-category-badge" th:text="${v.categoryBadge}">Passenger Car</div>
                 </div>
-                <div class="df-card-body">
-                    <div class="df-card-location">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                        <span th:text="${v.branch != null ? v.branch.branchName : 'Colombo Central Station'}">Colombo Central Station</span>
+
+                <!-- Active filter indicator tag -->
+                <div id="activeFilterPill" style="display: none;" class="df-active-filter-badge">
+                    <span>Filtering by: <strong id="activeFilterText"
+                            style="color: var(--df-forest-green);">Toyota</strong></span>
+                    <button type="button" class="df-btn-reset-filters" onclick="clearAllFilters()">Clear Filter &bull;
+                        Show All</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ============================================================== -->
+    <!-- 2.5 AVAILABLE COUPON CODES & ACTIVE DEALS                      -->
+    <!-- ============================================================== -->
+    <section class="df-coupons-section" id="available-coupons">
+        <div class="df-coupons-header">
+            <div class="df-section-title-wrap">
+                <div class="df-coupons-tag">
+                    <span class="df-pulse-indicator"></span>
+                    <span>Active Promotions &bull; Verified Coupons</span>
+                </div>
+                <h2>Available Coupon Codes</h2>
+                <p>Save instantly on your reservation. Copy any coupon ID below or click "Book with Code" to apply
+                    automatic savings.</p>
+            </div>
+        </div>
+
+        <!-- Responsive Coupon Cards Grid -->
+        <div class="df-coupons-grid">
+            <!-- Render database promotions when available -->
+            <th:block th:if="${activePromotions != null and !activePromotions.empty}">
+                <div th:each="p : ${activePromotions}" class="df-coupon-card">
+                    <!-- Left: Prominent colorful discount badge -->
+                    <div class="df-coupon-discount-badge"
+                        th:classappend="${p.discountRate != null and p.discountRate >= 20 ? 'badge-vip' : (p.discountRate != null and p.discountRate >= 15 ? 'badge-summer' : 'badge-general')}">
+                        <span class="df-discount-percent"
+                            th:text="${p.discountRate != null ? p.discountRate.stripTrailingZeros().toPlainString() + '%' : '15%'}">15%</span>
+                        <span class="df-discount-sub">OFF</span>
                     </div>
-                    <h3 class="df-card-title" onclick="handleCardClick(this)" th:text="${v.model}">
-                        Toyota Prius 2024 Prime
-                    </h3>
-                    <div class="df-card-specs">
-                        <div class="df-spec-item">
-                            <span class="df-spec-label">Transmission</span>
-                            <span class="df-spec-val" th:text="${v.transmission}">Automatic (CVT)</span>
+
+                    <!-- Center: Campaign details -->
+                    <div class="df-coupon-body">
+                        <div class="df-coupon-pill-group">
+                            <span class="df-coupon-pill df-pill-season"
+                                th:text="${p.vehicleSeason != null ? p.vehicleSeason : 'ALL SEASONS'}">SUMMER</span>
+                            <span class="df-coupon-pill df-pill-category"
+                                th:text="${p.vehicleCategory != null ? p.vehicleCategory : 'ALL FLEET'}">SEDAN</span>
                         </div>
-                        <div class="df-spec-item">
-                            <span class="df-spec-label">Capacity</span>
-                            <span class="df-spec-val" th:text="${v.capacity}">5 Seats</span>
-                        </div>
-                        <div class="df-spec-item">
-                            <span class="df-spec-label">Engine / Fuel</span>
-                            <span class="df-spec-val" th:text="${v.fuel}">Hybrid 24 km/L</span>
+                        <h3 class="df-coupon-title" th:text="${p.title}" th:title="${p.title}">Summer Park Super Saver
+                        </h3>
+                        <div class="df-coupon-meta">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Valid until <strong
+                                    th:text="${p.endDate != null ? p.endDate : 'Season End'}">2026-08-31</strong></span>
                         </div>
                     </div>
-                    <div class="df-card-footer">
-                        <div class="df-card-price-wrap">
-                            <span class="df-price-label">Daily Rental</span>
-                            <div class="df-card-price">Rs. <span th:text="${#numbers.formatDecimal(v.dailyRate, 0, 'COMMA', 0, 'POINT')}">12,500</span> <small>/day</small></div>
+
+                    <!-- Right: Dashed-border coupon code box + Copy & Book actions -->
+                    <div class="df-coupon-action-box">
+                        <div class="df-coupon-code-dashed">
+                            <span class="df-coupon-code-label">COUPON ID</span>
+                            <span class="df-coupon-code-string"
+                                th:text="${p.couponId != null ? p.couponId : (p.couponCode != null ? p.couponCode : 'SUMMER15')}">SUMMER15</span>
+                            <button type="button" class="df-btn-copy-coupon"
+                                th:attr="data-code=${p.couponId != null ? p.couponId : (p.couponCode != null ? p.couponCode : 'SUMMER15')}"
+                                onclick="copyCouponCode(this)" title="Click to copy coupon code">
+                                <svg class="copy-svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span class="copy-btn-text">Copy Code</span>
+                            </button>
                         </div>
-                        <button type="button" class="df-btn-book" onclick="handleCardClick(this)">
-                            Book Now
+                        <a th:href="@{/bookings/new(couponCode=${p.couponId != null ? p.couponId : p.couponCode})}"
+                            class="df-btn-use-coupon" title="Reserve with this coupon applied">
+                            <span>Book with Code</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </th:block>
+
+            <!-- Fallback cards when activePromotions is empty in the database -->
+            <th:block th:if="${activePromotions == null or activePromotions.empty}">
+                <!-- Card 1: SUMMER15 -->
+                <div class="df-coupon-card">
+                    <div class="df-coupon-discount-badge badge-summer">
+                        <span class="df-discount-percent">15%</span>
+                        <span class="df-discount-sub">OFF</span>
+                    </div>
+                    <div class="df-coupon-body">
+                        <div class="df-coupon-pill-group">
+                            <span class="df-coupon-pill df-pill-season">SUMMER</span>
+                            <span class="df-coupon-pill df-pill-category">SEDAN</span>
+                        </div>
+                        <h3 class="df-coupon-title" title="Summer Park Super Saver">Summer Park Super Saver</h3>
+                        <div class="df-coupon-meta">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Valid until <strong>2026-08-31</strong></span>
+                        </div>
+                    </div>
+                    <div class="df-coupon-action-box">
+                        <div class="df-coupon-code-dashed">
+                            <span class="df-coupon-code-label">COUPON ID</span>
+                            <span class="df-coupon-code-string">SUMMER15</span>
+                            <button type="button" class="df-btn-copy-coupon" data-code="SUMMER15"
+                                onclick="copyCouponCode(this)" title="Click to copy coupon code">
+                                <svg class="copy-svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span class="copy-btn-text">Copy Code</span>
+                            </button>
+                        </div>
+                        <a th:href="@{/bookings/new(couponCode='SUMMER15')}" class="df-btn-use-coupon"
+                            title="Reserve with this coupon applied">
+                            <span>Book with Code</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 2: ESCAPE10 -->
+                <div class="df-coupon-card">
+                    <div class="df-coupon-discount-badge badge-general">
+                        <span class="df-discount-percent">10%</span>
+                        <span class="df-discount-sub">OFF</span>
+                    </div>
+                    <div class="df-coupon-body">
+                        <div class="df-coupon-pill-group">
+                            <span class="df-coupon-pill df-pill-season">WEEKEND</span>
+                            <span class="df-coupon-pill df-pill-category">SUV &amp; VANS</span>
+                        </div>
+                        <h3 class="df-coupon-title" title="Weekend Escape Discount">Weekend Escape Discount</h3>
+                        <div class="df-coupon-meta">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Valid until <strong>2026-07-31</strong></span>
+                        </div>
+                    </div>
+                    <div class="df-coupon-action-box">
+                        <div class="df-coupon-code-dashed">
+                            <span class="df-coupon-code-label">COUPON ID</span>
+                            <span class="df-coupon-code-string">ESCAPE10</span>
+                            <button type="button" class="df-btn-copy-coupon" data-code="ESCAPE10"
+                                onclick="copyCouponCode(this)" title="Click to copy coupon code">
+                                <svg class="copy-svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span class="copy-btn-text">Copy Code</span>
+                            </button>
+                        </div>
+                        <a th:href="@{/bookings/new(couponCode='ESCAPE10')}" class="df-btn-use-coupon"
+                            title="Reserve with this coupon applied">
+                            <span>Book with Code</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Card 3: DRIVEFLOW20 -->
+                <div class="df-coupon-card">
+                    <div class="df-coupon-discount-badge badge-vip">
+                        <span class="df-discount-percent">20%</span>
+                        <span class="df-discount-sub">OFF</span>
+                    </div>
+                    <div class="df-coupon-body">
+                        <div class="df-coupon-pill-group">
+                            <span class="df-coupon-pill df-pill-season">SPECIAL</span>
+                            <span class="df-coupon-pill df-pill-category">LUXURY FLEET</span>
+                        </div>
+                        <h3 class="df-coupon-title" title="DriveFlow VIP Promo">DriveFlow VIP Promo</h3>
+                        <div class="df-coupon-meta">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <span>Valid until <strong>2026-10-31</strong></span>
+                        </div>
+                    </div>
+                    <div class="df-coupon-action-box">
+                        <div class="df-coupon-code-dashed">
+                            <span class="df-coupon-code-label">COUPON ID</span>
+                            <span class="df-coupon-code-string">DRIVEFLOW20</span>
+                            <button type="button" class="df-btn-copy-coupon" data-code="DRIVEFLOW20"
+                                onclick="copyCouponCode(this)" title="Click to copy coupon code">
+                                <svg class="copy-svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span class="copy-btn-text">Copy Code</span>
+                            </button>
+                        </div>
+                        <a th:href="@{/bookings/new(couponCode='DRIVEFLOW20')}" class="df-btn-use-coupon"
+                            title="Reserve with this coupon applied">
+                            <span>Book with Code</span>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </th:block>
+        </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 3. FEATURED FLEET (CLICK-TO-BOOK CARD GRID)                    -->
+    <!-- ============================================================== -->
+    <section class="df-fleet-section" id="featured-fleet">
+        <!-- Section Header -->
+        <div class="df-section-header">
+            <div class="df-section-title-wrap">
+                <h2>Latest additions to our fleet</h2>
+                <p>Certified, safety-inspected passenger cars. Click any vehicle image or "Book Now" to automatically
+                    reserve.</p>
+            </div>
+            <a th:href="@{/vehicles}" class="df-link-browse-all">
+                Browse all fleet vehicles &rarr;
+            </a>
+        </div>
+
+        <!-- 3-Column Vehicle Card Grid -->
+        <div class="df-fleet-grid" id="fleetCardGrid">
+
+            <!-- Dynamic Database Vehicles -->
+            <th:block th:if="${vehicles != null and !vehicles.empty}">
+                <div th:each="v : ${vehicles}" class="df-fleet-card" th:data-id="${v.vehicleId}"
+                    th:data-brand="${v.brand}" th:data-model="${v.model}"
+                    th:data-branch="${v.branch != null ? v.branch.branchName : 'Colombo Central Station'}"
+                    th:data-status="${v.status != null ? v.status : 'AVAILABLE'}" th:data-rate="${v.dailyRate}"
+                    th:data-transmission="${v.transmission}" th:data-capacity="${v.capacity}" th:data-fuel="${v.fuel}"
+                    th:data-image="${v.imageUrl}">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap" onclick="handleCardClick(this)"
+                        title="Click image to reserve this vehicle">
+                        <img th:src="${v.imageUrl}" th:alt="${v.model}" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
                         </button>
+                        <div class="df-card-category-badge" th:text="${v.categoryBadge}">Passenger Car</div>
                     </div>
-                </div>
-            </div>
-        </th:block>
-
-        <!-- Static Fallback Fleet (if database uninitialized) -->
-        <th:block th:unless="${vehicles != null and !vehicles.empty}">
-        <!-- Card 1: Toyota Prius 2024 Prime -->
-        <div class="df-fleet-card" data-brand="Toyota" data-model="Toyota Prius 2024 Prime Hybrid" data-status="AVAILABLE" data-branch="Colombo Central Station">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/category_economy.jpg" alt="Toyota Prius 2024 Hybrid" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">Hybrid Efficient</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Colombo Central Station
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')">
-                    Toyota Prius 2024 Prime
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Automatic (CVT)</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">5 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Engine / Fuel</span>
-                        <span class="df-spec-val">Hybrid 24 km/L</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 12,500 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 2: Mercedes-Benz C200 AMG Line -->
-        <div class="df-fleet-card" data-brand="Benz" data-model="Benz C-Class C200 AMG Line" data-status="AVAILABLE" data-branch="Airport Express Hub">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/category_luxury.jpg" alt="Mercedes-Benz C200 AMG" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">Executive Sedan</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Airport Express Hub (Katunayake)
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')">
-                    Benz C-Class C200 AMG
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Automatic (9G)</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">5 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Engine / Fuel</span>
-                        <span class="df-spec-val">Turbo Petrol</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 28,000 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 3: Tesla Model 3 Dual Motor -->
-        <div class="df-fleet-card" data-brand="Tesla" data-model="Tesla Model 3 Dual Motor Long Range" data-status="AVAILABLE" data-branch="Colombo Central Station">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/car_tesla_model3.jpg" alt="Tesla Model 3 Dual Motor" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">100% Electric EV</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Colombo Central Station
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')">
-                    Tesla Model 3 Dual Motor
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Single-Speed EV</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">5 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Range / Fuel</span>
-                        <span class="df-spec-val">Electric (490 km)</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 32,000 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 4: Suzuki Swift Sport -->
-        <div class="df-fleet-card" data-brand="Suzuki" data-model="Suzuki Swift Sport Hatchback" data-status="AVAILABLE" data-branch="Galle Coastal Office">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/car_suzuki_swift.jpg" alt="Suzuki Swift Sport" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">City Hatchback</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Galle Coastal Office
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')">
-                    Suzuki Swift Sport
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Automatic</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">4 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Engine / Fuel</span>
-                        <span class="df-spec-val">Smart Hybrid</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 8,500 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 5: Honda Vezel e:HEV RS -->
-        <div class="df-fleet-card" data-brand="Honda" data-model="Honda Vezel e:HEV RS Crossover" data-status="AVAILABLE" data-branch="Colombo Central Station">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/lifestyle_car.jpg" alt="Honda Vezel e:HEV" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">Urban Crossover</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Colombo Central Station
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')">
-                    Honda Vezel e:HEV RS
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Automatic (e-CVT)</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">5 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Engine / Fuel</span>
-                        <span class="df-spec-val">Hybrid i-MMD</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 14,500 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 6: Toyota Land Cruiser Prado 4x4 -->
-        <div class="df-fleet-card" data-brand="Toyota" data-model="Toyota Land Cruiser Prado 4x4" data-status="AVAILABLE" data-branch="Kandy Heritage Hub">
-            <!-- Clickable Vehicle Image Trigger -->
-            <div class="df-card-image-wrap" onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')" title="Click image to reserve this vehicle">
-                <img src="/images/category_suv.jpg" alt="Toyota Prado 4x4" class="df-card-image">
-                <div class="df-image-click-hint">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline></svg>
-                    Click to Reserve
-                </div>
-                <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)" title="Save to favorites" aria-label="Favorite vehicle">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                    </svg>
-                </button>
-                <div class="df-card-category-badge">Adventure 4x4</div>
-            </div>
-            <div class="df-card-body">
-                <div class="df-card-location">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Kandy Heritage Hub
-                </div>
-                <h3 class="df-card-title" onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')">
-                    Toyota Land Cruiser Prado
-                </h3>
-                <div class="df-card-specs">
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Transmission</span>
-                        <span class="df-spec-val">Automatic 4WD</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Capacity</span>
-                        <span class="df-spec-val">7 Seats</span>
-                    </div>
-                    <div class="df-spec-item">
-                        <span class="df-spec-label">Engine / Fuel</span>
-                        <span class="df-spec-val">Diesel Turbo</span>
-                    </div>
-                </div>
-                <div class="df-card-footer">
-                    <div class="df-card-price-wrap">
-                        <span class="df-price-label">Daily Rental</span>
-                        <div class="df-card-price">Rs. 35,000 <small>/day</small></div>
-                    </div>
-                    <button type="button" class="df-btn-book" onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')">
-                        Book Now
-                    </button>
-                </div>
-            </div>
-        </div>
-        </th:block>
-
-        <!-- Empty state fallback if no cards match query -->
-        <div id="noVehiclesFound" class="df-empty-fleet">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="margin: 0 auto 1rem;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="8" y1="12" x2="16" y2="12"></line>
-            </svg>
-            <h3 style="color: var(--df-navy); font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem;">No vehicles found matching your criteria</h3>
-            <p style="margin: 0 0 1.25rem;">Try adjusting your model search keyword or clearing the manufacturer brand filter.</p>
-            <button type="button" class="df-btn-register" onclick="clearAllFilters()">View All Fleet Vehicles</button>
-        </div>
-
-    </div>
-</section>
-
-<!-- ============================================================== -->
-<!-- 4. "HOW BOOKING WORKS" SECTION (CAR RENTAL WORKFLOW)          -->
-<!-- ============================================================== -->
-<section class="df-workflow-section">
-    <div class="df-workflow-container">
-        <div class="df-workflow-split">
-            <!-- Left: Automotive Lifestyle Visual -->
-            <div class="df-workflow-visual">
-                <img src="/images/lifestyle_car.jpg" alt="DriveFlow car rental Sri Lanka">
-                <div class="df-workflow-badge">
-                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></div>
-                    <div>
-                        <strong style="font-size: 0.95rem; display: block; color: #ffffff;">100% Inspected Fleet</strong>
-                        <span style="font-size: 0.78rem; color: #cbd5e1;">Zero hidden fees &bull; 24/7 Islandwide Assistance</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right: 3-Step Process List -->
-            <div class="df-workflow-content">
-                <h3>Seamless Reservation Process</h3>
-                <h2>How Booking Works</h2>
-                <p style="color: var(--df-muted); font-size: 1.05rem; line-height: 1.6;">
-                    DriveFlow makes renting a certified car in Sri Lanka effortless. From our central hubs to airport pickups, your journey starts with 3 simple steps:
-                </p>
-
-                <div class="df-workflow-steps">
-                    <!-- Step 1 -->
-                    <div class="df-step-item">
-                        <div class="df-step-number">1</div>
-                        <div class="df-step-text">
-                            <h4>Browse the Fleet</h4>
-                            <p>Filter our certified park inventory by brand, branch, or vehicle type to select the model that suits your journey.</p>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span
+                                th:text="${v.branch != null ? v.branch.branchName : 'Colombo Central Station'}">Colombo
+                                Central Station</span>
                         </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="df-step-item">
-                        <div class="df-step-number">2</div>
-                        <div class="df-step-text">
-                            <h4>Reserve Securely</h4>
-                            <p>Lock in your dates and receive an instant booking confirmation via email with transparent pricing in Sri Lankan Rupees.</p>
+                        <h3 class="df-card-title" onclick="handleCardClick(this)" th:text="${v.model}">
+                            Toyota Prius 2024 Prime
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val" th:text="${v.transmission}">Automatic (CVT)</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val" th:text="${v.capacity}">5 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val" th:text="${v.fuel}">Hybrid 24 km/L</span>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="df-step-item">
-                        <div class="df-step-number">3</div>
-                        <div class="df-step-text">
-                            <h4>Pick Up &amp; Drive</h4>
-                            <p>Collect your keys from the designated branch and enjoy your journey across scenic Sri Lankan highways with 24/7 support.</p>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. <span
+                                        th:text="${#numbers.formatDecimal(v.dailyRate, 0, 'COMMA', 0, 'POINT')}">12,500</span>
+                                    <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book" onclick="handleCardClick(this)">
+                                Book Now
+                            </button>
                         </div>
                     </div>
                 </div>
+            </th:block>
+
+            <!-- Static Fallback Fleet (if database uninitialized) -->
+            <th:block th:unless="${vehicles != null and !vehicles.empty}">
+                <!-- Card 1: Toyota Prius 2024 Prime -->
+                <div class="df-fleet-card" data-brand="Toyota" data-model="Toyota Prius 2024 Prime Hybrid"
+                    data-status="AVAILABLE" data-branch="Colombo Central Station">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/category_economy.jpg" alt="Toyota Prius 2024 Hybrid" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">Hybrid Efficient</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Colombo Central Station
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')">
+                            Toyota Prius 2024 Prime
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Automatic (CVT)</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">5 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val">Hybrid 24 km/L</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 12,500 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(1, 'Toyota Prius 2024 Prime', 'Colombo Central Station', 12500, 'Automatic (CVT)', 5, 'Hybrid 24 km/L', '/images/category_economy.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Mercedes-Benz C200 AMG Line -->
+                <div class="df-fleet-card" data-brand="Benz" data-model="Benz C-Class C200 AMG Line"
+                    data-status="AVAILABLE" data-branch="Airport Express Hub">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/category_luxury.jpg" alt="Mercedes-Benz C200 AMG" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">Executive Sedan</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Airport Express Hub (Katunayake)
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')">
+                            Benz C-Class C200 AMG
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Automatic (9G)</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">5 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val">Turbo Petrol</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 28,000 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(2, 'Benz C-Class C200 AMG', 'Airport Express Hub (Katunayake)', 28000, 'Automatic (9G)', 5, 'Turbo Petrol', '/images/category_luxury.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Tesla Model 3 Dual Motor -->
+                <div class="df-fleet-card" data-brand="Tesla" data-model="Tesla Model 3 Dual Motor Long Range"
+                    data-status="AVAILABLE" data-branch="Colombo Central Station">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/car_tesla_model3.jpg" alt="Tesla Model 3 Dual Motor" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">100% Electric EV</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Colombo Central Station
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')">
+                            Tesla Model 3 Dual Motor
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Single-Speed EV</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">5 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Range / Fuel</span>
+                                <span class="df-spec-val">Electric (490 km)</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 32,000 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(5, 'Tesla Model 3 Dual Motor', 'Colombo Central Station', 32000, 'Single-Speed EV', 5, 'Electric (490 km)', '/images/car_tesla_model3.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4: Suzuki Swift Sport -->
+                <div class="df-fleet-card" data-brand="Suzuki" data-model="Suzuki Swift Sport Hatchback"
+                    data-status="AVAILABLE" data-branch="Galle Coastal Office">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/car_suzuki_swift.jpg" alt="Suzuki Swift Sport" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">City Hatchback</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Galle Coastal Office
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')">
+                            Suzuki Swift Sport
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Automatic</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">4 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val">Smart Hybrid</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 8,500 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(4, 'Suzuki Swift Sport', 'Galle Coastal Office', 8500, 'Automatic', 4, 'Smart Hybrid', '/images/car_suzuki_swift.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 5: Honda Vezel e:HEV RS -->
+                <div class="df-fleet-card" data-brand="Honda" data-model="Honda Vezel e:HEV RS Crossover"
+                    data-status="AVAILABLE" data-branch="Colombo Central Station">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/lifestyle_car.jpg" alt="Honda Vezel e:HEV" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">Urban Crossover</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Colombo Central Station
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')">
+                            Honda Vezel e:HEV RS
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Automatic (e-CVT)</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">5 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val">Hybrid i-MMD</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 14,500 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(2, 'Honda Vezel e:HEV RS', 'Colombo Central Station', 14500, 'Automatic (e-CVT)', 5, 'Hybrid i-MMD', '/images/lifestyle_car.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 6: Toyota Land Cruiser Prado 4x4 -->
+                <div class="df-fleet-card" data-brand="Toyota" data-model="Toyota Land Cruiser Prado 4x4"
+                    data-status="AVAILABLE" data-branch="Kandy Heritage Hub">
+                    <!-- Clickable Vehicle Image Trigger -->
+                    <div class="df-card-image-wrap"
+                        onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')"
+                        title="Click image to reserve this vehicle">
+                        <img src="/images/category_suv.jpg" alt="Toyota Prado 4x4" class="df-card-image">
+                        <div class="df-image-click-hint">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polyline>
+                            </svg>
+                            Click to Reserve
+                        </div>
+                        <button class="df-card-favorite-btn" onclick="event.stopPropagation(); toggleCardHeart(this)"
+                            title="Save to favorites" aria-label="Favorite vehicle">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="df-card-category-badge">Adventure 4x4</div>
+                    </div>
+                    <div class="df-card-body">
+                        <div class="df-card-location">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            Kandy Heritage Hub
+                        </div>
+                        <h3 class="df-card-title"
+                            onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')">
+                            Toyota Land Cruiser Prado
+                        </h3>
+                        <div class="df-card-specs">
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Transmission</span>
+                                <span class="df-spec-val">Automatic 4WD</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Capacity</span>
+                                <span class="df-spec-val">7 Seats</span>
+                            </div>
+                            <div class="df-spec-item">
+                                <span class="df-spec-label">Engine / Fuel</span>
+                                <span class="df-spec-val">Diesel Turbo</span>
+                            </div>
+                        </div>
+                        <div class="df-card-footer">
+                            <div class="df-card-price-wrap">
+                                <span class="df-price-label">Daily Rental</span>
+                                <div class="df-card-price">Rs. 35,000 <small>/day</small></div>
+                            </div>
+                            <button type="button" class="df-btn-book"
+                                onclick="clickToBook(16, 'Toyota Land Cruiser Prado', 'Kandy Heritage Hub', 35000, 'Automatic 4WD', 7, 'Diesel Turbo', '/images/category_suv.jpg')">
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </th:block>
+
+            <!-- Empty state fallback if no cards match query -->
+            <div id="noVehiclesFound" class="df-empty-fleet">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"
+                    style="margin: 0 auto 1rem;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                <h3 style="color: var(--df-navy); font-size: 1.25rem; font-weight: 700; margin: 0 0 0.5rem;">No vehicles
+                    found matching your criteria</h3>
+                <p style="margin: 0 0 1.25rem;">Try adjusting your model search keyword or clearing the manufacturer
+                    brand filter.</p>
+                <button type="button" class="df-btn-register" onclick="clearAllFilters()">View All Fleet
+                    Vehicles</button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- 4. "HOW BOOKING WORKS" SECTION (CAR RENTAL WORKFLOW)          -->
+    <!-- ============================================================== -->
+    <section class="df-workflow-section">
+        <div class="df-workflow-container">
+            <div class="df-workflow-split">
+                <!-- Left: Automotive Lifestyle Visual -->
+                <div class="df-workflow-visual">
+                    <img src="/images/lifestyle_car.jpg" alt="DriveFlow car rental Sri Lanka">
+                    <div class="df-workflow-badge">
+                        <div style="width: 12px; height: 12px; border-radius: 50%; background: #22c55e;"></div>
+                        <div>
+                            <strong style="font-size: 0.95rem; display: block; color: #ffffff;">100% Inspected
+                                Fleet</strong>
+                            <span style="font-size: 0.78rem; color: #cbd5e1;">Zero hidden fees &bull; 24/7 Islandwide
+                                Assistance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: 3-Step Process List -->
+                <div class="df-workflow-content">
+                    <h3>Seamless Reservation Process</h3>
+                    <h2>How Booking Works</h2>
+                    <p style="color: var(--df-muted); font-size: 1.05rem; line-height: 1.6;">
+                        DriveFlow makes renting a certified car in Sri Lanka effortless. From our central hubs to
+                        airport pickups, your journey starts with 3 simple steps:
+                    </p>
+
+                    <div class="df-workflow-steps">
+                        <!-- Step 1 -->
+                        <div class="df-step-item">
+                            <div class="df-step-number">1</div>
+                            <div class="df-step-text">
+                                <h4>Browse the Fleet</h4>
+                                <p>Filter our certified park inventory by brand, branch, or vehicle type to select the
+                                    model that suits your journey.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="df-step-item">
+                            <div class="df-step-number">2</div>
+                            <div class="df-step-text">
+                                <h4>Reserve Securely</h4>
+                                <p>Lock in your dates and receive an instant booking confirmation via email with
+                                    transparent pricing in Sri Lankan Rupees.</p>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="df-step-item">
+                            <div class="df-step-number">3</div>
+                            <div class="df-step-text">
+                                <h4>Pick Up &amp; Drive</h4>
+                                <p>Collect your keys from the designated branch and enjoy your journey across scenic Sri
+                                    Lankan highways with 24/7 support.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- ============================================================== -->
-<!-- 5. FOOTER CTA & LINKS                                          -->
-<!-- ============================================================== -->
-<!-- Long-Term Corporate Lease Banner -->
-<section class="df-lease-banner">
-    <div class="df-lease-content">
-        <h2>Need a vehicle for a long-term corporate lease?</h2>
-        <p>
-            Custom monthly packages, executive sedans, dedicated fleet maintenance, and priority replacement vehicles for Sri Lankan businesses and expatriates.
-        </p>
-        <button type="button" class="df-btn-contact-sales" onclick="window.location.href='/incident'">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-            Contact Sales
-        </button>
-    </div>
-</section>
+    <!-- ============================================================== -->
+    <!-- 5. FOOTER CTA & LINKS                                          -->
+    <!-- ============================================================== -->
+    <!-- Long-Term Corporate Lease Banner -->
+    <section class="df-lease-banner">
+        <div class="df-lease-content">
+            <h2>Need a vehicle for a long-term corporate lease?</h2>
+            <p>
+                Custom monthly packages, executive sedans, dedicated fleet maintenance, and priority replacement
+                vehicles for Sri Lankan businesses and expatriates.
+            </p>
+            <button type="button" class="df-btn-contact-sales" onclick="window.location.href='/incident'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                    <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
+                </svg>
+                Contact Sales
+            </button>
+        </div>
+    </section>
 
-<!-- Standard Footer -->
-<footer class="df-site-footer">
-    <div class="df-footer-container">
-        <div class="df-footer-grid">
-            <!-- Brand description -->
-            <div>
-                <a th:href="@{/}" class="df-brand-wrap" style="margin-bottom: 1.25rem;">
-                    <div class="df-brand-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.3">
-                            <circle cx="12" cy="12" r="9"></circle>
-                            <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M12 3v6"></path>
-                            <path d="M12 15v6"></path>
-                            <path d="M3 12h6"></path>
-                            <path d="M15 12h6"></path>
-                        </svg>
+    <!-- Standard Footer -->
+    <footer class="df-site-footer">
+        <div class="df-footer-container">
+            <div class="df-footer-grid">
+                <!-- Brand description -->
+                <div>
+                    <a th:href="@{/}" class="df-brand-wrap" style="margin-bottom: 1.25rem;">
+                        <div class="df-brand-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff"
+                                stroke-width="2.3">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M12 3v6"></path>
+                                <path d="M12 15v6"></path>
+                                <path d="M3 12h6"></path>
+                                <path d="M15 12h6"></path>
+                            </svg>
+                        </div>
+                        <div class="df-brand-title">Drive<span>Flow</span></div>
+                    </a>
+                    <p style="line-height: 1.6; max-width: 320px; margin: 0 0 1.5rem; font-size: 0.88rem;">
+                        Sri Lanka's trusted digital car rental network. Providing certified passenger sedans, eco
+                        hybrids, and 4x4 adventure vehicles with transparent daily rates and 24/7 roadside assistance.
+                    </p>
+                    <div style="display: flex; gap: 0.75rem; font-size: 0.8rem; color: #64748b;">
+                        <span>📍 Colombo</span>
+                        <span>&bull;</span>
+                        <span>Katunayake (BIA)</span>
+                        <span>&bull;</span>
+                        <span>Kandy</span>
+                        <span>&bull;</span>
+                        <span>Galle</span>
                     </div>
-                    <div class="df-brand-title">Drive<span>Flow</span></div>
-                </a>
-                <p style="line-height: 1.6; max-width: 320px; margin: 0 0 1.5rem; font-size: 0.88rem;">
-                    Sri Lanka's trusted digital car rental network. Providing certified passenger sedans, eco hybrids, and 4x4 adventure vehicles with transparent daily rates and 24/7 roadside assistance.
-                </p>
-                <div style="display: flex; gap: 0.75rem; font-size: 0.8rem; color: #64748b;">
-                    <span>📍 Colombo</span>
-                    <span>&bull;</span>
-                    <span>Katunayake (BIA)</span>
-                    <span>&bull;</span>
-                    <span>Kandy</span>
-                    <span>&bull;</span>
-                    <span>Galle</span>
+                </div>
+
+                <!-- Explore Links -->
+                <div class="df-footer-col">
+                    <h4>Explore</h4>
+                    <ul class="df-footer-links">
+                        <li><a th:href="@{/vehicles}">Browse All Fleet</a></li>
+                        <li><a th:href="@{/bookings/new}">Make a Reservation</a></li>
+                        <li><a th:href="@{/promotions}">Seasonal Offers</a></li>
+                        <li><a th:href="@{/feedback}">Customer Reviews</a></li>
+                    </ul>
+                </div>
+
+                <!-- Account Links -->
+                <div class="df-footer-col">
+                    <h4>Account</h4>
+                    <ul class="df-footer-links">
+                        <li><a th:href="@{/login}">Customer Sign In</a></li>
+                        <li><a th:href="@{/register}">Register Account</a></li>
+                        <li><a th:href="@{/profile}">My Profile &amp; KYC</a></li>
+                        <li><a th:href="@{/invoices-payments}">Invoices &amp; Billing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Help Links -->
+                <div class="df-footer-col">
+                    <h4>Help &amp; Support</h4>
+                    <ul class="df-footer-links">
+                        <li><a th:href="@{/incidents/report}">24/7 Breakdown Assistance</a></li>
+                        <li><a href="mailto:support@driveflow.com">support@driveflow.com</a></li>
+                        <li><span style="color: #64748b;">Hotline: 011 234 5678</span></li>
+                    </ul>
+                </div>
+
+                <!-- Terms & Privacy -->
+                <div class="df-footer-col">
+                    <h4>Terms &amp; Compliance</h4>
+                    <ul class="df-footer-links">
+                        <li><a th:href="@{/terms}">Rental Terms</a></li>
+                        <li><a th:href="@{/privacy}">Privacy Policy</a></li>
+                        <li><span style="color: #64748b;">Currency: Sri Lankan Rupee (Rs.)</span></li>
+                    </ul>
                 </div>
             </div>
 
-            <!-- Explore Links -->
-            <div class="df-footer-col">
-                <h4>Explore</h4>
-                <ul class="df-footer-links">
-                    <li><a th:href="@{/vehicles}">Browse All Fleet</a></li>
-                    <li><a th:href="@{/bookings/new}">Make a Reservation</a></li>
-                    <li><a th:href="@{/promotions}">Seasonal Offers</a></li>
-                    <li><a th:href="@{/feedback}">Customer Reviews</a></li>
-                </ul>
-            </div>
-
-            <!-- Account Links -->
-            <div class="df-footer-col">
-                <h4>Account</h4>
-                <ul class="df-footer-links">
-                    <li><a th:href="@{/login}">Customer Sign In</a></li>
-                    <li><a th:href="@{/register}">Register Account</a></li>
-                    <li><a th:href="@{/profile}">My Profile &amp; KYC</a></li>
-                    <li><a th:href="@{/invoices-payments}">Invoices &amp; Billing</a></li>
-                </ul>
-            </div>
-
-            <!-- Help Links -->
-            <div class="df-footer-col">
-                <h4>Help &amp; Support</h4>
-                <ul class="df-footer-links">
-                    <li><a th:href="@{/incidents/report}">24/7 Breakdown Assistance</a></li>
-                    <li><a href="mailto:support@driveflow.com">support@driveflow.com</a></li>
-                    <li><span style="color: #64748b;">Hotline: 011 234 5678</span></li>
-                </ul>
-            </div>
-
-            <!-- Terms & Privacy -->
-            <div class="df-footer-col">
-                <h4>Terms &amp; Compliance</h4>
-                <ul class="df-footer-links">
-                    <li><a th:href="@{/terms}">Rental Terms</a></li>
-                    <li><a th:href="@{/privacy}">Privacy Policy</a></li>
-                    <li><span style="color: #64748b;">Currency: Sri Lankan Rupee (Rs.)</span></li>
-                </ul>
+            <div class="df-footer-bottom">
+                <div>
+                    &copy; 2026 DriveFlow Car Rental (Pvt) Ltd. All rights reserved. Sri Lanka.
+                </div>
+                <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
+                    <span>🇱🇰 SLTDA Registered</span>
+                    <span>🔒 256-bit SSL Security</span>
+                    <strong style="color: var(--df-forest-green);">Strictly Car Rental &bull; Pricing in Sri Lankan
+                        Rupees (Rs.)</strong>
+                </div>
             </div>
         </div>
+    </footer>
 
-        <div class="df-footer-bottom">
-            <div>
-                &copy; 2026 DriveFlow Car Rental (Pvt) Ltd. All rights reserved. Sri Lanka.
-            </div>
-            <div style="display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap;">
-                <span>🇱🇰 SLTDA Registered</span>
-                <span>🔒 256-bit SSL Security</span>
-                <strong style="color: var(--df-forest-green);">Strictly Car Rental &bull; Pricing in Sri Lankan Rupees (Rs.)</strong>
-            </div>
-        </div>
-    </div>
-</footer>
+    <!-- Interactive Filtering, Heart Toggles, and Seamless Click-to-Book Data Transfer -->
+    <script>
+        let currentSelectedBrand = null;
 
-<!-- Interactive Filtering, Heart Toggles, and Seamless Click-to-Book Data Transfer -->
-<script>
-let currentSelectedBrand = null;
-
-// Extract attributes from card element and invoke clickToBook
-function handleCardClick(el) {
-    const card = el.closest('.df-fleet-card');
-    if (!card) return;
-    const vId = card.getAttribute('data-id') || 1;
-    const model = card.getAttribute('data-model') || '';
-    const branch = card.getAttribute('data-branch') || '';
-    const rate = card.getAttribute('data-rate') || 12500;
-    const transmission = card.getAttribute('data-transmission') || '';
-    const seats = card.getAttribute('data-capacity') || '';
-    const fuel = card.getAttribute('data-fuel') || '';
-    const image = card.getAttribute('data-image') || '';
-    clickToBook(vId, model, branch, rate, transmission, seats, fuel, image);
-}
-
-// Seamless Click-to-Book Data Transfer to /booking
-function clickToBook(vehicleId, model, branch, rate, transmission, seats, fuel, image) {
-    const carData = {
-        vehicle_id: vehicleId,
-        model: model,
-        branch: branch,
-        daily_rate: rate,
-        transmission: transmission,
-        seats: seats,
-        fuel: fuel,
-        image: image
-    };
-
-    // 1. Store vehicle context in sessionStorage for browser navigation
-    try {
-        sessionStorage.setItem('selectedVehicle', JSON.stringify(carData));
-    } catch (e) {
-        console.warn('SessionStorage unavailable:', e);
-    }
-
-    // 2. Route immediately to /bookings/new with vehicleId query param
-    const targetUrl = '/bookings/new?vehicleId=' + encodeURIComponent(vehicleId) +
-                      '&model=' + encodeURIComponent(model) +
-                      '&branch=' + encodeURIComponent(branch) +
-                      '&rate=' + encodeURIComponent(rate);
-    window.location.href = targetUrl;
-}
-
-function toggleCardHeart(btn) {
-    btn.classList.toggle('active');
-    const svg = btn.querySelector('svg');
-    if (btn.classList.contains('active')) {
-        svg.setAttribute('fill', '#ef4444');
-        svg.setAttribute('stroke', '#ef4444');
-    } else {
-        svg.setAttribute('fill', 'none');
-        svg.setAttribute('stroke', '#64748b');
-    }
-}
-
-function selectBrandCard(brandName, cardEl) {
-    const cards = document.querySelectorAll('#brandCardsRow .df-brand-card');
-    
-    // Toggle off if already selected
-    if (currentSelectedBrand === brandName) {
-        currentSelectedBrand = null;
-        cardEl.classList.remove('active');
-        const actionSpan = cardEl.querySelector('.df-brand-card-action');
-        if (actionSpan) actionSpan.innerHTML = 'View Cars &rarr;';
-        hideActiveFilterPill();
-    } else {
-        currentSelectedBrand = brandName;
-        cards.forEach(c => {
-            c.classList.remove('active');
-            const act = c.querySelector('.df-brand-card-action');
-            if (act) act.innerHTML = 'View Cars &rarr;';
-        });
-        cardEl.classList.add('active');
-        const actionSpan = cardEl.querySelector('.df-brand-card-action');
-        if (actionSpan) actionSpan.innerHTML = 'Selected &#10003;';
-        showActiveFilterPill(brandName);
-    }
-
-    applyFleetFilters();
-}
-
-function showActiveFilterPill(brand) {
-    const pill = document.getElementById('activeFilterPill');
-    const text = document.getElementById('activeFilterText');
-    if (pill && text) {
-        text.textContent = brand;
-        pill.style.display = 'inline-flex';
-    }
-}
-
-function hideActiveFilterPill() {
-    const pill = document.getElementById('activeFilterPill');
-    if (pill) {
-        pill.style.display = 'none';
-    }
-}
-
-function clearAllFilters() {
-    currentSelectedBrand = null;
-    const cards = document.querySelectorAll('#brandCardsRow .df-brand-card');
-    cards.forEach(c => {
-        c.classList.remove('active');
-        const act = c.querySelector('.df-brand-card-action');
-        if (act) act.innerHTML = 'View Cars &rarr;';
-    });
-    
-    const searchInput = document.getElementById('modelSearchInput');
-    if (searchInput) searchInput.value = '';
-
-    const availabilitySelect = document.getElementById('availabilitySelect');
-    if (availabilitySelect) availabilitySelect.value = 'ALL';
-
-    hideActiveFilterPill();
-    applyFleetFilters();
-}
-
-function applyFleetFilters() {
-    const searchInput = document.getElementById('modelSearchInput');
-    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
-    const availabilitySelect = document.getElementById('availabilitySelect');
-    const availVal = availabilitySelect ? availabilitySelect.value : 'ALL';
-
-    const cards = document.querySelectorAll('#fleetCardGrid .df-fleet-card');
-    let visibleCount = 0;
-
-    cards.forEach(card => {
-        const brand = card.getAttribute('data-brand') || '';
-        const model = (card.getAttribute('data-model') || '').toLowerCase();
-        const branch = (card.getAttribute('data-branch') || '').toLowerCase();
-        const status = card.getAttribute('data-status') || 'AVAILABLE';
-
-        // Check Brand match
-        const matchesBrand = !currentSelectedBrand || (brand.toLowerCase() === currentSelectedBrand.toLowerCase());
-
-        // Check Availability match
-        const matchesAvail = (availVal === 'ALL') || (status.toUpperCase() === availVal.toUpperCase());
-
-        // Check Text query match
-        const matchesQuery = !query || model.includes(query) || branch.includes(query) || brand.toLowerCase().includes(query);
-
-        if (matchesBrand && matchesAvail && matchesQuery) {
-            card.style.display = 'flex';
-            visibleCount++;
-        } else {
-            card.style.display = 'none';
+        // Extract attributes from card element and invoke clickToBook
+        function handleCardClick(el) {
+            const card = el.closest('.df-fleet-card');
+            if (!card) return;
+            const vId = card.getAttribute('data-id') || 1;
+            const model = card.getAttribute('data-model') || '';
+            const branch = card.getAttribute('data-branch') || '';
+            const rate = card.getAttribute('data-rate') || 12500;
+            const transmission = card.getAttribute('data-transmission') || '';
+            const seats = card.getAttribute('data-capacity') || '';
+            const fuel = card.getAttribute('data-fuel') || '';
+            const image = card.getAttribute('data-image') || '';
+            clickToBook(vId, model, branch, rate, transmission, seats, fuel, image);
         }
-    });
 
-    const noVehiclesMsg = document.getElementById('noVehiclesFound');
-    if (noVehiclesMsg) {
-        noVehiclesMsg.style.display = visibleCount === 0 ? 'block' : 'none';
-    }
-}
+        // Seamless Click-to-Book Data Transfer to /booking
+        function clickToBook(vehicleId, model, branch, rate, transmission, seats, fuel, image) {
+            const carData = {
+                vehicle_id: vehicleId,
+                model: model,
+                branch: branch,
+                daily_rate: rate,
+                transmission: transmission,
+                seats: seats,
+                fuel: fuel,
+                image: image
+            };
 
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('modelSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', applyFleetFilters);
-        searchInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                applyFleetFilters();
+            // 1. Store vehicle context in sessionStorage for browser navigation
+            try {
+                sessionStorage.setItem('selectedVehicle', JSON.stringify(carData));
+            } catch (e) {
+                console.warn('SessionStorage unavailable:', e);
+            }
+
+            // 2. Route immediately to /bookings/new with vehicleId query param
+            const targetUrl = '/bookings/new?vehicleId=' + encodeURIComponent(vehicleId) +
+                '&model=' + encodeURIComponent(model) +
+                '&branch=' + encodeURIComponent(branch) +
+                '&rate=' + encodeURIComponent(rate);
+            window.location.href = targetUrl;
+        }
+
+        function toggleCardHeart(btn) {
+            btn.classList.toggle('active');
+            const svg = btn.querySelector('svg');
+            if (btn.classList.contains('active')) {
+                svg.setAttribute('fill', '#ef4444');
+                svg.setAttribute('stroke', '#ef4444');
+            } else {
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('stroke', '#64748b');
+            }
+        }
+
+        function selectBrandCard(brandName, cardEl) {
+            const cards = document.querySelectorAll('#brandCardsRow .df-brand-card');
+
+            // Toggle off if already selected
+            if (currentSelectedBrand === brandName) {
+                currentSelectedBrand = null;
+                cardEl.classList.remove('active');
+                const actionSpan = cardEl.querySelector('.df-brand-card-action');
+                if (actionSpan) actionSpan.innerHTML = 'View Cars &rarr;';
+                hideActiveFilterPill();
+            } else {
+                currentSelectedBrand = brandName;
+                cards.forEach(c => {
+                    c.classList.remove('active');
+                    const act = c.querySelector('.df-brand-card-action');
+                    if (act) act.innerHTML = 'View Cars &rarr;';
+                });
+                cardEl.classList.add('active');
+                const actionSpan = cardEl.querySelector('.df-brand-card-action');
+                if (actionSpan) actionSpan.innerHTML = 'Selected &#10003;';
+                showActiveFilterPill(brandName);
+            }
+
+            applyFleetFilters();
+        }
+
+        function showActiveFilterPill(brand) {
+            const pill = document.getElementById('activeFilterPill');
+            const text = document.getElementById('activeFilterText');
+            if (pill && text) {
+                text.textContent = brand;
+                pill.style.display = 'inline-flex';
+            }
+        }
+
+        function hideActiveFilterPill() {
+            const pill = document.getElementById('activeFilterPill');
+            if (pill) {
+                pill.style.display = 'none';
+            }
+        }
+
+        function clearAllFilters() {
+            currentSelectedBrand = null;
+            const cards = document.querySelectorAll('#brandCardsRow .df-brand-card');
+            cards.forEach(c => {
+                c.classList.remove('active');
+                const act = c.querySelector('.df-brand-card-action');
+                if (act) act.innerHTML = 'View Cars &rarr;';
+            });
+
+            const searchInput = document.getElementById('modelSearchInput');
+            if (searchInput) searchInput.value = '';
+
+            const availabilitySelect = document.getElementById('availabilitySelect');
+            if (availabilitySelect) availabilitySelect.value = 'ALL';
+
+            hideActiveFilterPill();
+            applyFleetFilters();
+        }
+
+        function applyFleetFilters() {
+            const searchInput = document.getElementById('modelSearchInput');
+            const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            const availabilitySelect = document.getElementById('availabilitySelect');
+            const availVal = availabilitySelect ? availabilitySelect.value : 'ALL';
+
+            const cards = document.querySelectorAll('#fleetCardGrid .df-fleet-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const brand = card.getAttribute('data-brand') || '';
+                const model = (card.getAttribute('data-model') || '').toLowerCase();
+                const branch = (card.getAttribute('data-branch') || '').toLowerCase();
+                const status = card.getAttribute('data-status') || 'AVAILABLE';
+
+                // Check Brand match
+                const matchesBrand = !currentSelectedBrand || (brand.toLowerCase() === currentSelectedBrand.toLowerCase());
+
+                // Check Availability match
+                const matchesAvail = (availVal === 'ALL') || (status.toUpperCase() === availVal.toUpperCase());
+
+                // Check Text query match
+                const matchesQuery = !query || model.includes(query) || branch.includes(query) || brand.toLowerCase().includes(query);
+
+                if (matchesBrand && matchesAvail && matchesQuery) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const noVehiclesMsg = document.getElementById('noVehiclesFound');
+            if (noVehiclesMsg) {
+                noVehiclesMsg.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('modelSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFleetFilters);
+                searchInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyFleetFilters();
+                    }
+                });
+            }
+
+            const availabilitySelect = document.getElementById('availabilitySelect');
+            if (availabilitySelect) {
+                availabilitySelect.addEventListener('change', applyFleetFilters);
             }
         });
-    }
 
-    const availabilitySelect = document.getElementById('availabilitySelect');
-    if (availabilitySelect) {
-        availabilitySelect.addEventListener('change', applyFleetFilters);
-    }
-});
-</script>
+        // ==============================================================
+        // COUPON CODE COPY FUNCTIONALITY
+        // ==============================================================
+        function copyCouponCode(btn) {
+            const code = btn.getAttribute('data-code');
+            if (!code) return;
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(() => {
+                    showCopiedState(btn, code);
+                }).catch(() => {
+                    fallbackCopyCoupon(btn, code);
+                });
+            } else {
+                fallbackCopyCoupon(btn, code);
+            }
+        }
+
+        function fallbackCopyCoupon(btn, code) {
+            const tempInput = document.createElement('input');
+            tempInput.value = code;
+            tempInput.style.position = 'absolute';
+            tempInput.style.left = '-9999px';
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand('copy');
+                showCopiedState(btn, code);
+            } catch (err) {
+                console.error('Copy coupon failed', err);
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function showCopiedState(btn, code) {
+            const textSpan = btn.querySelector('.copy-btn-text');
+            const originalText = textSpan ? textSpan.textContent : 'Copy Code';
+            btn.classList.add('copied');
+            if (textSpan) textSpan.textContent = 'Copied! ✓';
+
+            let toast = document.getElementById('couponToast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'couponToast';
+                toast.className = 'df-coupon-toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg> <span>Coupon ID <strong>' + code + '</strong> copied to clipboard!</span>';
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                btn.classList.remove('copied');
+                if (textSpan) textSpan.textContent = originalText;
+            }, 2200);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+    </script>
 
 </body>
+
 </html>

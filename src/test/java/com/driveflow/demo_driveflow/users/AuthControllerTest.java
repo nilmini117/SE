@@ -28,6 +28,9 @@ public class AuthControllerTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private com.driveflow.demo_driveflow.otp.OtpService otpService;
+
     @InjectMocks
     private AuthController authController;
 
@@ -272,5 +275,56 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.email").exists());
 
         verify(userService, never()).registerCustomer(any());
+    }
+
+    @Test
+    @DisplayName("Should reject send OTP with 400 Bad Request when no email is provided and unauthenticated")
+    void shouldRejectSendOtp_WhenNoEmailProvidedAndUnauthenticated() throws Exception {
+        mockMvc.perform(post("/api/auth/otp/send")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Email address is required."));
+
+        verify(otpService, never()).generateOtp(any());
+        verify(otpService, never()).generatePasswordOtp(any());
+    }
+
+    @Test
+    @DisplayName("Should dispatch OTP with 200 OK when email is provided in body")
+    void shouldDispatchOtp_WhenEmailIsProvidedInBody() throws Exception {
+        mockMvc.perform(post("/api/auth/otp/send")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\": \"customer@driveflow.com\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(200))
+                .andExpect(jsonPath("$.success").value(true));
+
+        verify(otpService, times(1)).generateOtp("customer@driveflow.com");
+    }
+
+    @Test
+    @DisplayName("Should dispatch password OTP with 200 OK when authenticated principal is present and body has no email")
+    void shouldDispatchOtp_WhenAuthenticatedAndBodyHasNoEmail() throws Exception {
+        org.springframework.security.core.Authentication auth =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "user@driveflow.com",
+                        "pass",
+                        java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CUSTOMER")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(auth);
+        try {
+            mockMvc.perform(post("/api/auth/otp/send")
+                    .principal(auth)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value(200))
+                    .andExpect(jsonPath("$.success").value(true));
+
+            verify(otpService, times(1)).generatePasswordOtp("user@driveflow.com");
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
     }
 }

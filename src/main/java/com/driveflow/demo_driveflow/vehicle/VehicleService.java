@@ -17,6 +17,7 @@ public interface VehicleService {
     Vehicle registerVehicle(VehicleRegistrationDto dto, org.springframework.web.multipart.MultipartFile imageFile);
     List<Vehicle> getDashboardVehicles();
     Vehicle updateVehicle(Long id, Vehicle vehicle);
+    Vehicle updateVehicle(Long id, Vehicle vehicle, org.springframework.web.multipart.MultipartFile imageFile);
     void removeVehicle(Long id);
     Map<String, Long> getVehicleStatusCounts();
     Map<String, Long> getBrandVehicleCounts();

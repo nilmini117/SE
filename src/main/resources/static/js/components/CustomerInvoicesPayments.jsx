@@ -69,9 +69,24 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
     if (formErrors.cardNo) setFormErrors({ ...formErrors, cardNo: null });
   };
 
-  // Expiration date formatter (MM/YY)
+  // Expiration date formatter (MM/YY) - strictly 12 months (01-12)
   const handleExpiryChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, '').substring(0, 4);
+    let raw = e.target.value.replace(/\D/g, '').substring(0, 4);
+    if (raw.length >= 1) {
+      const first = raw.charAt(0);
+      if (first >= '2' && first <= '9') {
+        raw = '0' + first + raw.substring(1);
+        if (raw.length > 4) raw = raw.substring(0, 4);
+      }
+    }
+    if (raw.length >= 2) {
+      const month = parseInt(raw.substring(0, 2), 10);
+      if (month > 12) {
+        raw = '12' + raw.substring(2);
+      } else if (month === 0) {
+        raw = '01' + raw.substring(2);
+      }
+    }
     if (raw.length >= 2) {
       setExpiry(raw.substring(0, 2) + '/' + raw.substring(2));
     } else {
@@ -110,7 +125,7 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
 
     const expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     if (!expiryRegex.test(expiry)) {
-      errors.expiry = 'Expiration date must follow MM/YY format (e.g. 12/28).';
+      errors.expiry = 'Expiration date must have a valid month (01 to 12) in MM/YY format (e.g. 12/28).';
     }
 
     if (cvv.length !== 3) {
@@ -142,7 +157,7 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
         if (data.success) {
           setNotification({
             type: 'success',
-            message: `Payment of $${Number(data.amountPaid || selectedBooking.totalAmountDue).toFixed(2)} processed successfully! Reference: ${data.refNo || 'PAY-SUCCESS'}. Booking #BK-${selectedBooking.bookingId} is now marked as PAID.`
+            message: `Payment of Rs. ${Number(data.amountPaid || selectedBooking.totalAmountDue).toFixed(2)} processed successfully! Reference: ${data.refNo || 'PAY-SUCCESS'}. Booking #BK-${selectedBooking.bookingId} is now marked as PAID.`
           });
 
           // Update local state to show booking as paid
@@ -318,7 +333,7 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <strong style={{ color: '#4f46e5', fontSize: '1rem' }}>
-                        ${Number(b.totalAmountDue || b.chargedRate || 0).toFixed(2)}
+                        Rs. {Number(b.totalAmountDue || b.chargedRate || 0).toFixed(2)}
                       </strong>
                     </td>
                     <td style={{ padding: '1rem 1.25rem' }}>
@@ -495,7 +510,7 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
                   <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Total settlement due</span>
                 </div>
                 <div style={{ fontSize: '1.8rem', fontWeight: 800, color: '#4f46e5' }}>
-                  ${Number(selectedBooking?.totalAmountDue || selectedBooking?.chargedRate || 0).toFixed(2)}
+                  Rs. {Number(selectedBooking?.totalAmountDue || selectedBooking?.chargedRate || 0).toFixed(2)}
                 </div>
               </div>
             </div>
@@ -652,7 +667,7 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
                   boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
                 }}
               >
-                {submitting ? 'Processing Payment...' : selectedBooking?.isPaid ? 'Reservation Already Paid' : `Authorize & Pay $${Number(selectedBooking?.totalAmountDue || selectedBooking?.chargedRate || 0).toFixed(2)}`}
+                {submitting ? 'Processing Payment...' : selectedBooking?.isPaid ? 'Reservation Already Paid' : `Authorize & Pay Rs. ${Number(selectedBooking?.totalAmountDue || selectedBooking?.chargedRate || 0).toFixed(2)}`}
               </button>
 
               <div style={{ marginTop: '0.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', color: '#64748b', fontSize: '0.78rem' }}>

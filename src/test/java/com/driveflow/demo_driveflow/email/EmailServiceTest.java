@@ -266,6 +266,52 @@ public class EmailServiceTest {
     }
 
     @Test
+    @DisplayName("EmailService: sendVehicleReturnedThankYouEmail with isEarlyReturn dispatches refund notice")
+    void testSendVehicleReturnedThankYouEmail_WithEarlyReturn() throws Exception {
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        emailService.sendVehicleReturnedThankYouEmail(
+                "customer@driveflow.com",
+                "John Doe",
+                1001L,
+                "Mercedes-Benz C-Class",
+                "/feedback",
+                true
+        );
+
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage msg = captor.getValue();
+        assertNotNull(msg);
+        assertEquals("[DriveFlow] Vehicle Check-In Complete - Thank You for Driving with Us!", msg.getSubject());
+        assertEquals("customer@driveflow.com", msg.getAllRecipients()[0].toString());
+    }
+
+    @Test
+    @DisplayName("EmailService: sendReturnVehicleOtpEmail dispatches OTP authorization code with early return notice")
+    void testSendReturnVehicleOtpEmail_WithEarlyReturn() throws Exception {
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+
+        emailService.sendReturnVehicleOtpEmail(
+                "customer@driveflow.com",
+                "John Doe",
+                1001L,
+                "654321",
+                10,
+                true
+        );
+
+        ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mailSender, times(1)).send(captor.capture());
+
+        MimeMessage msg = captor.getValue();
+        assertNotNull(msg);
+        assertEquals("[DriveFlow] Authorization Code for Vehicle Return - Booking #BK-1001", msg.getSubject());
+        assertEquals("customer@driveflow.com", msg.getAllRecipients()[0].toString());
+    }
+
+    @Test
     @DisplayName("EmailService: sendNotification dispatches SimpleMailMessage with official sender")
     void testSendNotification_DispatchesSimpleMailMessage() {
         emailService.sendNotification("driver@example.com", "Test Subject", "Test Body Message");

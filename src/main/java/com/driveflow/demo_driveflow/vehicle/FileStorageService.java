@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,28 +43,31 @@ public class FileStorageService {
         String fileName = "vehicle_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + extension;
 
         Path targetDir = Paths.get(uploadBaseDir, "vehicles").toAbsolutePath().normalize();
-        File dirFile = targetDir.toFile();
-        if (!dirFile.exists()) {
-            dirFile.mkdirs();
+        if (!Files.exists(targetDir)) {
+            Files.createDirectories(targetDir);
         }
 
         Path targetPath = targetDir.resolve(fileName);
         Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
         // Also copy to src/main/resources/static/uploads/vehicles and target/classes/static/uploads/vehicles if available
-        try {
-            Path staticSrcDir = Paths.get("src", "main", "resources", "static", "uploads", "vehicles").toAbsolutePath().normalize();
-            if (staticSrcDir.toFile().exists() || staticSrcDir.toFile().mkdirs()) {
-                Files.copy(file.getInputStream(), staticSrcDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (Exception ignored) {}
+        if (Files.exists(targetPath)) {
+            try {
+                Path staticSrcDir = Paths.get("src", "main", "resources", "static", "uploads", "vehicles").toAbsolutePath().normalize();
+                if (!Files.exists(staticSrcDir)) {
+                    Files.createDirectories(staticSrcDir);
+                }
+                Files.copy(targetPath, staticSrcDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception ignored) {}
 
-        try {
-            Path targetClassesDir = Paths.get("target", "classes", "static", "uploads", "vehicles").toAbsolutePath().normalize();
-            if (targetClassesDir.toFile().exists() || targetClassesDir.toFile().mkdirs()) {
-                Files.copy(file.getInputStream(), targetClassesDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-            }
-        } catch (Exception ignored) {}
+            try {
+                Path targetClassesDir = Paths.get("target", "classes", "static", "uploads", "vehicles").toAbsolutePath().normalize();
+                if (!Files.exists(targetClassesDir)) {
+                    Files.createDirectories(targetClassesDir);
+                }
+                Files.copy(targetPath, targetClassesDir.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception ignored) {}
+        }
 
         return "/uploads/vehicles/" + fileName;
     }

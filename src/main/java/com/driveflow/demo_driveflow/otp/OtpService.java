@@ -96,4 +96,25 @@ public interface OtpService {
      * Explicitly clears the cached OTP for an email and purpose.
      */
     void clearOtp(String email, OtpType type);
+
+    /**
+     * Generates a 6-digit numeric OTP for vehicle return authorization,
+     * caches it mapped to OtpType.VEHICLE_RETURN, and dispatches the authorization email.
+     *
+     * @param email         Recipient email address
+     * @param customerName  Customer display name
+     * @param bookingId     Booking ID being returned
+     * @param isEarlyReturn Whether this is an early return prior to scheduled end date
+     * @return 6-digit numeric OTP
+     */
+    String generateVehicleReturnOtp(String email, String customerName, Long bookingId, boolean isEarlyReturn);
+
+    /**
+     * Verifies the submitted OTP for vehicle return and invalidates it upon success.
+     *
+     * @param email Recipient email address
+     * @param otp   Submitted 6-digit OTP code
+     * @return true if valid and not expired
+     */
+    boolean verifyVehicleReturnOtp(String email, String otp);
 }

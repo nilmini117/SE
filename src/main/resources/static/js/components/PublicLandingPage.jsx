@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -56,6 +56,43 @@ export default function PublicLandingPage({
 
   // Corporate Lease Modal state
   const [isSalesModalOpen, setIsSalesModalOpen] = useState(false);
+
+  // Active promotions state for Deals & Coupons dashboard display
+  const [promotions, setPromotions] = useState([
+    {
+      promotionId: 6,
+      title: 'Summer Trip Super Saver',
+      couponId: 'SUMMER12',
+      couponCode: 'SUMMER12',
+      discountRate: 12.0,
+      endDate: '2026-12-31',
+      vehicleSeason: 'SUMMER',
+      vehicleCategory: 'ALL'
+    },
+    {
+      promotionId: 7,
+      title: 'Website Special EV Drive',
+      couponId: 'WEB0',
+      couponCode: 'WEB0',
+      discountRate: 15.0,
+      endDate: '2026-10-10',
+      vehicleSeason: 'ALL_SEASONS',
+      vehicleCategory: 'ELECTRIC'
+    }
+  ]);
+  const [copiedCoupon, setCopiedCoupon] = useState(null);
+
+  // Fetch verified active promotions from Spring Boot REST API
+  useEffect(() => {
+    fetch('/api/promotions')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setPromotions(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Toggle favorite
   const toggleFavorite = (vehicleId) => {
@@ -425,29 +462,49 @@ export default function PublicLandingPage({
       {/* ============================================================== */}
       {/* 2. LIGHT-THEMED HERO SECTION & BRAND FILTERS                   */}
       {/* ============================================================== */}
-      <header style={{
-        backgroundImage: 'url(/images/lifestyle_car.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
+      <header className="relative text-center overflow-hidden border-b border-slate-200" style={{
         position: 'relative',
+        backgroundColor: '#f8fafc',
         borderBottom: '1px solid #e2e8f0',
-        padding: '3.5rem 1.5rem 4rem',
+        padding: '4.5rem 1.5rem 4.5rem',
         color: '#0f172a',
         textAlign: 'center',
+        overflow: 'hidden',
       }}>
-        {/* White overlay with 60% opacity */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.60)',
-          zIndex: 1,
-        }} />
+        {/* Background image element at 70% opacity */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-70"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundImage: 'url(/images/lifestyle_car.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 38%',
+            backgroundRepeat: 'no-repeat',
+            opacity: 0.70,
+            zIndex: 1,
+          }}
+        />
 
-        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10 }}>
+        {/* Soft overlay ensuring high text readability & 70% visibility */}
+        <div
+          className="absolute inset-0 bg-black/30"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, 0.22)',
+            backdropFilter: 'blur(0.5px)',
+            zIndex: 2,
+          }}
+        />
+
+        <div className="relative z-10 text-center mx-auto flex flex-col items-center" style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           {/* Badge */}
           <div style={{
             display: 'inline-flex',
@@ -473,35 +530,46 @@ export default function PublicLandingPage({
             Certified Sri Lankan Park Inventory
           </div>
 
-          {/* Title & Subtext */}
-          <h1 style={{
-            fontSize: 'clamp(2.2rem, 4.5vw, 3.4rem)',
-            fontWeight: 800,
-            letterSpacing: '-0.03em',
-            margin: '0 0 0.85rem',
-            color: '#0f172a',
-            lineHeight: 1.15,
-          }}>
-            Find your choice in our park
-          </h1>
-          <p style={{
-            fontSize: 'clamp(1.05rem, 2vw, 1.25rem)',
-            color: '#0f172a',
-            fontWeight: 600,
-            maxWidth: '720px',
-            margin: '0 auto 2.5rem',
-            lineHeight: 1.6,
-          }}>
-            Safe drive makes happy journey
-          </p>
+          {/* Title & Subtext - Perfectly centered & enlarged to text-5xl / text-6xl */}
+          <div className="text-center w-full" style={{ textAlign: 'center', width: '100%' }}>
+            <h1 className="text-center text-5xl md:text-6xl font-extrabold text-slate-900" style={{
+              fontSize: 'clamp(2.85rem, 5.5vw, 4.2rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.035em',
+              margin: '0 auto 0.95rem',
+              textAlign: 'center',
+              color: '#0f172a',
+              lineHeight: 1.12,
+              maxWidth: '950px',
+            }}>
+              Find your choice in our park
+            </h1>
+            <p className="text-center text-black text-lg md:text-xl font-bold" style={{
+              fontSize: 'clamp(1.1rem, 2.2vw, 1.3rem)',
+              color: '#000000',
+              WebkitTextFillColor: '#000000',
+              fontWeight: 700,
+              maxWidth: '720px',
+              margin: '0 auto',
+              textAlign: 'center',
+              lineHeight: 1.6,
+              opacity: 1,
+              textShadow: 'none',
+            }}>
+              <span style={{ color: '#000000', WebkitTextFillColor: '#000000', fontWeight: 700 }}>
+                Safe drive makes happy journey
+              </span>
+            </p>
+          </div>
 
-          {/* Horizontal Row of 5 Brand Filter Cards (Light Theme) */}
-          <div style={{
+          {/* Horizontal Row of 5 Brand Filter Cards - Moved further down with mt-12 / mt-16 */}
+          <div className="df-brands-row mt-12 md:mt-16 w-full" style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
             gap: '1.25rem',
             maxWidth: '1100px',
-            margin: '0 auto 2.5rem',
+            margin: '3.75rem auto 2.5rem', /* mt-16 further down */
+            width: '100%',
           }}>
             {brands.map((b) => {
               const isSelected = selectedBrand && selectedBrand.toLowerCase() === b.name.toLowerCase();
@@ -567,26 +635,29 @@ export default function PublicLandingPage({
             })}
           </div>
 
-          {/* Pill-Shaped Search Bar (Light Theme) */}
-          <div style={{ maxWidth: '920px', margin: '0 auto' }}>
+          {/* Pill-Shaped Search Bar - Single Row */}
+          <div style={{ maxWidth: '960px', width: '100%', margin: '0 auto' }}>
             <div style={{
               backgroundColor: '#ffffff',
               borderRadius: '9999px',
-              padding: '0.6rem 0.75rem',
+              padding: '0.45rem 0.55rem 0.45rem 1.35rem',
               border: '1px solid #e2e8f0',
               boxShadow: '0 12px 32px -6px rgba(15, 23, 42, 0.08)',
               display: 'flex',
               alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: '0.5rem',
+              flexWrap: 'nowrap', // Strictly single row
+              gap: '0.65rem',
+              width: '100%',
+              boxSizing: 'border-box',
             }}>
               {/* Input */}
               <div style={{
-                flex: '2 1 280px',
+                flex: '1 1 auto',
+                minWidth: 0,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.5rem 1.25rem',
+                gap: '0.65rem',
+                padding: '0.35rem 0.75rem 0.35rem 0',
                 borderRight: '1px solid #e2e8f0',
               }}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.3">
@@ -600,6 +671,7 @@ export default function PublicLandingPage({
                   placeholder="Search by model or reg number (e.g. Prius, WP CA)..."
                   style={{
                     width: '100%',
+                    minWidth: '120px',
                     border: 'none',
                     outline: 'none',
                     fontFamily: 'inherit',
@@ -613,11 +685,13 @@ export default function PublicLandingPage({
 
               {/* Select */}
               <div style={{
-                flex: '1 1 200px',
+                flex: '0 0 auto',
+                width: '175px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.65rem',
-                padding: '0.5rem 1rem',
+                gap: '0.5rem',
+                padding: '0.35rem 0.5rem',
+                whiteSpace: 'nowrap',
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.3">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -636,6 +710,7 @@ export default function PublicLandingPage({
                     color: '#0f172a',
                     backgroundColor: 'transparent',
                     cursor: 'pointer',
+                    textOverflow: 'ellipsis',
                   }}
                 >
                   <option value="ALL">All Availability</option>
@@ -649,18 +724,19 @@ export default function PublicLandingPage({
                 type="button"
                 onClick={() => {}}
                 style={{
+                  flex: '0 0 auto',
                   backgroundColor: '#16a34a',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '0.85rem 1.85rem',
+                  padding: '0.75rem 1.65rem',
                   borderRadius: '9999px',
                   fontFamily: 'inherit',
-                  fontSize: '0.95rem',
+                  fontSize: '0.92rem',
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '0.5rem',
+                  gap: '0.45rem',
                   boxShadow: '0 4px 14px rgba(22, 163, 74, 0.35)',
                   whiteSpace: 'nowrap',
                 }}
@@ -975,6 +1051,177 @@ export default function PublicLandingPage({
             </button>
           </div>
         )}
+      </section>
+
+      {/* ============================================================== */}
+      {/* 3.5 AVAILABLE COUPON CODES & ACTIVE DEALS DASHBOARD            */}
+      {/* ============================================================== */}
+      <section id="available-coupons" style={{
+        maxWidth: '1240px',
+        margin: '0 auto',
+        padding: '3rem 1.5rem 4.5rem',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            backgroundColor: '#ecfdf5',
+            color: '#15803d',
+            padding: '0.35rem 0.9rem',
+            borderRadius: '9999px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            marginBottom: '0.75rem',
+            border: '1px solid #bbf7d0'
+          }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e', display: 'inline-block' }} />
+            <span>Active Promotions &bull; Verified Coupons</span>
+          </div>
+          <h2 style={{ fontSize: 'clamp(1.8rem, 3vw, 2.4rem)', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.03em', margin: '0 0 0.5rem' }}>
+            Available Deals &amp; Coupon Codes
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '1rem', maxWidth: '620px', margin: '0 auto', lineHeight: 1.5 }}>
+            Save instantly on your reservation. Copy any coupon ID below or click "Book with Code" to apply automatic savings across the fleet.
+          </p>
+        </div>
+
+        {/* Responsive Coupon Cards Grid: Using promotions.map to loop through ALL active promotions */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: '1.5rem'
+        }}>
+          {promotions.map((promo) => {
+            const code = promo.couponId || promo.couponCode || 'PROMO';
+            const rate = promo.discountRate ? Number(promo.discountRate).toFixed(0) : '15';
+            const season = promo.vehicleSeason || 'ALL SEASONS';
+            const category = promo.category || promo.vehicleCategory || 'ALL';
+            const isUniversal = category.toUpperCase() === 'ALL' || category.toUpperCase() === 'ALL_FLEET';
+            const isCopied = copiedCoupon === code;
+
+            return (
+              <div
+                key={promo.promotionId}
+                style={{
+                  backgroundColor: '#ffffff',
+                  borderRadius: '18px',
+                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 18px rgba(15, 23, 42, 0.05)',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  transition: 'all 0.25s ease'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <span style={{
+                      backgroundColor: '#f1f5f9',
+                      color: '#475569',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '0.2rem 0.55rem',
+                      borderRadius: '6px',
+                      textTransform: 'uppercase'
+                    }}>
+                      {season}
+                    </span>
+                    <span style={{
+                      backgroundColor: isUniversal ? '#ecfdf5' : '#eff6ff',
+                      color: isUniversal ? '#15803d' : '#1d4ed8',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '0.2rem 0.55rem',
+                      borderRadius: '6px',
+                      textTransform: 'uppercase',
+                      border: isUniversal ? '1px solid #bbf7d0' : '1px solid #bfdbfe'
+                    }}>
+                      {isUniversal ? 'All Vehicles' : category}
+                    </span>
+                  </div>
+                  <div style={{
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    padding: '0.3rem 0.7rem',
+                    borderRadius: '10px'
+                  }}>
+                    {rate}% OFF
+                  </div>
+                </div>
+
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.35rem' }}>
+                    {promo.title}
+                  </h3>
+                  <div style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                    Valid until: <strong style={{ color: '#334155' }}>{promo.endDate || 'Season End'}</strong>
+                  </div>
+                </div>
+
+                <div style={{
+                  marginTop: 'auto',
+                  backgroundColor: '#f8fafc',
+                  border: '1.5px dashed #cbd5e1',
+                  borderRadius: '12px',
+                  padding: '0.85rem 1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem'
+                }}>
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8' }}>COUPON ID</span>
+                    <strong style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>{code}</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(code);
+                        setCopiedCoupon(code);
+                        setTimeout(() => setCopiedCoupon(null), 2500);
+                      }}
+                      style={{
+                        backgroundColor: isCopied ? '#22c55e' : '#ffffff',
+                        color: isCopied ? '#ffffff' : '#0f172a',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        padding: '0.4rem 0.7rem',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {isCopied ? 'Copied!' : 'Copy Code'}
+                    </button>
+                    <a
+                      href={`/bookings/new?couponCode=${encodeURIComponent(code)}`}
+                      style={{
+                        backgroundColor: '#16a34a',
+                        color: '#ffffff',
+                        borderRadius: '8px',
+                        padding: '0.4rem 0.85rem',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.3rem'
+                      }}
+                    >
+                      <span>Book</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* ============================================================== */}

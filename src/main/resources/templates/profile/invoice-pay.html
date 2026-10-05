@@ -51,23 +51,23 @@
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; font-size: 0.9rem; color: var(--slate-600);">
                 <span>Base Rental Amount:</span>
-                <span th:text="'$' + ${#numbers.formatDecimal(invoice.rentalAmt != null ? invoice.rentalAmt : 0, 1, 2)}">$0.00</span>
+                <span th:text="'Rs. ' + ${#numbers.formatDecimal(invoice.rentalAmt != null ? invoice.rentalAmt : 0, 1, 2)}">Rs. 0.00</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--slate-600);">
                 <span>Late Return Surcharge:</span>
-                <span th:text="'$' + ${#numbers.formatDecimal(invoice.lateFee != null ? invoice.lateFee : 0, 1, 2)}">$0.00</span>
+                <span th:text="'Rs. ' + ${#numbers.formatDecimal(invoice.lateFee != null ? invoice.lateFee : 0, 1, 2)}">Rs. 0.00</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 2px dashed var(--slate-300);">
                 <span style="font-weight: 800; font-size: 1.1rem; color: var(--slate-900);">Total Due:</span>
                 <span style="font-weight: 800; font-size: 1.35rem; color: var(--primary);"
-                      th:text="'$' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)}">
-                    $150.00
+                      th:text="'Rs. ' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)}">
+                    Rs. 150.00
                 </span>
             </div>
         </div>
 
         <!-- Payment Form -->
-        <form th:action="@{/profile/invoices/{id}/pay(id=${invoice.invoiceId})}" method="post">
+        <form th:action="@{/profile/invoices/{id}/pay(id=${invoice.invoiceId})}" method="post" onsubmit="return validatePaymentForm(this)">
             <div class="form-group" style="margin-bottom: 1.25rem;">
                 <label class="form-label">Issuing Bank</label>
                 <input type="text" name="bankName" class="form-control" placeholder="e.g. Commercial Bank, Chase, HSBC" required>
@@ -81,7 +81,8 @@
             <div class="form-group" style="margin-bottom: 1.25rem;">
                 <label class="form-label">Credit / Debit Card Number</label>
                 <div style="position: relative;">
-                    <input type="text" name="cardNo" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19" required
+                    <input type="text" name="cardNo" id="cardNo" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19" required
+                           oninput="formatCardNumber(this)"
                            style="letter-spacing: 0.05em; font-family: monospace; font-size: 1rem;">
                     <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-400); pointer-events: none;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -98,18 +99,21 @@
             <div class="form-row" style="margin-bottom: 1.25rem;">
                 <div class="form-group">
                     <label class="form-label">Expiration Date (MM/YY)</label>
-                    <input type="text" class="form-control" placeholder="12/28" maxlength="5" required>
+                    <input type="text" name="expiry" id="expiry" class="form-control" placeholder="12/28" maxlength="5"
+                           oninput="formatExpiry(this)" required>
+                    <small style="color: var(--slate-500); font-size: 0.78rem; display: block; margin-top: 0.25rem;">Valid months: 01 to 12</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Security Code (CVV)</label>
-                    <input type="password" class="form-control" placeholder="123" maxlength="4" required>
+                    <input type="password" name="cvv" id="cvv" class="form-control" placeholder="123" maxlength="3"
+                           oninput="formatCvv(this)" required>
                 </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 1.75rem;">
                 <label class="form-label">Authorized Payment Amount</label>
                 <input type="text" class="form-control"
-                       th:value="'$' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)} + ' USD (Exact Amount Due)'"
+                       th:value="'Rs. ' + ${#numbers.formatDecimal(invoice.totalAmt != null ? invoice.totalAmt : 0, 1, 2)} + ' (Exact Amount Due)'"
                        readonly style="background-color: var(--slate-100); font-weight: 700; color: var(--primary);">
             </div>
 
@@ -132,6 +136,85 @@
 </main>
 
 <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+<script>
+    function formatCardNumber(input) {
+        var value = input.value.replace(/\D/g, '');
+        if (value.length > 16) {
+            value = value.substring(0, 16);
+        }
+        var formatted = '';
+        for (var i = 0; i < value.length; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formatted += ' ';
+            }
+            formatted += value[i];
+        }
+        input.value = formatted;
+    }
+
+    /**
+     * Expiration date formatter: MM/YY format strictly restricted to 12 months (01-12).
+     */
+    function formatExpiry(input) {
+        var value = input.value.replace(/\D/g, '');
+        if (value.length > 4) {
+            value = value.substring(0, 4);
+        }
+        if (value.length >= 1) {
+            var firstChar = value.charAt(0);
+            if (firstChar >= '2' && firstChar <= '9') {
+                value = '0' + firstChar + value.substring(1);
+                if (value.length > 4) value = value.substring(0, 4);
+            }
+        }
+        if (value.length >= 2) {
+            var month = parseInt(value.substring(0, 2), 10);
+            if (month > 12) {
+                value = '12' + value.substring(2);
+            } else if (month === 0) {
+                value = '01' + value.substring(2);
+            }
+        }
+        if (value.length >= 2) {
+            input.value = value.substring(0, 2) + '/' + value.substring(2);
+        } else {
+            input.value = value;
+        }
+    }
+
+    function formatCvv(input) {
+        input.value = input.value.replace(/\D/g, '').substring(0, 3);
+    }
+
+    function validatePaymentForm(form) {
+        var cardNoInput = document.getElementById('cardNo');
+        var expiryInput = document.getElementById('expiry');
+        var cvvInput = document.getElementById('cvv');
+
+        var rawCard = cardNoInput.value.replace(/\D/g, '');
+        if (rawCard.length !== 16) {
+            alert('Invalid Card: Please enter a 16-digit card number.');
+            cardNoInput.focus();
+            return false;
+        }
+
+        var expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
+        if (!expiryPattern.test(expiryInput.value)) {
+            alert('Invalid Expiration Date: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).');
+            expiryInput.focus();
+            return false;
+        }
+
+        if (cvvInput.value.length !== 3) {
+            alert('Invalid CVV: Security code must be 3 digits.');
+            cvvInput.focus();
+            return false;
+        }
+
+        return true;
+    }
+</script>
 
 </body>
 </html>

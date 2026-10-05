@@ -1,6 +1,5 @@
 package com.driveflow.demo_driveflow.feedback;
 
-import com.driveflow.demo_driveflow.users.CustomerRepository;
 import com.driveflow.demo_driveflow.users.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,9 +17,6 @@ public class FeedbackApiController {
 
     @Autowired
     private FeedbackService feedbackService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
 
     @Autowired
     private StaffRepository staffRepository;

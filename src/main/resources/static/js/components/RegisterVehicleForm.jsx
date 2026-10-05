@@ -75,7 +75,7 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
 
         setLoading(true);
         try {
-            // Build multipart FormData payload so image upload and metadata are processed together
+            // Build multipart FormData payload so image upload and vehicle details are sent simultaneously
             const data = new FormData();
             data.append('brand', formData.brand);
             data.append('model', formData.model.trim());
@@ -93,20 +93,44 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
             }
             if (imageFile) {
                 data.append('image', imageFile);
+                data.append('file', imageFile);
             }
 
-            const response = await fetch('/vehicles/api/register', {
+            // Send multipart/form-data to Spring Boot controller
+            let response = await fetch('/api/vehicles', {
                 method: 'POST',
                 body: data
             });
 
+            if (!response.ok && (response.status === 404 || response.status === 405)) {
+                // Seamless fallback to /vehicles/api/register
+                response = await fetch('/vehicles/api/register', {
+                    method: 'POST',
+                    body: data
+                });
+            }
+
             if (!response.ok) {
                 const text = await response.text();
-                throw new Error(text || 'Failed to register vehicle.');
+                let errMsg = 'Failed to register vehicle.';
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed.message) errMsg = parsed.message;
+                    else if (parsed.error) errMsg = parsed.error;
+                } catch (_) {
+                    if (text) errMsg = text;
+                }
+                throw new Error(errMsg);
             }
 
             const savedVehicle = await response.json();
-            setSuccessMessage(`Vehicle ${savedVehicle.model || formData.model} registered successfully with status AVAILABLE!`);
+            setSuccessMessage(`Vehicle ${savedVehicle.model || formData.model} registered successfully with photo!`);
+            
+            // Clear file upload selection
+            setImageFile(null);
+            setImagePreview(null);
+            const fileInput = document.getElementById('react-vehicle-image') || document.getElementById('vehicle-image-input');
+            if (fileInput) fileInput.value = '';
 
             if (onSuccess) {
                 onSuccess(savedVehicle);
@@ -400,6 +424,7 @@ const RegisterVehicleForm = ({ branches = [], onSuccess, onCancel }) => {
                         type="file"
                         id="react-vehicle-image"
                         name="image"
+                        data-testid="vehicle-image-input"
                         accept="image/*"
                         className="form-control"
                         onChange={handleImageChange}

@@ -25,9 +25,6 @@ public class IncidentController {
     private com.driveflow.demo_driveflow.users.UserService userService;
 
     @Autowired
-    private com.driveflow.demo_driveflow.booking.BookingService bookingService;
-
-    @Autowired
     private com.driveflow.demo_driveflow.booking.BookingRepository bookingRepository;
 
     // --- CUSTOMER SUPPORT ("Need to contact us") ---

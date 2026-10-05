@@ -232,4 +232,31 @@ public class CustomerInvoicePaymentControllerTest {
         assertTrue(redirectAttributes.getFlashAttributes().get("errorMessage").toString().contains("must be approved by staff"));
         verify(paymentService, never()).processPayment(any());
     }
+
+    @Test
+    @DisplayName("processPayment rejects invalid expiry month greater than 12")
+    void testProcessPayment_InvalidExpiryMonth() {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("customer@driveflow.com");
+        when(staffRepository.findByEmail("customer@driveflow.com")).thenReturn(Optional.empty());
+        when(userService.findCustomerByEmail("customer@driveflow.com")).thenReturn(Optional.of(customer));
+        when(bookingService.getBookingById(100L)).thenReturn(confirmedBooking);
+
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.processPayment(
+                100L,
+                50L,
+                "Commercial Bank",
+                "4111222233334444",
+                "13/25", // Invalid month 13 > 12
+                "123",
+                authentication,
+                redirectAttributes
+        );
+
+        assertEquals("redirect:/invoices-payments?selectedBookingId=100", view);
+        assertTrue(redirectAttributes.getFlashAttributes().get("errorMessage").toString().contains("Month must be between 01 and 12"));
+        verify(paymentService, never()).processPayment(any());
+    }
 }

@@ -97,6 +97,37 @@ public interface EmailService {
                                          String vehicleDetails, String feedbackUrl);
 
     /**
+     * [Lifecycle 5: Vehicle Returned (Thank You, Refund Notice & Feedback CTA)]
+     * Automatically triggers when the customer clicks "Confirm Return" and booking status transitions to RETURNED.
+     * If isEarlyReturn is true, informs customer that refund money can be collected from the branch front desk
+     * after giving the car key to the staff.
+     *
+     * @param toEmail        Customer's registered email address
+     * @param customerName   Customer's full name
+     * @param bookingId      Booking primary ID
+     * @param vehicleDetails Returned vehicle model details
+     * @param feedbackUrl    Direct call-to-action link to the feedback module
+     * @param isEarlyReturn  True if vehicle is returned prior to scheduled end date
+     */
+    void sendVehicleReturnedThankYouEmail(String toEmail, String customerName, Long bookingId,
+                                         String vehicleDetails, String feedbackUrl, boolean isEarlyReturn);
+
+    /**
+     * Sends a 6-digit numeric OTP email to authorize vehicle return.
+     * If isEarlyReturn is true, informs customer that refund money can be collected from the branch front desk
+     * after giving the car key to the staff.
+     *
+     * @param toEmail       Recipient email address
+     * @param customerName  Customer display name
+     * @param bookingId     Booking ID being returned
+     * @param otp           6-digit numeric OTP code
+     * @param expiryMinutes Expiration window in minutes
+     * @param isEarlyReturn True if vehicle is returned prior to scheduled end date
+     */
+    void sendReturnVehicleOtpEmail(String toEmail, String customerName, Long bookingId,
+                                  String otp, int expiryMinutes, boolean isEarlyReturn);
+
+    /**
      * Automatically triggers an HTML-formatted email notification to the assigned maintenance company
      * upon saving a vehicle maintenance schedule.
      *

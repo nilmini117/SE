@@ -181,6 +181,21 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public Vehicle updateVehicle(Long id, Vehicle updatedVehicle, org.springframework.web.multipart.MultipartFile imageFile) {
+        if (imageFile != null && !imageFile.isEmpty() && fileStorageService != null) {
+            try {
+                String storedUrl = fileStorageService.storeVehicleImage(imageFile);
+                if (storedUrl != null) {
+                    updatedVehicle.setImageUrl(storedUrl);
+                }
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to upload vehicle image: " + e.getMessage(), e);
+            }
+        }
+        return updateVehicle(id, updatedVehicle);
+    }
+
+    @Override
     public void removeVehicle(Long id) {
         Vehicle existing = getVehicleById(id);
 
