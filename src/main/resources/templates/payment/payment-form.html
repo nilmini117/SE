@@ -41,17 +41,25 @@
                 <select name="paymentMethod" id="paymentMethod" class="form-control" onchange="toggleCardFields()">
                     <option value="CASH">Cash / Bank Transfer</option>
                     <option value="CREDIT_CARD">Credit / Debit Card</option>
+                    <option value="PAYPAL">PayPal Express</option>
                 </select>
             </div>
 
             <div id="cardFields" style="display: none; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div class="form-group">
                     <label class="form-label">Bank Name</label>
-                    <input type="text" name="bankName" class="form-control" placeholder="e.g. Chase, Bank of America">
+                    <input type="text" name="bankName" class="form-control" placeholder="e.g. Chase, Commercial Bank">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Card Number (Will be masked)</label>
                     <input type="text" name="cardNo" class="form-control" placeholder="4532XXXXXXXX1234" maxlength="19">
+                </div>
+            </div>
+
+            <div id="paypalFields" style="display: none; background: #f0f7ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="color: #003087; font-weight: 700;">PayPal Account Email / ID</label>
+                    <input type="email" name="paypalEmail" class="form-control" placeholder="payer@example.com">
                 </div>
             </div>
 
@@ -96,7 +104,9 @@
     function toggleCardFields() {
         const method = document.getElementById('paymentMethod').value;
         const cardFields = document.getElementById('cardFields');
-        cardFields.style.display = method === 'CREDIT_CARD' ? 'block' : 'none';
+        const paypalFields = document.getElementById('paypalFields');
+        if (cardFields) cardFields.style.display = method === 'CREDIT_CARD' ? 'block' : 'none';
+        if (paypalFields) paypalFields.style.display = method === 'PAYPAL' ? 'block' : 'none';
     }
 </script>
 

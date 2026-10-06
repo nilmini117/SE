@@ -170,7 +170,7 @@
                                 th:data-vehicle="${b.vehicleModel}"
                                 th:data-dates="${b.pickupDate} + ' to ' + ${b.returnDate}"
                                 onclick="selectBookingForPayment(this)">
-                            Pay with Card &rarr;
+                            Pay Now &rarr;
                         </button>
                         <span th:if="${b.isPaid and b.bookingStatus != 'RETURNED'}" class="badge badge-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.65rem; background: var(--slate-100); color: var(--slate-600);">
                             Settled
@@ -197,35 +197,40 @@
         </div>
     </div>
 
-    <!-- SECTION 2: INTEGRATED PAYMENT GATEWAY FORM -->
+    <!-- SECTION 2: INTEGRATED MULTI-STRATEGY PAYMENT GATEWAY FORM -->
     <div id="paymentGatewaySection" class="df-card" style="border-top: 4px solid var(--primary); background: #ffffff; margin-bottom: 2.5rem; scroll-margin-top: 5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        
+        <!-- Header & Strategy Indicator -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
             <div>
                 <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
-                    <div style="width: 34px; height: 34px; border-radius: 8px; background: #e0e7ff; color: var(--primary); display: flex; align-items: center; justify-content: center;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #e0e7ff; color: var(--primary); display: flex; align-items: center; justify-content: center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
                             <line x1="1" y1="10" x2="23" y2="10"></line>
                         </svg>
                     </div>
-                    <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin: 0;">
-                        Secure Payment Gateway
-                    </h2>
+                    <div>
+                        <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--slate-900); margin: 0;">
+                            Payment Gateway
+                        </h2>
+                    </div>
                 </div>
                 <p style="font-size: 0.88rem; color: var(--slate-500); margin: 0;">
-                    Complete settlement for your staff-confirmed booking using any major Credit or Debit card.
+                    Select your preferred payment method to complete your reservation settlement.
                 </p>
             </div>
 
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
                 <span class="badge badge-success" style="font-size: 0.78rem;">256-Bit SSL Encrypted</span>
+                <span class="badge badge-info" style="font-size: 0.78rem;">Instant Settlement</span>
             </div>
         </div>
 
         <div th:if="${unpaidCount == 0 and (confirmedBookings != null and !confirmedBookings.empty)}"
              style="padding: 1.5rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); text-align: center; color: var(--slate-600);">
             <div style="font-size: 1.25rem; font-weight: 700; color: #047857; margin-bottom: 0.35rem;">All Confirmed Reservations Are Settled!</div>
-            <p style="font-size: 0.9rem; margin: 0;">You have no outstanding invoices awaiting card settlement.</p>
+            <p style="font-size: 0.9rem; margin: 0;">You have no outstanding invoices awaiting settlement.</p>
         </div>
 
         <!-- The Payment Gateway Form -->
@@ -238,10 +243,62 @@
             <!-- Hidden Inputs -->
             <input type="hidden" name="bookingId" id="formBookingId" th:value="${selectedItem != null ? selectedItem.bookingId : ''}" />
             <input type="hidden" name="invoiceId" id="formInvoiceId" th:value="${selectedItem != null ? selectedItem.invoiceId : ''}" />
+            <input type="hidden" name="paymentMethod" id="formPaymentMethod" value="CREDIT_CARD" />
 
+            <!-- Payment Method Selector Cards -->
+            <div style="margin-bottom: 1.5rem;">
+                <label class="form-label" style="font-weight: 700; font-size: 0.9rem; color: var(--slate-800); margin-bottom: 0.65rem; display: block;">
+                    Choose Payment Method
+                </label>
+                <div class="df-payment-methods-grid">
+                    <!-- Option 1: Credit / Debit Card -->
+                    <div id="methodCardCc" class="df-payment-method-card df-method-card-cc active" onclick="selectPaymentMethod('CREDIT_CARD')">
+                        <input type="radio" name="methodOptionRadio" id="radioMethodCc" value="CREDIT_CARD" checked>
+                        <div class="df-method-icon-wrap">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </div>
+                        <div class="df-method-info">
+                            <div class="df-method-title">
+                                <span>Credit / Debit Card</span>
+                                <span style="font-size: 0.72rem; padding: 0.15rem 0.45rem; background: #e0e7ff; color: #4338ca; border-radius: 4px; font-weight: 700;">VISA / MC</span>
+                            </div>
+                            <div class="df-method-desc">
+                                Pay securely using Visa, Mastercard, or American Express.
+                            </div>
+                        </div>
+                        <div class="df-method-check">&#10003;</div>
+                    </div>
+
+                    <!-- Option 2: PayPal -->
+                    <div id="methodCardPaypal" class="df-payment-method-card df-method-card-paypal" onclick="selectPaymentMethod('PAYPAL')">
+                        <input type="radio" name="methodOptionRadio" id="radioMethodPaypal" value="PAYPAL">
+                        <div class="df-method-icon-wrap">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 21h4a2 2 0 0 0 2-1.7l1.5-9.3A2 2 0 0 0 12.5 8H8a2 2 0 0 0-2 1.7L4.5 19.3A2 2 0 0 0 6.5 21z"></path>
+                                <path d="M11 14h3.5a3.5 3.5 0 0 0 0-7H9"></path>
+                            </svg>
+                        </div>
+                        <div class="df-method-info">
+                            <div class="df-method-title">
+                                <span>PayPal Express</span>
+                                <span style="font-size: 0.72rem; padding: 0.15rem 0.45rem; background: #e0f2fe; color: #0369a1; border-radius: 4px; font-weight: 700;">PROTECTED</span>
+                            </div>
+                            <div class="df-method-desc">
+                                Fast, secure checkout with your PayPal account or balance.
+                            </div>
+                        </div>
+                        <div class="df-method-check">&#10003;</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two-Column Payment Layout -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; margin-bottom: 1.5rem;">
                 
-                <!-- Left Summary Box: Selected Booking Breakdown -->
+                <!-- Left Column: Summary Breakdown & Live Dynamic Previews -->
                 <div style="background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); padding: 1.5rem; display: flex; flex-direction: column; justify-content: space-between;">
                     <div>
                         <div style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; color: var(--slate-500); letter-spacing: 0.05em; margin-bottom: 0.75rem;">
@@ -278,129 +335,233 @@
                             </div>
                         </div>
 
-                        <div style="font-size: 0.88rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.88rem; margin-bottom: 1.25rem;">
                             <span style="font-size: 0.75rem; color: var(--slate-500); text-transform: uppercase; display: block;">Rental Dates</span>
                             <span id="summaryDates" style="color: var(--slate-800); font-weight: 600;"
                                   th:text="${selectedItem != null ? selectedItem.pickupDate + ' to ' + selectedItem.returnDate : 'Selected dates'}">
                                 2026-09-10 to 2026-09-15
                             </span>
                         </div>
+
+                        <!-- DYNAMIC PREVIEW 1: Virtual Credit Card (Visible when Credit Card strategy active) -->
+                        <div id="virtualCardPreview" class="df-virtual-card">
+                            <div class="df-card-top-row">
+                                <div class="df-card-chip"></div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span id="vcBank" style="font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; opacity: 0.9;">YOUR BANK</span>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity: 0.7;">
+                                        <path d="M5 9c2-2 5-2 7 0"></path>
+                                        <path d="M3 6c3.5-3.5 8.5-3.5 12 0"></path>
+                                        <path d="M7 12c1-1 2.5-1 3.5 0"></path>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div id="vcNumber" class="df-card-number-display">
+                                •••• •••• •••• ••••
+                            </div>
+
+                            <div class="df-card-bottom-row">
+                                <div>
+                                    <div class="df-card-label-small">Cardholder</div>
+                                    <div id="vcHolder" class="df-card-val" th:text="${customer != null ? #strings.toUpperCase(customer.name) : 'CARDHOLDER'}">CARDHOLDER</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="df-card-label-small">Expires</div>
+                                    <div id="vcExpiry" class="df-card-val">MM/YY</div>
+                                </div>
+                                <div id="vcBrandBadge" style="font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; color: #94a3b8;">
+                                    CARD
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DYNAMIC PREVIEW 2: PayPal Showcase (Visible when PayPal strategy active) -->
+                        <div id="paypalShowcasePreview" class="df-paypal-showcase" style="display: none;">
+                            <div class="df-paypal-header">
+                                <div class="df-paypal-logo">
+                                    <span>Pay</span>Pal
+                                </div>
+                                <span class="badge badge-info" style="font-size: 0.75rem;">Verified Gateway</span>
+                            </div>
+                            <div style="font-size: 0.85rem; color: #334155; line-height: 1.5; margin-bottom: 0.85rem;">
+                                <div style="font-weight: 700; color: #003087; margin-bottom: 0.25rem;">PayPal Buyer Protection Included</div>
+                                Your transaction is safeguarded by 24/7 fraud monitoring and zero unauthorized liability.
+                            </div>
+                            <div style="background: #ffffff; border: 1px solid #e0f2fe; border-radius: 8px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.65rem;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem;">
+                                    &#10003;
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--slate-600);">
+                                    Instant receipt emailed directly to your PayPal account upon authorization.
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Authorized Total Due Highlight -->
-                    <div style="padding-top: 1rem; border-top: 2px dashed var(--slate-300); display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div style="padding-top: 1.25rem; border-top: 2px dashed var(--slate-300); display: flex; justify-content: space-between; align-items: flex-end;">
                         <div>
                             <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--slate-600); display: block;">Total Amount to Authorize</span>
                             <span style="font-size: 0.78rem; color: var(--slate-500);">All taxes & mileage included</span>
                         </div>
-                        <div id="summaryAmountDue" style="font-size: 1.8rem; font-weight: 800; color: var(--primary);"
+                        <div id="summaryAmountDue" style="font-size: 1.85rem; font-weight: 800; color: var(--primary);"
                              th:text="'Rs. ' + ${#numbers.formatDecimal(selectedItem != null and selectedItem.totalAmountDue != null ? selectedItem.totalAmountDue : 0, 1, 2)}">
                             Rs. 150.00
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Form: Card Payment Input Fields -->
+                <!-- Right Column: Customer Inputs -->
                 <div>
-                    <!-- Bank Name -->
-                    <div class="form-group" style="margin-bottom: 1.2rem;">
-                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Issuing Bank</label>
-                        <input type="text" name="bankName" id="bankName" class="form-control"
-                               placeholder="e.g. Commercial Bank of Ceylon, Chase, HSBC, Bank of Ceylon"
-                               value="Commercial Bank"
-                               required
-                               style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: inherit; font-size: 0.95rem;">
-                    </div>
 
-                    <!-- Cardholder Name -->
-                    <div class="form-group" style="margin-bottom: 1.2rem;">
-                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Cardholder Name</label>
-                        <input type="text" class="form-control"
-                               th:value="${customer != null ? customer.name : 'Authorized Customer'}"
-                               readonly
-                               style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-200); background: var(--slate-100); color: var(--slate-700); font-weight: 600; font-size: 0.95rem;">
-                    </div>
-
-                    <!-- 16-Digit Credit Card Number -->
-                    <div class="form-group" style="margin-bottom: 1.2rem;">
-                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700); display: flex; justify-content: space-between;">
-                            <span>16-Digit Credit / Debit Card Number</span>
-                            <span id="cardTypeBadge" style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">VISA / MASTERCARD</span>
-                        </label>
-                        <div style="position: relative;">
-                            <input type="text"
-                                   name="cardNo"
-                                   id="cardNo"
-                                   class="form-control"
-                                   placeholder="4111 2222 3333 4444"
-                                   maxlength="19"
-                                   required
-                                   autocomplete="cc-number"
-                                   oninput="formatCardNumber(this)"
-                                   style="width: 100%; padding: 0.7rem 2.8rem 0.7rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 1.05rem; letter-spacing: 0.05em; font-weight: 600;">
-                            <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-400); pointer-events: none;">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-                                    <line x1="1" y1="10" x2="23" y2="10"></line>
-                                </svg>
-                            </span>
-                        </div>
-                        <small style="color: var(--slate-500); font-size: 0.78rem; margin-top: 0.3rem; display: block;">
-                            Card must contain exactly 16 numeric digits. Numbers are securely tokenized.
-                        </small>
-                    </div>
-
-                    <!-- Expiration Date & CVV Row -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
-                        <!-- Expiration Date (MM/YY) -->
-                        <div class="form-group">
-                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Expiration (MM/YY)</label>
-                            <input type="text"
-                                   name="expiry"
-                                   id="expiry"
-                                   class="form-control"
-                                   placeholder="12/28"
-                                   maxlength="5"
-                                   required
-                                   autocomplete="cc-exp"
-                                   oninput="formatExpiry(this)"
-                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                    <!-- ================= CREDIT CARD INPUT SECTION ================= -->
+                    <div id="creditCardInputsSection">
+                        <!-- Bank Name -->
+                        <div class="form-group" style="margin-bottom: 1.2rem;">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Issuing Bank</label>
+                            <input type="text" name="bankName" id="bankName" class="form-control"
+                                   placeholder="e.g. Commercial Bank of Ceylon, Chase, HSBC"
+                                   oninput="updateVirtualCard()"
+                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: inherit; font-size: 0.95rem;">
                         </div>
 
-                        <!-- 3-Digit CVV -->
-                        <div class="form-group">
-                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">3-Digit CVV</label>
-                            <input type="password"
-                                   name="cvv"
-                                   id="cvv"
-                                   class="form-control"
-                                   placeholder="123"
-                                   maxlength="3"
-                                   required
-                                   autocomplete="cc-csc"
-                                   oninput="formatCvv(this)"
-                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                        <!-- Cardholder Name -->
+                        <div class="form-group" style="margin-bottom: 1.2rem;">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Cardholder Name</label>
+                            <input type="text" id="cardholderInput" class="form-control"
+                                   th:value="${customer != null ? customer.name : ''}"
+                                   placeholder="Cardholder Name"
+                                   style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-200); background: var(--slate-100); color: var(--slate-700); font-weight: 600; font-size: 0.95rem;">
                         </div>
+
+                        <!-- 16-Digit Credit Card Number -->
+                        <div class="form-group" style="margin-bottom: 1.2rem;">
+                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700); display: flex; justify-content: space-between;">
+                                <span>16-Digit Credit / Debit Card Number</span>
+                                <span id="cardTypeBadge" style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">CARD</span>
+                            </label>
+                            <div style="position: relative;">
+                                <input type="text"
+                                       name="cardNo"
+                                       id="cardNo"
+                                       class="form-control"
+                                       placeholder="•••• •••• •••• ••••"
+                                       maxlength="19"
+                                       autocomplete="cc-number"
+                                       oninput="formatCardNumber(this); updateVirtualCard();"
+                                       style="width: 100%; padding: 0.7rem 2.8rem 0.7rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 1.05rem; letter-spacing: 0.05em; font-weight: 600;">
+                                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--slate-400); pointer-events: none;">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                                    </svg>
+                                </span>
+                            </div>
+                            <small style="color: var(--slate-500); font-size: 0.78rem; margin-top: 0.3rem; display: block;">
+                                🔒 Secure 256-bit SSL encrypted transaction clearance.
+                            </small>
+                        </div>
+
+                        <!-- Expiration Date & CVV Row -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                            <!-- Expiration Date (MM/YY) -->
+                            <div class="form-group">
+                                <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">Expiration (MM/YY)</label>
+                                <input type="text"
+                                       name="expiry"
+                                       id="expiry"
+                                       class="form-control"
+                                       placeholder="MM/YY"
+                                       maxlength="5"
+                                       autocomplete="cc-exp"
+                                       oninput="formatExpiry(this); updateVirtualCard();"
+                                       style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                            </div>
+
+                            <!-- 3-Digit CVV -->
+                            <div class="form-group">
+                                <label class="form-label" style="font-weight: 600; font-size: 0.85rem; color: var(--slate-700);">3-Digit CVV</label>
+                                <input type="password"
+                                       name="cvv"
+                                       id="cvv"
+                                       class="form-control"
+                                       placeholder="•••"
+                                       maxlength="3"
+                                       autocomplete="cc-csc"
+                                       oninput="formatCvv(this)"
+                                       style="width: 100%; padding: 0.65rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--slate-300); font-family: monospace; font-size: 0.95rem; font-weight: 600;">
+                            </div>
+                        </div>
+
+                        <!-- Card Submit Button -->
+                        <button type="submit"
+                                id="submitCcBtn"
+                                class="btn btn-primary"
+                                style="width: 100%; padding: 0.85rem; font-size: 1.05rem; font-weight: 700; gap: 0.5rem;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                            <span id="ccBtnText">Authorize via Credit Card</span>
+                        </button>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit"
-                            id="submitPaymentBtn"
-                            class="btn btn-primary"
-                            style="width: 100%; padding: 0.85rem; font-size: 1.05rem; font-weight: 700; gap: 0.5rem;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
-                        <span>Confirm & Authorize Payment</span>
-                    </button>
+                    <!-- ================= PAYPAL INPUT SECTION ================= -->
+                    <div id="paypalInputsSection" style="display: none;">
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label class="form-label" style="font-weight: 700; font-size: 0.9rem; color: #003087;">
+                                PayPal Account Email Address <span style="color: var(--danger);">*</span>
+                            </label>
+                            <div style="position: relative;">
+                                <input type="email"
+                                       name="paypalEmail"
+                                       id="paypalEmail"
+                                       class="form-control"
+                                       placeholder="your.email@example.com"
+                                       th:value="${customer != null ? customer.email : ''}"
+                                       style="width: 100%; padding: 0.75rem 2.8rem 0.75rem 0.85rem; border-radius: var(--radius-sm); border: 1.5px solid #0284c7; font-size: 0.95rem; font-weight: 600;">
+                                <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #0284c7; pointer-events: none;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                                        <circle cx="12" cy="12" r="4"></circle>
+                                        <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <small style="color: var(--slate-500); font-size: 0.8rem; margin-top: 0.35rem; display: block;">
+                                🔒 You will be billed securely via your authorized PayPal account.
+                            </small>
+                        </div>
 
-                    <div style="margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--slate-500); font-size: 0.78rem;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <div style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem;">
+                            <div style="font-weight: 700; font-size: 0.85rem; color: var(--slate-800); margin-bottom: 0.35rem;">
+                                Quick & Seamless Checkout
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--slate-600); margin: 0; line-height: 1.4;">
+                                No card numbers required on DriveFlow servers. Upon clicking the button below, your PayPal transaction will be authorized and your reservation cleared instantly.
+                            </p>
+                        </div>
+
+                        <!-- PayPal Gold Action Button -->
+                        <button type="submit"
+                                id="submitPaypalBtn"
+                                class="df-paypal-btn">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M7 21h4a2 2 0 0 0 2-1.7l1.5-9.3A2 2 0 0 0 12.5 8H8a2 2 0 0 0-2 1.7L4.5 19.3A2 2 0 0 0 6.5 21z"></path>
+                                <path d="M11 14h3.5a3.5 3.5 0 0 0 0-7H9"></path>
+                            </svg>
+                            <span id="paypalBtnText">Pay with PayPal</span>
+                        </button>
+                    </div>
+
+                    <div style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; color: var(--slate-500); font-size: 0.78rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                         <span>Certified PCI-DSS Compliant Payment Clearance</span>
                     </div>
+
                 </div>
 
             </div>
@@ -545,7 +706,45 @@
 
 <script>
     /**
-     * Card number real-time formatter: adds space every 4 digits, limits to 16 digits.
+     * Switch active payment strategy dynamically (Strategy Pattern).
+     */
+    function selectPaymentMethod(method) {
+        var hiddenMethod = document.getElementById('formPaymentMethod');
+        var cardCc = document.getElementById('methodCardCc');
+        var cardPaypal = document.getElementById('methodCardPaypal');
+        var radioCc = document.getElementById('radioMethodCc');
+        var radioPaypal = document.getElementById('radioMethodPaypal');
+
+        var ccSection = document.getElementById('creditCardInputsSection');
+        var paypalSection = document.getElementById('paypalInputsSection');
+        var vcPreview = document.getElementById('virtualCardPreview');
+        var paypalPreview = document.getElementById('paypalShowcasePreview');
+
+        hiddenMethod.value = method;
+
+        if (method === 'PAYPAL') {
+            cardCc.classList.remove('active');
+            cardPaypal.classList.add('active', 'paypal-active');
+            radioPaypal.checked = true;
+
+            ccSection.style.display = 'none';
+            paypalSection.style.display = 'block';
+            vcPreview.style.display = 'none';
+            paypalPreview.style.display = 'block';
+        } else {
+            cardPaypal.classList.remove('active', 'paypal-active');
+            cardCc.classList.add('active');
+            radioCc.checked = true;
+
+            paypalSection.style.display = 'none';
+            ccSection.style.display = 'block';
+            paypalPreview.style.display = 'none';
+            vcPreview.style.display = 'flex';
+        }
+    }
+
+    /**
+     * Formats card number input with space every 4 digits, max 16 digits.
      */
     function formatCardNumber(input) {
         var value = input.value.replace(/\D/g, '');
@@ -593,53 +792,124 @@
     }
 
     /**
-     * CVV formatter: exactly 3 numeric digits.
+     * CVV formatter: max 3 digits.
      */
     function formatCvv(input) {
         input.value = input.value.replace(/\D/g, '').substring(0, 3);
     }
 
     /**
-     * Client-side validation ensuring:
-     * - Exactly 16 digits for card number
-     * - Valid MM/YY format with month 01-12
-     * - 3-digit CVV
+     * Live Holographic Virtual Card Synchronizer
+     */
+    function updateVirtualCard() {
+        var cardNoInput = document.getElementById('cardNo');
+        var bankNameInput = document.getElementById('bankName');
+        var expiryInput = document.getElementById('expiry');
+
+        var vcNumber = document.getElementById('vcNumber');
+        var vcBank = document.getElementById('vcBank');
+        var vcExpiry = document.getElementById('vcExpiry');
+        var vcBrandBadge = document.getElementById('vcBrandBadge');
+        var cardTypeBadge = document.getElementById('cardTypeBadge');
+
+        // Bank Name Sync
+        if (vcBank && bankNameInput) {
+            var bVal = bankNameInput.value.trim();
+            vcBank.textContent = bVal ? bVal.toUpperCase() : 'YOUR BANK';
+        }
+
+        // Expiry Sync
+        if (vcExpiry && expiryInput) {
+            var expVal = expiryInput.value.trim();
+            vcExpiry.textContent = expVal ? expVal : 'MM/YY';
+        }
+
+        // Card Number & Brand Detection
+        if (vcNumber && cardNoInput) {
+            var val = cardNoInput.value.replace(/\s+/g, '');
+            if (!val) {
+                vcNumber.textContent = '•••• •••• •••• ••••';
+                if (vcBrandBadge) {
+                    vcBrandBadge.textContent = 'CARD';
+                    vcBrandBadge.style.color = '#94a3b8';
+                }
+                if (cardTypeBadge) {
+                    cardTypeBadge.textContent = 'CARD';
+                }
+            } else {
+                var padded = (val + '••••••••••••••••').substring(0, 16);
+                var formatted = '';
+                for (var i = 0; i < 16; i++) {
+                    if (i > 0 && i % 4 === 0) formatted += ' ';
+                    formatted += padded[i];
+                }
+                vcNumber.textContent = formatted;
+
+                // Brand detection
+                var brand = 'VISA';
+                var color = '#facc15';
+                if (val.startsWith('5') || val.startsWith('2')) {
+                    brand = 'MASTERCARD';
+                    color = '#f97316';
+                } else if (val.startsWith('34') || val.startsWith('37')) {
+                    brand = 'AMEX';
+                    color = '#38bdf8';
+                }
+                if (vcBrandBadge) {
+                    vcBrandBadge.textContent = brand;
+                    vcBrandBadge.style.color = color;
+                }
+                if (cardTypeBadge) {
+                    cardTypeBadge.textContent = brand;
+                }
+            }
+        }
+    }
+
+    /**
+     * Client-Side Payment Form Validator
      */
     function validatePaymentForm(e) {
-        var cardNoInput = document.getElementById('cardNo');
-        var expiryInput = document.getElementById('expiry');
-        var cvvInput = document.getElementById('cvv');
-        var bookingIdInput = document.getElementById('formBookingId');
+        var method = document.getElementById('formPaymentMethod').value;
+        if (method === 'CREDIT_CARD') {
+            var cardNo = document.getElementById('cardNo');
+            var expiry = document.getElementById('expiry');
+            var cvv = document.getElementById('cvv');
 
-        if (!bookingIdInput.value) {
-            alert('Please select a confirmed booking to pay.');
-            e.preventDefault();
-            return false;
+            var rawNum = cardNo ? cardNo.value.replace(/\D/g, '') : '';
+            if (rawNum.length !== 16) {
+                alert('Please enter a valid 16-digit card number.');
+                if (cardNo) cardNo.focus();
+                if (e && e.preventDefault) e.preventDefault();
+                return false;
+            }
+
+            var expVal = expiry ? expiry.value.trim() : '';
+            var expiryRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+            if (!expiryRegex.test(expVal)) {
+                alert('Please enter a valid expiration date in MM/YY format (e.g. 12/28).');
+                if (expiry) expiry.focus();
+                if (e && e.preventDefault) e.preventDefault();
+                return false;
+            }
+
+            var cvvVal = cvv ? cvv.value.trim() : '';
+            if (cvvVal.length !== 3) {
+                alert('Please enter a valid 3-digit CVV.');
+                if (cvv) cvv.focus();
+                if (e && e.preventDefault) e.preventDefault();
+                return false;
+            }
+        } else if (method === 'PAYPAL') {
+            var emailInp = document.getElementById('paypalEmail');
+            var emailVal = emailInp ? emailInp.value.trim() : '';
+            if (!emailVal || !emailVal.includes('@')) {
+                alert('Please enter a valid PayPal account email address.');
+                if (emailInp) emailInp.focus();
+                if (e && e.preventDefault) e.preventDefault();
+                return false;
+            }
         }
-
-        var rawCard = cardNoInput.value.replace(/\D/g, '');
-        if (rawCard.length !== 16) {
-            alert('Invalid Card: Please enter a full 16-digit credit or debit card number.');
-            cardNoInput.focus();
-            e.preventDefault();
-            return false;
-        }
-
-        var expiryPattern = /^(0[1-9]|1[0-2])\/\d{2}$/;
-        if (!expiryPattern.test(expiryInput.value)) {
-            alert('Invalid Expiry: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).');
-            expiryInput.focus();
-            e.preventDefault();
-            return false;
-        }
-
-        if (cvvInput.value.length !== 3) {
-            alert('Invalid CVV: Security code must be exactly 3 digits.');
-            cvvInput.focus();
-            e.preventDefault();
-            return false;
-        }
-
         return true;
     }
 

@@ -107,17 +107,19 @@ public class CustomerInvoicePaymentController {
     }
 
     /**
-     * Form submission for the integrated Payment Gateway in the Invoices & Payments
-     * tab.
+     * Form submission for the integrated Payment Gateway in the Invoices & Payments tab.
+     * Uses Strategy Pattern to execute interchangeable payment algorithms (CreditCardPayment vs. PayPalPayment).
      */
     @PostMapping("/invoices-payments/pay")
     public String processPayment(
             @RequestParam("bookingId") Long bookingId,
             @RequestParam(value = "invoiceId", required = false) Long invoiceId,
-            @RequestParam("bankName") String bankName,
-            @RequestParam("cardNo") String cardNo,
+            @RequestParam(value = "paymentMethod", required = false, defaultValue = "CREDIT_CARD") String paymentMethod,
+            @RequestParam(value = "bankName", required = false) String bankName,
+            @RequestParam(value = "cardNo", required = false) String cardNo,
             @RequestParam(value = "expiry", required = false) String expiry,
             @RequestParam(value = "cvv", required = false) String cvv,
+            @RequestParam(value = "paypalEmail", required = false) String paypalEmail,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -153,31 +155,45 @@ public class CustomerInvoicePaymentController {
             return "redirect:/invoices-payments";
         }
 
-        // 16-Digit Credit Card Validation
-        String cleanCardNo = (cardNo != null) ? cardNo.replaceAll("[\\s-]", "") : "";
-        if (cleanCardNo.length() != 16 || !cleanCardNo.matches("^\\d{16}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Invalid Card Number: Must enter a valid 16-digit credit or debit card number.");
-            redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
-            return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
-        }
+        boolean isPayPal = "PAYPAL".equalsIgnoreCase(paymentMethod);
+        String cleanCardNo = null;
 
-        // 3-Digit CVV Validation
-        String cleanCvv = (cvv != null) ? cvv.trim() : "";
-        if (!cleanCvv.matches("^\\d{3}$") && !cleanCvv.matches("^\\d{4}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Invalid CVV: Security code must be 3 digits.");
-            redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
-            return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
-        }
+        if (isPayPal) {
+            // PayPal Email Validation
+            String cleanEmail = paypalEmail != null ? paypalEmail.trim() : "";
+            if (cleanEmail.isEmpty() || !cleanEmail.contains("@")) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Invalid PayPal Account: Please provide a valid PayPal email address.");
+                redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
+                return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
+            }
+        } else {
+            // 16-Digit Credit Card Validation
+            cleanCardNo = (cardNo != null) ? cardNo.replaceAll("[\\s-]", "") : "";
+            if (cleanCardNo.length() != 16 || !cleanCardNo.matches("^\\d{16}$")) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Invalid Card Number: Must enter a valid 16-digit credit or debit card number.");
+                redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
+                return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
+            }
 
-        // Expiry Date Validation (MM/YY) - strictly 12 months (01-12)
-        String cleanExpiry = (expiry != null) ? expiry.trim() : "";
-        if (!cleanExpiry.matches("^(0[1-9]|1[0-2])\\/\\d{2}$")) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Invalid Expiration Date: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).");
-            redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
-            return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
+            // 3-Digit CVV Validation
+            String cleanCvv = (cvv != null) ? cvv.trim() : "";
+            if (!cleanCvv.matches("^\\d{3}$") && !cleanCvv.matches("^\\d{4}$")) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Invalid CVV: Security code must be 3 digits.");
+                redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
+                return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
+            }
+
+            // Expiry Date Validation (MM/YY) - strictly 12 months (01-12)
+            String cleanExpiry = (expiry != null) ? expiry.trim() : "";
+            if (!cleanExpiry.matches("^(0[1-9]|1[0-2])\\/\\d{2}$")) {
+                redirectAttributes.addFlashAttribute("errorMessage",
+                        "Invalid Expiration Date: Month must be between 01 and 12 in MM/YY format (e.g. 12/28).");
+                redirectAttributes.addFlashAttribute("errorBookingId", bookingId);
+                return "redirect:/invoices-payments?selectedBookingId=" + bookingId;
+            }
         }
 
         // Fetch or create invoice
@@ -199,34 +215,68 @@ public class CustomerInvoicePaymentController {
             });
         }
 
-        if ("PAID".equalsIgnoreCase(invoice.getStatus())) {
+        if (invoice != null && "PAID".equalsIgnoreCase(invoice.getStatus())) {
             redirectAttributes.addFlashAttribute("infoMessage",
                     "Invoice #INV-" + invoice.getInvoiceId() + " for Booking #BK-" + bookingId
                             + " has already been settled.");
             return "redirect:/invoices-payments";
         }
 
-        // Execute payment transaction
-        CreditCardPay cc = new CreditCardPay();
-        cc.setBankName(bankName != null && !bankName.isBlank() ? bankName.trim() : "Direct Card Payment");
-        cc.setCardNo(cleanCardNo);
-        cc.setAmountPaid(invoice.getTotalAmt());
-        cc.setPaymentDate(LocalDate.now());
-        cc.setStatus("COMPLETED");
-        cc.setRefNo("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
-        cc.setInvoice(invoice);
+        Payment paymentRecord;
 
-        paymentService.processPayment(cc);
+        if (isPayPal) {
+            // Strategy Pattern Execution: PayPalPayment
+            paymentService.processCustomerPayment("PAYPAL", invoice.getTotalAmt().doubleValue(), String.valueOf(bookingId));
+
+            Payment pay = new Payment();
+            pay.setRefNo("PAY-PP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            pay.setPaymentDate(LocalDate.now());
+            pay.setAmountPaid(invoice.getTotalAmt());
+            pay.setStatus("COMPLETED");
+            pay.setInvoice(invoice);
+            paymentRecord = pay;
+        } else {
+            // Strategy Pattern Execution: CreditCardPayment
+            paymentService.processCustomerPayment("CREDIT_CARD", invoice.getTotalAmt().doubleValue(), String.valueOf(bookingId));
+
+            CreditCardPay cc = new CreditCardPay();
+            cc.setBankName(bankName != null && !bankName.isBlank() ? bankName.trim() : "Direct Card Payment");
+            cc.setCardNo(cleanCardNo);
+            cc.setAmountPaid(invoice.getTotalAmt());
+            cc.setPaymentDate(LocalDate.now());
+            cc.setStatus("COMPLETED");
+            cc.setRefNo("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            cc.setInvoice(invoice);
+            paymentRecord = cc;
+        }
+
+        paymentService.processPayment(paymentRecord);
 
         invoice.setStatus("PAID");
         paymentService.updateInvoice(invoice.getInvoiceId(), invoice);
 
+        String strategyLabel = isPayPal ? "PayPal Express" : "Credit / Debit Card";
         redirectAttributes.addFlashAttribute("successMessage",
-                "Payment of Rs. " + String.format("%.2f", invoice.getTotalAmt()) + " processed successfully! " +
-                        "Booking #BK-" + bookingId + " (Invoice #INV-" + invoice.getInvoiceId()
-                        + ") is now fully PAID. Transaction Ref: " + cc.getRefNo());
+                "Payment of Rs. " + String.format("%.2f", invoice.getTotalAmt()) + " processed successfully via "
+                        + strategyLabel + "! Booking #BK-" + bookingId + " (Invoice #INV-" + invoice.getInvoiceId()
+                        + ") is now fully PAID. Transaction Ref: " + paymentRecord.getRefNo());
 
         return "redirect:/invoices-payments";
+    }
+
+    /**
+     * Backward-compatible overload for existing test suites.
+     */
+    public String processPayment(
+            Long bookingId,
+            Long invoiceId,
+            String bankName,
+            String cardNo,
+            String expiry,
+            String cvv,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+        return processPayment(bookingId, invoiceId, "CREDIT_CARD", bankName, cardNo, expiry, cvv, null, authentication, redirectAttributes);
     }
 
     /**

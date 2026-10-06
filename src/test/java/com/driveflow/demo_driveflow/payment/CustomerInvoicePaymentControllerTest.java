@@ -259,4 +259,67 @@ public class CustomerInvoicePaymentControllerTest {
         assertTrue(redirectAttributes.getFlashAttributes().get("errorMessage").toString().contains("Month must be between 01 and 12"));
         verify(paymentService, never()).processPayment(any());
     }
+
+    @Test
+    @DisplayName("processPayment succeeds with valid PayPal email via Strategy Pattern")
+    void testProcessPayment_PayPalSuccess() {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("customer@driveflow.com");
+        when(staffRepository.findByEmail("customer@driveflow.com")).thenReturn(Optional.empty());
+        when(userService.findCustomerByEmail("customer@driveflow.com")).thenReturn(Optional.of(customer));
+        when(bookingService.getBookingById(100L)).thenReturn(confirmedBooking);
+        when(paymentService.getInvoiceById(50L)).thenReturn(invoice);
+
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.processPayment(
+                100L,
+                50L,
+                "PAYPAL",
+                null,
+                null,
+                null,
+                null,
+                "customer.driveflow@paypal.com",
+                authentication,
+                redirectAttributes
+        );
+
+        assertEquals("redirect:/invoices-payments", view);
+        assertNotNull(redirectAttributes.getFlashAttributes().get("successMessage"));
+        assertTrue(redirectAttributes.getFlashAttributes().get("successMessage").toString().contains("PayPal"));
+        assertEquals("PAID", invoice.getStatus());
+        verify(paymentService, times(1)).processCustomerPayment(eq("PAYPAL"), anyDouble(), eq("100"));
+        verify(paymentService, times(1)).processPayment(any(Payment.class));
+        verify(paymentService, times(1)).updateInvoice(eq(50L), eq(invoice));
+    }
+
+    @Test
+    @DisplayName("processPayment rejects invalid PayPal email")
+    void testProcessPayment_PayPalInvalidEmail() {
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getName()).thenReturn("customer@driveflow.com");
+        when(staffRepository.findByEmail("customer@driveflow.com")).thenReturn(Optional.empty());
+        when(userService.findCustomerByEmail("customer@driveflow.com")).thenReturn(Optional.of(customer));
+        when(bookingService.getBookingById(100L)).thenReturn(confirmedBooking);
+
+        RedirectAttributes redirectAttributes = new RedirectAttributesModelMap();
+
+        String view = controller.processPayment(
+                100L,
+                50L,
+                "PAYPAL",
+                null,
+                null,
+                null,
+                null,
+                "not-an-email",
+                authentication,
+                redirectAttributes
+        );
+
+        assertEquals("redirect:/invoices-payments?selectedBookingId=100", view);
+        assertTrue(redirectAttributes.getFlashAttributes().get("errorMessage").toString().contains("PayPal"));
+        verify(paymentService, never()).processPayment(any());
+    }
 }

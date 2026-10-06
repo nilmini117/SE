@@ -99,6 +99,15 @@ public class PaymentController {
             toSave.setStatus("COMPLETED");
         }
 
+        // Execute PaymentStrategy (CreditCardPayment or PayPalPayment via PaymentContext)
+        if ("CREDIT_CARD".equalsIgnoreCase(paymentMethod) || "PAYPAL".equalsIgnoreCase(paymentMethod)) {
+            String bId = (toSave.getInvoice() != null && toSave.getInvoice().getBooking() != null)
+                    ? String.valueOf(toSave.getInvoice().getBooking().getBookingId())
+                    : "TXN-" + toSave.getRefNo();
+            double amt = toSave.getAmountPaid() != null ? toSave.getAmountPaid().doubleValue() : 0.0;
+            paymentService.processCustomerPayment(paymentMethod, amt, bId);
+        }
+
         paymentService.processPayment(toSave);
         return "redirect:/payments";
     }

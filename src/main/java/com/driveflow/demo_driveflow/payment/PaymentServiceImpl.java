@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.payment;
 
+import com.driveflow.demo_driveflow.payment.strategy.*;
 import com.driveflow.demo_driveflow.users.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,6 +9,12 @@ import java.util.List;
 
 @Service
 public class PaymentServiceImpl implements PaymentService {
+
+    @Autowired
+    private CreditCardPayment creditCardPayment;
+
+    @Autowired
+    private PayPalPayment payPalPayment;
 
     @Autowired
     private InvoiceRepository invoiceRepository;
@@ -160,6 +167,21 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = getPaymentById(id);
         payment.setStatus("CANCELLED");
         paymentRepository.save(payment);
+    }
+
+    @Override
+    public void processCustomerPayment(String methodType, double amount, String bookingId) {
+        PaymentContext context = new PaymentContext();
+
+        // Dynamically assign the strategy based on frontend input
+        if (methodType != null && methodType.equalsIgnoreCase("CREDIT_CARD")) {
+            context.setPaymentStrategy(creditCardPayment);
+        } else if (methodType != null && methodType.equalsIgnoreCase("PAYPAL")) {
+            context.setPaymentStrategy(payPalPayment);
+        }
+
+        // Execute the payment without knowing the underlying details
+        context.checkout(amount, bookingId);
     }
 
     @Override

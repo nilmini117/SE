@@ -18,6 +18,7 @@ public interface PaymentService {
     Payment processPayment(Payment payment);
     Payment updatePayment(Long id, Payment payment);
     void cancelPayment(Long id);
+    void processCustomerPayment(String methodType, double amount, String bookingId);
 
     // Refunds
     Refund issueRefund(Refund refund);
