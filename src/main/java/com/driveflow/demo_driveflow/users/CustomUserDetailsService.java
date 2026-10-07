@@ -30,13 +30,16 @@ public class CustomUserDetailsService implements UserDetailsService {
             role = "CUSTOMER";
         }
 
+        boolean active = user.getIsActive() != null ? user.getIsActive() : true;
+
         return new CustomUserDetails(
                 user.getSystemId(),
                 user.getEmail(),
                 user.getPassword(),
                 user.getFirstName(),
                 user.getLastName(),
-                role
+                role,
+                active
         );
     }
 }

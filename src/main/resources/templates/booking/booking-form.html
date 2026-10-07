@@ -181,11 +181,44 @@
                     <input type="hidden" name="chargedRate" id="chargedRate" th:value="${booking.chargedRate != null ? booking.chargedRate : 37500.00}">
                 </div>
 
-                <!-- SECTION 4: PRICING ENGINE & SEASONAL DISCOUNTS -->
-                <div id="step4Container" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                <!-- SECTION 4: EXTRAS & ADD-ONS (additional_service & booking_additional_service) -->
+                <div id="stepExtrasContainer" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">4</span>
+                            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
+                                Extras &amp; Add-ons (Optional)
+                            </h3>
+                        </div>
+                        <span style="font-size: 0.78rem; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 0.2rem 0.6rem; border-radius: 9999px; font-weight: 700;">
+                            ✨ Additional Services
+                        </span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 1rem;">
+                        Select equipment, child seats, or premium protection. Costs are calculated dynamically based on your rental duration.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem;">
+                        <label th:each="s : ${additionalServices}"
+                               class="extra-service-card"
+                               style="background: white; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.85rem 1rem; display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; transition: all 0.2s;">
+                            <input type="checkbox" name="serviceIds" th:value="${s.serviceId}" th:data-rate="${s.ratePerDay}" th:data-name="${s.serviceName}"
+                                   class="extra-service-checkbox" onchange="renderPricingBreakdown()"
+                                   style="margin-top: 0.2rem; transform: scale(1.15); accent-color: var(--primary); cursor: pointer;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 700; color: var(--slate-800); font-size: 0.92rem;" th:text="${s.serviceName}">GPS Navigation</div>
+                                <div style="font-size: 0.8rem; color: #0284c7; font-weight: 700; margin-top: 0.2rem;"
+                                     th:text="'Rs. ' + ${#numbers.formatDecimal(s.ratePerDay, 1, 2)} + ' / day'">Rs. 500.00 / day</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: PRICING ENGINE & SEASONAL DISCOUNTS -->
+                <div id="step4Container" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700;">5</span>
                             <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--slate-900); margin: 0;">
                                 Pricing Engine & Seasonal Discounts
                             </h3>
@@ -509,7 +542,21 @@
                 }
 
                 const discountAmount = discountRate > 0 ? (baseCost * (discountRate / 100)) : 0;
-                const finalTotal = baseCost - discountAmount;
+
+                // Calculate Selected Additional Services (Extras & Add-ons)
+                let extrasDailySum = 0;
+                const selectedExtrasList = [];
+                document.querySelectorAll('.extra-service-checkbox:checked').forEach(cb => {
+                    const rate = parseFloat(cb.dataset.rate) || 0;
+                    extrasDailySum += rate;
+                    selectedExtrasList.push({
+                        name: cb.dataset.name || 'Additional Service',
+                        rate: rate,
+                        total: rate * durationDays
+                    });
+                });
+                const totalExtrasCost = extrasDailySum * durationDays;
+                const finalTotal = baseCost - discountAmount + totalExtrasCost;
 
                 // Update hidden form inputs for clean submission
                 if (durationHidden) durationHidden.value = durationDays;
@@ -534,6 +581,24 @@
                                         Rs. ${baseCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
                                     </td>
                                 </tr>
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: #0284c7;">
+                                        Extras &amp; Add-ons (${selectedExtrasList.length} Selected &times; ${durationDays} ${durationDays === 1 ? 'Day' : 'Days'})
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 700; color: #0284c7;">
+                                        + Rs. ${totalExtrasCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ${selectedExtrasList.map(item => `
+                                <tr style="border-bottom: 1px dashed #f1f5f9; background: #f8fafc;">
+                                    <td style="padding: 0.35rem 0.75rem; color: #0369a1; font-size: 0.82rem;">
+                                        ↳ ${item.name} (Rs. ${item.rate.toLocaleString('en-US', {minimumFractionDigits: 2})}/d)
+                                    </td>
+                                    <td style="padding: 0.35rem 0.75rem; text-align: right; font-weight: 600; color: #0369a1; font-size: 0.82rem;">
+                                        Rs. ${item.total.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                `).join('')}
                                 ${discountRate > 0 ? `
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
                                     <td style="padding: 0.55rem 0; color: #059669;">
@@ -560,6 +625,7 @@
                                 <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">FINAL CALCULATED COST</div>
                                 <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
                                     ${discountRate > 0 ? 'Discount Active: ' + promoTitle + ' (-' + discountRate + '%)' : 'Pre-submission total'}
+                                    ${totalExtrasCost > 0 ? ' • Includes Rs. ' + totalExtrasCost.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' in Extras' : ''}
                                 </div>
                             </div>
                             <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">
@@ -576,14 +642,14 @@
                 if (state.startDate) params.append('startDate', state.startDate);
                 if (state.endDate) params.append('endDate', state.endDate);
                 if (state.couponCode) params.append('couponCode', state.couponCode);
+                document.querySelectorAll('.extra-service-checkbox:checked').forEach(cb => {
+                    params.append('serviceIds', cb.value);
+                });
 
                 fetch('/bookings/calculate-pricing?' + params.toString())
                     .then(res => res.ok ? res.json() : null)
                     .then(serverBreakdown => {
                         if (serverBreakdown) {
-                            if (chargedRateHidden && serverBreakdown.finalTotalCost) {
-                                chargedRateHidden.value = serverBreakdown.finalTotalCost;
-                            }
                             if (durationHidden && serverBreakdown.durationDays) {
                                 durationHidden.value = serverBreakdown.durationDays;
                             }
@@ -624,10 +690,28 @@
                 const durationDays = Number(data.durationDays || 1);
                 const baseCost = Number(data.baseCost || (baseDailyRate * durationDays));
                 const discountRate = Number(data.discountRate || 0);
-                const discountAmount = Number(data.discountAmount || 0);
-                const finalTotal = Number(data.finalTotalCost || (baseCost - discountAmount));
+                const discountAmount = Number(data.discountAmount || (discountRate > 0 ? (baseCost * (discountRate / 100)) : 0));
                 const promoTitle = data.promotionTitle || 'Seasonal Discount';
                 const couponId = data.couponId || (hasEnteredCode ? couponInput.value.trim().toUpperCase() : '');
+
+                // Calculate Selected Additional Services (Extras & Add-ons)
+                let extrasDailySum = 0;
+                const selectedExtrasList = [];
+                document.querySelectorAll('.extra-service-checkbox:checked').forEach(cb => {
+                    const rate = parseFloat(cb.dataset.rate) || 0;
+                    extrasDailySum += rate;
+                    selectedExtrasList.push({
+                        name: cb.dataset.name || 'Additional Service',
+                        rate: rate,
+                        total: rate * durationDays
+                    });
+                });
+                const totalExtrasCost = extrasDailySum * durationDays;
+                const finalTotal = baseCost - discountAmount + totalExtrasCost;
+
+                if (chargedRateHidden) {
+                    chargedRateHidden.value = finalTotal.toFixed(2);
+                }
 
                 pricingContainer.innerHTML = `
                     <div style="background: var(--slate-100); padding: 0.65rem 1rem; border-bottom: 1px solid #e2e8f0; font-size: 0.85rem; font-weight: 700; color: var(--slate-800); display: flex; justify-content: space-between; align-items: center;">
@@ -647,6 +731,24 @@
                                         Rs. ${baseCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
                                     </td>
                                 </tr>
+                                <tr style="border-bottom: 1px dashed #e2e8f0;">
+                                    <td style="padding: 0.55rem 0; color: #0284c7;">
+                                        Extras &amp; Add-ons (${selectedExtrasList.length} Selected &times; ${durationDays} ${durationDays === 1 ? 'Day' : 'Days'})
+                                    </td>
+                                    <td style="padding: 0.55rem 0; text-align: right; font-weight: 700; color: #0284c7;">
+                                        + Rs. ${totalExtrasCost.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                ${selectedExtrasList.map(item => `
+                                <tr style="border-bottom: 1px dashed #f1f5f9; background: #f8fafc;">
+                                    <td style="padding: 0.35rem 0.75rem; color: #0369a1; font-size: 0.82rem;">
+                                        ↳ ${item.name} (Rs. ${item.rate.toLocaleString('en-US', {minimumFractionDigits: 2})}/d)
+                                    </td>
+                                    <td style="padding: 0.35rem 0.75rem; text-align: right; font-weight: 600; color: #0369a1; font-size: 0.82rem;">
+                                        Rs. ${item.total.toLocaleString('en-US', {minimumFractionDigits: 2})}
+                                    </td>
+                                </tr>
+                                `).join('')}
                                 ${discountRate > 0 ? `
                                 <tr style="border-bottom: 1px dashed #e2e8f0;">
                                     <td style="padding: 0.55rem 0; color: #059669;">
@@ -673,6 +775,7 @@
                                 <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--slate-500); font-weight: 700;">FINAL CALCULATED COST</div>
                                 <div style="font-size: 0.78rem; color: #059669; font-weight: 600;">
                                     ${discountRate > 0 ? 'Discount Active: ' + promoTitle + ' (-' + discountRate + '%)' : 'Pre-submission total'}
+                                    ${totalExtrasCost > 0 ? ' • Includes Rs. ' + totalExtrasCost.toLocaleString('en-US', {minimumFractionDigits: 2}) + ' in Extras' : ''}
                                 </div>
                             </div>
                             <div style="font-size: 1.6rem; font-weight: 800; color: var(--primary);">
@@ -734,6 +837,11 @@
             if (applyCouponBtn) {
                 applyCouponBtn.addEventListener('click', renderPricingBreakdown);
             }
+
+            document.querySelectorAll('.extra-service-checkbox').forEach(cb => {
+                cb.addEventListener('change', renderPricingBreakdown);
+                cb.addEventListener('click', renderPricingBreakdown);
+            });
 
             // Dynamic Autofill from Dashboard Click-to-Book
             function checkDashboardAutofill() {

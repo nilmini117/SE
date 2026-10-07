@@ -14,4 +14,15 @@ public class PaymentContext {
         }
         paymentStrategy.pay(amount, bookingId);
     }
+
+    public void checkout(double amount, String bookingId, String payerEmail) {
+        if (paymentStrategy == null) {
+            throw new IllegalStateException("Payment strategy not set!");
+        }
+        if (payerEmail != null && !payerEmail.isBlank()) {
+            paymentStrategy.pay(amount, bookingId, payerEmail);
+        } else {
+            paymentStrategy.pay(amount, bookingId);
+        }
+    }
 }

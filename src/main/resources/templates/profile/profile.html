@@ -70,8 +70,13 @@
                 <code style="background: var(--slate-100); padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 700; font-size: 0.95rem; color: var(--primary);" th:text="${customer.drivingLicense}">B-1234567</code>
             </div>
             <div>
-                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block; margin-bottom: 0.25rem;">Phone / Contact</span>
-                <span style="color: var(--slate-800); font-size: 1rem; font-weight: 600;" th:text="${customer.contactNumber != null ? customer.contactNumber : 'Not provided'}">+1-555-0199</span>
+                <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block; margin-bottom: 0.25rem;">Phone / Contact Numbers</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+                    <span style="color: var(--slate-800); font-size: 1rem; font-weight: 700;" th:text="${customer.contactNumber != null ? customer.contactNumber : 'Not provided'}">+1-555-0199</span>
+                    <span th:each="n : ${customer.contactNumbers}" th:if="${n != customer.contactNumber}" 
+                          style="background: #e0f2fe; color: #0369a1; font-size: 0.78rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                          th:text="${n}">0112999888</span>
+                </div>
             </div>
             <div>
                 <span style="font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--slate-500); display: block; margin-bottom: 0.25rem;">Date of Birth</span>

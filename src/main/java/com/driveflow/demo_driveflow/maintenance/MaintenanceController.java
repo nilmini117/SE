@@ -1,5 +1,6 @@
 package com.driveflow.demo_driveflow.maintenance;
 
+import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import com.driveflow.demo_driveflow.vehicle.VehicleService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/maintenance")
@@ -327,5 +329,137 @@ public class MaintenanceController {
             redirectAttributes.addFlashAttribute("errorMessage", "Could not delete company: " + e.getMessage());
         }
         return "redirect:/maintenance/companies";
+    }
+
+    // =========================================================================
+    // FLEET MAINTENANCE (Digital Legal Documents & Routine Inspections)
+    // =========================================================================
+
+    @GetMapping({"/fleet", "/documents"})
+    public String showFleetMaintenance(Model model) {
+        List<VehicleDocument> documents = maintenanceService.getAllDocuments();
+        List<Inspection> inspections = maintenanceService.getAllInspections();
+        List<Vehicle> vehicles = vehicleService.getAllVehicles();
+
+        long validDocCount = documents.stream()
+                .filter(d -> d.getExpiryDate() != null && !d.getExpiryDate().isBefore(java.time.LocalDate.now()))
+                .count();
+        long expiredDocCount = documents.size() - validDocCount;
+
+        long passedCount = inspections.stream()
+                .filter(i -> "PASSED".equalsIgnoreCase(i.getResult()))
+                .count();
+        long attentionCount = inspections.stream()
+                .filter(i -> "NEEDS_REPAIR".equalsIgnoreCase(i.getResult()) || "FAILED".equalsIgnoreCase(i.getResult()))
+                .count();
+
+        model.addAttribute("documents", documents);
+        model.addAttribute("inspections", inspections);
+        model.addAttribute("vehicles", vehicles);
+        model.addAttribute("totalVehicles", vehicles.size());
+        model.addAttribute("validDocCount", validDocCount);
+        model.addAttribute("expiredDocCount", expiredDocCount);
+        model.addAttribute("passedCount", passedCount);
+        model.addAttribute("attentionCount", attentionCount);
+        model.addAttribute("newDocument", new VehicleDocument());
+        model.addAttribute("newInspection", new Inspection());
+        return "maintenance/fleet-maintenance";
+    }
+
+    @PostMapping("/documents/upload")
+    public String uploadVehicleDocument(
+            @RequestParam("vehicleId") Long vehicleId,
+            @RequestParam("docType") String docType,
+            @RequestParam("expiryDate") @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate expiryDate,
+            @RequestParam(value = "documentFile", required = false) org.springframework.web.multipart.MultipartFile documentFile,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Vehicle vehicle = vehicleService.getVehicleById(vehicleId);
+            VehicleDocument doc = new VehicleDocument();
+            doc.setVehicle(vehicle);
+            doc.setDocType(docType);
+            doc.setExpiryDate(expiryDate);
+            doc.setUploadedAt(java.time.LocalDate.now());
+
+            if (documentFile != null && !documentFile.isEmpty()) {
+                String originalFilename = org.springframework.util.StringUtils.cleanPath(documentFile.getOriginalFilename());
+                String ext = "";
+                int idx = originalFilename.lastIndexOf('.');
+                if (idx > 0) {
+                    ext = originalFilename.substring(idx);
+                }
+                String safeName = "DOC_VEH_" + vehicleId + "_" + System.currentTimeMillis() + ext;
+                java.nio.file.Path uploadDir = java.nio.file.Paths.get("uploads", "documents");
+                if (!java.nio.file.Files.exists(uploadDir)) {
+                    java.nio.file.Files.createDirectories(uploadDir);
+                }
+                java.nio.file.Path dest = uploadDir.resolve(safeName);
+                java.nio.file.Files.copy(documentFile.getInputStream(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                doc.setFileName(originalFilename);
+                doc.setFilePath("/uploads/documents/" + safeName);
+            } else {
+                doc.setFileName("Digital_Record_" + System.currentTimeMillis());
+                doc.setFilePath(null);
+            }
+
+            maintenanceService.addDocument(doc);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Vehicle document '" + docType + "' successfully registered and uploaded for " + vehicle.getModel() + " (" + vehicle.getRegNo() + ").");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to register document: " + e.getMessage());
+        }
+        return "redirect:/maintenance/fleet";
+    }
+
+    @PostMapping("/documents/{id}/delete")
+    public String deleteVehicleDocument(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            maintenanceService.removeDocument(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Document successfully deleted.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not delete document: " + e.getMessage());
+        }
+        return "redirect:/maintenance/fleet";
+    }
+
+    @PostMapping("/inspections")
+    public String logRoutineInspection(
+            @RequestParam("vehicleId") Long vehicleId,
+            @RequestParam(value = "inspectionDate", required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate inspectionDate,
+            @RequestParam(value = "fuelLevel", defaultValue = "100") Integer fuelLevel,
+            @RequestParam(value = "result", defaultValue = "PASSED") String result,
+            @RequestParam(value = "damageNotes", required = false) String damageNotes,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            Vehicle vehicle = vehicleService.getVehicleById(vehicleId);
+            Inspection inspection = new Inspection();
+            inspection.setVehicle(vehicle);
+            inspection.setType("ROUTINE");
+            inspection.setInspectionDate(inspectionDate != null ? inspectionDate : java.time.LocalDate.now());
+            inspection.setFuelLevel(fuelLevel != null ? Math.max(0, Math.min(100, fuelLevel)) : 100);
+            inspection.setResult(result != null ? result.toUpperCase() : "PASSED");
+            inspection.setDamageNotes(damageNotes);
+
+            maintenanceService.logInspection(inspection);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Routine inspection result (" + inspection.getResult() + ") logged for " + vehicle.getModel() + " (" + vehicle.getRegNo() + ").");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Failed to log inspection: " + e.getMessage());
+        }
+        return "redirect:/maintenance/fleet";
+    }
+
+    @PostMapping("/inspections/{id}/delete")
+    public String deleteRoutineInspection(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            maintenanceService.removeInspection(id);
+            redirectAttributes.addFlashAttribute("successMessage", "Inspection record successfully removed.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Could not delete inspection record: " + e.getMessage());
+        }
+        return "redirect:/maintenance/fleet";
     }
 }

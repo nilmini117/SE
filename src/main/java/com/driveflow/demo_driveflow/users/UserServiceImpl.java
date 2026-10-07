@@ -142,6 +142,12 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public Customer updateCustomerProfile(String email, String firstName, String lastName, String contactNumber, String drivingLicense) {
+        return updateCustomerProfile(email, firstName, lastName, contactNumber, null, drivingLicense);
+    }
+
+    @Override
+    @Transactional
+    public Customer updateCustomerProfile(String email, String firstName, String lastName, String contactNumber, java.util.List<String> contactNumbers, String drivingLicense) {
         Customer customer = findCustomerByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Customer profile not found for: " + email));
 
@@ -163,6 +169,28 @@ public class UserServiceImpl implements UserService {
         }
         if (contactNumber != null && !contactNumber.isBlank()) {
             customer.setContactNumber(contactNumber.trim());
+        }
+        if (contactNumbers != null) {
+            java.util.List<String> cleanList = new java.util.ArrayList<>();
+            for (String cn : contactNumbers) {
+                if (cn != null && !cn.trim().isBlank()) {
+                    String clean = cn.trim();
+                    if (!cleanList.contains(clean)) {
+                        cleanList.add(clean);
+                    }
+                }
+            }
+            if (contactNumber != null && !contactNumber.trim().isBlank() && !cleanList.contains(contactNumber.trim())) {
+                cleanList.add(0, contactNumber.trim());
+            }
+            customer.setContactNumbers(cleanList);
+            if (!cleanList.isEmpty()) {
+                customer.setContactNumber(cleanList.get(0));
+            }
+        } else if (contactNumber != null && !contactNumber.trim().isBlank()) {
+            if (!customer.getContactNumbers().contains(contactNumber.trim())) {
+                customer.getContactNumbers().add(contactNumber.trim());
+            }
         }
         if (!license.isBlank()) {
             customer.setDrivingLicense(license);

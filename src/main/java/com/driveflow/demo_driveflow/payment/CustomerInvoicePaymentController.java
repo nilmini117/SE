@@ -233,6 +233,7 @@ public class CustomerInvoicePaymentController {
             pay.setPaymentDate(LocalDate.now());
             pay.setAmountPaid(invoice.getTotalAmt());
             pay.setStatus("COMPLETED");
+            pay.setPaymentType("PAYPAL");
             pay.setInvoice(invoice);
             paymentRecord = pay;
         } else {
@@ -245,6 +246,7 @@ public class CustomerInvoicePaymentController {
             cc.setAmountPaid(invoice.getTotalAmt());
             cc.setPaymentDate(LocalDate.now());
             cc.setStatus("COMPLETED");
+            cc.setPaymentType("CARD");
             cc.setRefNo("PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
             cc.setInvoice(invoice);
             paymentRecord = cc;

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Finance & Deposits')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('payments')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Corporate Finance & Security Deposits</h1>
+            <p class="df-header-subtitle">Manage customer security deposits (has_deposit) and process refunds for canceled or modified bookings.</p>
+        </div>
+        <div class="df-header-actions" style="display: flex; gap: 0.75rem;">
+            <button type="button" class="btn btn-primary" onclick="openDepositModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
+                Collect Security Deposit
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="openRefundModal()" style="background: white; border: 1px solid var(--slate-300);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"></path>
+                </svg>
+                Process Refund
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="df-tabs">
+        <a th:href="@{/payments(tab='transactions')}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="1" y="4" width="22" height="16" rx="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            Processed Payments
+        </a>
+        <a th:href="@{/payments(tab='sales')}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Company Sales Information
+        </a>
+        <a th:href="@{/finance}" class="df-tab-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Finance Panel (Deposits & Refunds)
+        </a>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span th:text="${successMessage}">Success message</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span th:text="${errorMessage}">Error message</span>
+    </div>
+
+    <!-- Metric Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+        <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Deposits Held</div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: #2563eb;" th:text="'Rs. ' + ${#numbers.formatDecimal(totalDepositsHeld, 1, 2)}">Rs. 0.00</div>
+            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Active security escrow funds</div>
+        </div>
+        <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Deposits Refunded</div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: #16a34a;" th:text="'Rs. ' + ${#numbers.formatDecimal(totalDepositsRefunded, 1, 2)}">Rs. 0.00</div>
+            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Safely returned to customers</div>
+        </div>
+        <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Processed Refunds</div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900);" th:text="'Rs. ' + ${#numbers.formatDecimal(approvedRefundsTotal, 1, 2)}">Rs. 0.00</div>
+            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Cancellations & modifications</div>
+        </div>
+        <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Pending Refund Approvals</div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: ${pendingRefundsCount > 0 ? '#e11d48' : '#16a34a'}" th:text="${pendingRefundsCount}">0</div>
+            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Requires manager review</div>
+        </div>
+    </div>
+
+    <!-- Inner Tabs -->
+    <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
+        <button type="button" id="tabDepositBtn" onclick="switchFinanceTab('deposits')" style="padding: 0.75rem 1.25rem; font-weight: 700; font-size: 0.95rem; border: none; background: none; cursor: pointer; color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px;">
+            Security Deposits Escrow (<span th:text="${deposits != null ? deposits.size() : 0}">0</span>)
+        </button>
+        <button type="button" id="tabRefundBtn" onclick="switchFinanceTab('refunds')" style="padding: 0.75rem 1.25rem; font-weight: 600; font-size: 0.95rem; border: none; background: none; cursor: pointer; color: var(--slate-500); border-bottom: 3px solid transparent; margin-bottom: -2px;">
+            Booking Refunds Log (<span th:text="${refunds != null ? refunds.size() : 0}">0</span>)
+        </button>
+    </div>
+
+    <!-- SECTION 1: SECURITY DEPOSITS (has_deposit) -->
+    <div id="sectionDeposits">
+        <div class="df-table-container">
+            <table class="df-table" th:if="${deposits != null and !deposits.empty}">
+                <thead>
+                <tr>
+                    <th>Deposit ID</th>
+                    <th>Linked Booking</th>
+                    <th>Customer Name</th>
+                    <th>Deposit Date</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th style="text-align: right;">Amount</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="dep : ${deposits}">
+                    <td><strong th:text="'#DEP-' + ${dep.depositId}">#DEP-1</strong></td>
+                    <td>
+                        <span th:if="${dep.booking != null}">
+                            <strong th:text="'#BK-' + ${dep.booking.bookingId}">#BK-1</strong>
+                            <span style="color: var(--slate-500); font-size: 0.85rem;" th:if="${dep.booking.vehicle != null}" th:text="' (' + ${dep.booking.vehicle.model} + ')'"></span>
+                        </span>
+                        <span th:if="${dep.booking == null}" style="color: var(--slate-400); font-style: italic;">Unlinked</span>
+                    </td>
+                    <td>
+                        <span th:if="${dep.booking != null and dep.booking.customer != null}" th:text="${dep.booking.customer.name}">Customer Name</span>
+                        <span th:if="${dep.booking == null or dep.booking.customer == null}" style="color: var(--slate-400); font-style: italic;">—</span>
+                    </td>
+                    <td th:text="${dep.depositDate}">2026-10-01</td>
+                    <td>
+                        <span class="badge badge-secondary" th:text="${dep.paymentMethod != null ? dep.paymentMethod : 'CASH'}">CASH</span>
+                    </td>
+                    <td>
+                        <span th:if="${dep.status == 'HELD'}" class="badge badge-primary" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;">Held in Escrow</span>
+                        <span th:if="${dep.status == 'REFUNDED'}" class="badge badge-success">Refunded</span>
+                        <span th:if="${dep.status == 'FORFEITED'}" class="badge badge-danger">Forfeited</span>
+                    </td>
+                    <td>
+                        <span th:text="${dep.notes != null ? dep.notes : '—'}" style="font-size: 0.85rem; color: var(--slate-600);"></span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700; color: var(--slate-900);" th:text="'Rs. ' + ${#numbers.formatDecimal(dep.amount, 1, 2)}">
+                        Rs. 200.00
+                    </td>
+                    <td style="text-align: right;">
+                        <div th:if="${dep.status == 'HELD'}" style="display: inline-flex; gap: 0.4rem;">
+                            <form th:action="@{/finance/deposits/{id}/refund(id=${dep.depositId})}" method="post" style="display: inline;" onsubmit="return confirm('Confirm refunding security deposit to customer?');">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-primary btn-sm" style="background: #16a34a; border-color: #16a34a; padding: 0.25rem 0.6rem; font-size: 0.78rem;">Refund</button>
+                            </form>
+                            <form th:action="@{/finance/deposits/{id}/forfeit(id=${dep.depositId})}" method="post" style="display: inline;" onsubmit="return confirm('Forfeit deposit due to vehicle damage or agreement breach?');">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">Forfeit</button>
+                            </form>
+                        </div>
+                        <span th:if="${dep.status != 'HELD'}" style="color: var(--slate-400); font-size: 0.82rem; font-style: italic;">Settled</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="empty-state" th:if="${deposits == null or deposits.empty}">
+                <div class="empty-state-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">No Security Deposits Recorded</h3>
+                <p class="empty-state-desc">Manually log customer security deposits collected upon rental dispatch.</p>
+                <button type="button" class="btn btn-primary" onclick="openDepositModal()">Collect First Deposit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: BOOKING REFUNDS (refund) -->
+    <div id="sectionRefunds" style="display: none;">
+        <div class="df-table-container">
+            <table class="df-table" th:if="${refunds != null and !refunds.empty}">
+                <thead>
+                <tr>
+                    <th>Refund ID</th>
+                    <th>Linked Booking / Payment</th>
+                    <th>Customer Name</th>
+                    <th>Refund Reason</th>
+                    <th>Date</th>
+                    <th>Approval Status</th>
+                    <th style="text-align: right;">Amount</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="r : ${refunds}">
+                    <td><strong th:text="'#REF-' + ${r.refundId}">#REF-1</strong></td>
+                    <td>
+                        <span th:if="${r.booking != null}">
+                            <strong th:text="'#BK-' + ${r.booking.bookingId}">#BK-1</strong>
+                        </span>
+                        <span th:if="${r.booking == null and r.payment != null}">
+                            <strong th:text="'#PAY-' + ${r.payment.paymentId}">#PAY-1</strong>
+                        </span>
+                        <span th:if="${r.booking == null and r.payment == null}" style="color: var(--slate-400); font-style: italic;">Direct Refund</span>
+                    </td>
+                    <td>
+                        <span th:if="${r.booking != null and r.booking.customer != null}" th:text="${r.booking.customer.name}">Customer Name</span>
+                        <span th:if="${r.booking == null and r.payment != null and r.payment.invoice != null and r.payment.invoice.booking != null}" th:text="${r.payment.invoice.booking.customer.name}">Customer</span>
+                        <span th:if="${r.booking == null and r.payment == null}" style="color: var(--slate-400); font-style: italic;">—</span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--slate-800);" th:text="${r.reason != null ? r.reason : 'Trip Cancellation'}">Trip Cancellation</span>
+                    </td>
+                    <td th:text="${r.refundDate}">2026-10-01</td>
+                    <td>
+                        <span th:if="${r.approvalStatus == 'APPROVED'}" class="badge badge-success">Approved</span>
+                        <span th:if="${r.approvalStatus == 'PENDING'}" class="badge badge-warning" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">Pending Review</span>
+                        <span th:if="${r.approvalStatus == 'REJECTED'}" class="badge badge-danger">Rejected</span>
+                    </td>
+                    <td style="text-align: right; font-weight: 700; color: #e11d48;" th:text="'Rs. ' + ${#numbers.formatDecimal(r.amount, 1, 2)}">
+                        Rs. 500.00
+                    </td>
+                    <td style="text-align: right;">
+                        <div th:if="${r.approvalStatus == 'PENDING'}" style="display: inline-flex; gap: 0.4rem;">
+                            <form th:action="@{/finance/refunds/{id}/approve(id=${r.refundId})}" method="post" style="display: inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-primary btn-sm" style="background: #16a34a; border-color: #16a34a; padding: 0.25rem 0.6rem; font-size: 0.78rem;">Approve</button>
+                            </form>
+                            <form th:action="@{/finance/refunds/{id}/reject(id=${r.refundId})}" method="post" style="display: inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">Reject</button>
+                            </form>
+                        </div>
+                        <span th:if="${r.approvalStatus != 'PENDING'}" style="color: var(--slate-400); font-size: 0.82rem; font-style: italic;">Processed</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="empty-state" th:if="${refunds == null or refunds.empty}">
+                <div class="empty-state-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                </div>
+                <h3 class="empty-state-title">No Refunds Logged</h3>
+                <p class="empty-state-desc">Process and disburse customer refunds for canceled or modified bookings.</p>
+                <button type="button" class="btn btn-primary" onclick="openRefundModal()">Issue First Refund</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- MODAL 1: COLLECT SECURITY DEPOSIT (has_deposit) -->
+<div id="depositModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 520px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div style="width: 34px; height: 34px; border-radius: 50%; background: #eff6ff; color: #2563eb; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;">Collect Security Deposit</h3>
+            </div>
+            <button type="button" onclick="closeDepositModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <form th:action="@{/finance/deposits}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Customer Booking <span style="color: var(--danger);">*</span></label>
+                    <select name="bookingId" class="form-control" required style="width: 100%;">
+                        <option value="" disabled selected>-- Select Booking --</option>
+                        <option th:each="b : ${bookings}"
+                                th:value="${b.bookingId}"
+                                th:text="'#BK-' + ${b.bookingId} + ' - ' + (${b.customer != null ? b.customer.name : 'Guest'}) + ' (' + (${b.vehicle != null ? b.vehicle.model : 'Vehicle'}) + ')'">
+                        </option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Deposit Amount (Rs.) <span style="color: var(--danger);">*</span></label>
+                        <input type="number" step="0.01" min="0" name="amount" value="5000.00" class="form-control" required style="width: 100%;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Payment Method</label>
+                        <select name="paymentMethod" class="form-control" style="width: 100%;">
+                            <option value="CASH">Cash Deposit</option>
+                            <option value="CARD">Credit / Debit Card</option>
+                            <option value="BANK_TRANSFER">Bank Transfer</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Escrow Notes / Condition</label>
+                    <input type="text" name="notes" class="form-control" placeholder="Refundable upon safe vehicle return without damage" style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeDepositModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="font-weight: 700;">Save Deposit</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 2: PROCESS REFUND (refund) -->
+<div id="refundModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 520px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
+        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <div style="width: 34px; height: 34px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"></path>
+                    </svg>
+                </div>
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;">Process Booking Refund</h3>
+            </div>
+            <button type="button" onclick="closeRefundModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <form th:action="@{/finance/refunds}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Select Booking <span style="color: var(--danger);">*</span></label>
+                    <select name="bookingId" class="form-control" required style="width: 100%;">
+                        <option value="" disabled selected>-- Select Booking --</option>
+                        <option th:each="b : ${bookings}"
+                                th:value="${b.bookingId}"
+                                th:text="'#BK-' + ${b.bookingId} + ' - ' + (${b.customer != null ? b.customer.name : 'Guest'}) + ' (' + ${b.status} + ')'">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Refund Amount (Rs.) <span style="color: var(--danger);">*</span></label>
+                    <input type="number" step="0.01" min="0.01" name="amount" placeholder="e.g. 3500.00" class="form-control" required style="width: 100%;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Refund Reason <span style="color: var(--danger);">*</span></label>
+                    <select name="reason" class="form-control" required style="width: 100%;">
+                        <option value="Customer Canceled Booking">Customer Canceled Booking (Per Cancellation Policy)</option>
+                        <option value="Trip Schedule Modified / Shortened">Trip Schedule Modified / Shortened</option>
+                        <option value="Vehicle Replacement / Downtime Refund">Vehicle Replacement / Downtime Refund</option>
+                        <option value="Overpayment / Billing Correction">Overpayment / Billing Correction</option>
+                        <option value="Customer Satisfaction Goodwill">Customer Satisfaction Goodwill</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="immediateApproval" name="immediateApproval" value="true" checked>
+                    <label for="immediateApproval" style="font-size: 0.85rem; color: var(--slate-700); margin: 0; cursor: pointer;">
+                        Immediately mark as APPROVED and disburse
+                    </label>
+                </div>
+            </div>
+
+            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" onclick="closeRefundModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #dc2626; border-color: #dc2626; font-weight: 700;">Process Refund</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function switchFinanceTab(tab) {
+        var depSection = document.getElementById('sectionDeposits');
+        var refSection = document.getElementById('sectionRefunds');
+        var depBtn = document.getElementById('tabDepositBtn');
+        var refBtn = document.getElementById('tabRefundBtn');
+
+        if (tab === 'deposits') {
+            depSection.style.display = 'block';
+            refSection.style.display = 'none';
+            depBtn.style.color = 'var(--primary)';
+            depBtn.style.borderBottomColor = 'var(--primary)';
+            refBtn.style.color = 'var(--slate-500)';
+            refBtn.style.borderBottomColor = 'transparent';
+        } else {
+            depSection.style.display = 'none';
+            refSection.style.display = 'block';
+            refBtn.style.color = 'var(--primary)';
+            refBtn.style.borderBottomColor = 'var(--primary)';
+            depBtn.style.color = 'var(--slate-500)';
+            depBtn.style.borderBottomColor = 'transparent';
+        }
+    }
+
+    function openDepositModal() {
+        document.getElementById('depositModal').style.display = 'flex';
+    }
+    function closeDepositModal() {
+        document.getElementById('depositModal').style.display = 'none';
+    }
+    function openRefundModal() {
+        document.getElementById('refundModal').style.display = 'flex';
+    }
+    function closeRefundModal() {
+        document.getElementById('refundModal').style.display = 'none';
+    }
+
+    window.addEventListener('click', function(e) {
+        if (e.target === document.getElementById('depositModal')) closeDepositModal();
+        if (e.target === document.getElementById('refundModal')) closeRefundModal();
+    });
+</script>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

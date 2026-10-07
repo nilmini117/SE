@@ -89,7 +89,8 @@ public class ProfileController {
     @PostMapping("/edit")
     public String updateProfile(@RequestParam("firstName") String firstName,
                                 @RequestParam("lastName") String lastName,
-                                @RequestParam("contactNumber") String contactNumber,
+                                @RequestParam(value = "contactNumber", required = false) String contactNumber,
+                                @RequestParam(value = "contactNumbers", required = false) java.util.List<String> contactNumbers,
                                 @RequestParam("drivingLicense") String drivingLicense,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
@@ -99,7 +100,7 @@ public class ProfileController {
 
         String email = authentication.getName();
         try {
-            userService.updateCustomerProfile(email, firstName, lastName, contactNumber, drivingLicense);
+            userService.updateCustomerProfile(email, firstName, lastName, contactNumber, contactNumbers, drivingLicense);
             redirectAttributes.addFlashAttribute("successMessage", "Profile details updated successfully!");
         } catch (IllegalArgumentException ex) {
             redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());

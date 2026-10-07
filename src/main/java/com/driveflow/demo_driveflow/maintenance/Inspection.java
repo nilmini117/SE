@@ -32,7 +32,17 @@ public class Inspection {
     @Column(name = "type")
     private String type; // ROUTINE, ACCIDENT
 
+    @Column(name = "inspection_date")
+    private java.time.LocalDate inspectionDate;
+
+    @Column(name = "result")
+    private String result; // PASSED, NEEDS_REPAIR, FAILED
+
     @ManyToOne
-    @JoinColumn(name = "booking_id")
+    @JoinColumn(name = "vehicle_id")
+    private com.driveflow.demo_driveflow.vehicle.Vehicle vehicle;
+
+    @ManyToOne
+    @JoinColumn(name = "booking_id", nullable = true)
     private Booking booking;
 }

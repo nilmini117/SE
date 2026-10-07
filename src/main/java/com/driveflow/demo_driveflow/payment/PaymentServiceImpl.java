@@ -5,6 +5,7 @@ import com.driveflow.demo_driveflow.users.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,6 +25,9 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Autowired
     private RefundRepository refundRepository;
+
+    @Autowired
+    private HasDepositRepository hasDepositRepository;
 
     @Autowired(required = false)
     private com.driveflow.demo_driveflow.email.EmailService emailService;
@@ -172,6 +176,17 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public void processCustomerPayment(String methodType, double amount, String bookingId) {
         PaymentContext context = new PaymentContext();
+        if (methodType != null && methodType.equalsIgnoreCase("CREDIT_CARD")) {
+            context.setPaymentStrategy(creditCardPayment);
+        } else if (methodType != null && methodType.equalsIgnoreCase("PAYPAL")) {
+            context.setPaymentStrategy(payPalPayment);
+        }
+        context.checkout(amount, bookingId);
+    }
+
+    @Override
+    public void processCustomerPayment(String methodType, double amount, String bookingId, String payerEmail) {
+        PaymentContext context = new PaymentContext();
 
         // Dynamically assign the strategy based on frontend input
         if (methodType != null && methodType.equalsIgnoreCase("CREDIT_CARD")) {
@@ -181,7 +196,36 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         // Execute the payment without knowing the underlying details
-        context.checkout(amount, bookingId);
+        context.checkout(amount, bookingId, payerEmail);
+    }
+
+    @Override
+    public BigDecimal calculateLateFee(long daysLate, BigDecimal dailyRentalRate) {
+        if (daysLate <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal rate = (dailyRentalRate != null) ? dailyRentalRate : BigDecimal.ZERO;
+        BigDecimal days = BigDecimal.valueOf(daysLate);
+        // Formula: Total Charge = (Days Late * Daily Rental Rate) + (Days Late * 1000)
+        return days.multiply(rate).add(days.multiply(new BigDecimal("1000.00")));
+    }
+
+    @Override
+    public BigDecimal calculateLateFee(com.driveflow.demo_driveflow.booking.Booking booking, LocalDate actualReturnDate) {
+        if (booking == null || booking.getEndDate() == null || actualReturnDate == null) {
+            return BigDecimal.ZERO;
+        }
+        if (!actualReturnDate.isAfter(booking.getEndDate())) {
+            return BigDecimal.ZERO;
+        }
+        long daysLate = java.time.temporal.ChronoUnit.DAYS.between(booking.getEndDate(), actualReturnDate);
+        BigDecimal dailyRate = BigDecimal.ZERO;
+        if (booking.getVehicle() != null && booking.getVehicle().getDailyRate() != null) {
+            dailyRate = booking.getVehicle().getDailyRate();
+        } else if (booking.getChargedRate() != null && booking.getDuration() != null && booking.getDuration() > 0) {
+            dailyRate = booking.getChargedRate().divide(BigDecimal.valueOf(booking.getDuration()), 2, java.math.RoundingMode.HALF_UP);
+        }
+        return calculateLateFee(daysLate, dailyRate);
     }
 
     @Override
@@ -189,12 +233,15 @@ public class PaymentServiceImpl implements PaymentService {
         if (refund.getApprovalStatus() == null || refund.getApprovalStatus().isBlank()) {
             refund.setApprovalStatus("PENDING");
         }
+        if (refund.getRefundDate() == null) {
+            refund.setRefundDate(LocalDate.now());
+        }
         return refundRepository.save(refund);
     }
 
     @Override
     public List<Refund> getAllRefunds() {
-        return refundRepository.findAll();
+        return refundRepository.findAllByOrderByRefundDateDesc();
     }
 
     @Override
@@ -215,6 +262,43 @@ public class PaymentServiceImpl implements PaymentService {
         Refund refund = getRefundById(id);
         refund.setApprovalStatus("REJECTED");
         return refundRepository.save(refund);
+    }
+
+    // Security Deposits (has_deposit)
+    @Override
+    public List<HasDeposit> getAllDeposits() {
+        return hasDepositRepository.findAllByOrderByDepositDateDesc();
+    }
+
+    @Override
+    public HasDeposit logSecurityDeposit(HasDeposit deposit) {
+        if (deposit.getStatus() == null || deposit.getStatus().isBlank()) {
+            deposit.setStatus("HELD");
+        }
+        if (deposit.getDepositDate() == null) {
+            deposit.setDepositDate(LocalDate.now());
+        }
+        return hasDepositRepository.save(deposit);
+    }
+
+    @Override
+    public HasDeposit getDepositById(Long depositId) {
+        return hasDepositRepository.findById(depositId)
+                .orElseThrow(() -> new RuntimeException("Security deposit not found: " + depositId));
+    }
+
+    @Override
+    public HasDeposit refundDeposit(Long depositId) {
+        HasDeposit deposit = getDepositById(depositId);
+        deposit.setStatus("REFUNDED");
+        return hasDepositRepository.save(deposit);
+    }
+
+    @Override
+    public HasDeposit forfeitDeposit(Long depositId) {
+        HasDeposit deposit = getDepositById(depositId);
+        deposit.setStatus("FORFEITED");
+        return hasDepositRepository.save(deposit);
     }
 
     @Autowired(required = false)

@@ -19,6 +19,11 @@ public interface PaymentService {
     Payment updatePayment(Long id, Payment payment);
     void cancelPayment(Long id);
     void processCustomerPayment(String methodType, double amount, String bookingId);
+    void processCustomerPayment(String methodType, double amount, String bookingId, String payerEmail);
+
+    // Late Fee Calculation
+    java.math.BigDecimal calculateLateFee(long daysLate, java.math.BigDecimal dailyRentalRate);
+    java.math.BigDecimal calculateLateFee(com.driveflow.demo_driveflow.booking.Booking booking, java.time.LocalDate actualReturnDate);
 
     // Refunds
     Refund issueRefund(Refund refund);
@@ -26,6 +31,13 @@ public interface PaymentService {
     Refund getRefundById(Long id);
     Refund approveRefund(Long id);
     Refund rejectRefund(Long id);
+
+    // Security Deposits (has_deposit)
+    List<HasDeposit> getAllDeposits();
+    HasDeposit logSecurityDeposit(HasDeposit deposit);
+    HasDeposit getDepositById(Long depositId);
+    HasDeposit refundDeposit(Long depositId);
+    HasDeposit forfeitDeposit(Long depositId);
 
     // Company Sales & Financial Summary
     CompanySalesSummaryDto getCompanySalesSummary();

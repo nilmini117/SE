@@ -85,7 +85,9 @@
                         </a>
                         <!-- Explicit Delete Button for Active (and other) promotions -->
                         <form th:action="@{/promotions/{id}/delete(id=${p.promotionId})}" method="post" style="display: inline;"
-                              onsubmit="return confirm('Are you sure you want to permanently delete promotion #PR-' + [[${p.promotionId}]] + ' (' + [[${p.title}]] + ')?');">
+                              th:data-id="${p.promotionId}"
+                              th:data-title="${p.title}"
+                              onsubmit="return confirm('Are you sure you want to permanently delete promotion #PR-' + this.dataset.id + ' (' + this.dataset.title + ')?');">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                             <button type="submit" class="btn btn-danger btn-sm" style="background: #dc2626; color: white; border: none;">
                                 Delete

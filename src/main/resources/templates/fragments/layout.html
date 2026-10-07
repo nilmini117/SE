@@ -50,13 +50,23 @@
                 </a>
             </li>
             <li sec:authorize="hasRole('STAFF')">
-                <a th:href="@{/maintenance}" th:classappend="${activeTab == 'maintenance'} ? 'active' : ''" class="df-nav-link">
+                <a th:href="@{/maintenance/fleet}" th:classappend="${activeTab == 'maintenance'} ? 'active' : ''" class="df-nav-link">
                     Maintenance
                 </a>
             </li>
             <li sec:authorize="hasRole('STAFF')">
-                <a th:href="@{/payments}" th:classappend="${activeTab == 'payments'} ? 'active' : ''" class="df-nav-link">
-                    Payments
+                <a th:href="@{/finance}" th:classappend="${activeTab == 'payments' or activeTab == 'finance'} ? 'active' : ''" class="df-nav-link">
+                    Finance
+                </a>
+            </li>
+            <li sec:authorize="hasRole('STAFF')">
+                <a th:href="@{/branches}" th:classappend="${activeTab == 'branches'} ? 'active' : ''" class="df-nav-link">
+                    Branches
+                </a>
+            </li>
+            <li sec:authorize="hasRole('STAFF')">
+                <a th:href="@{/staff}" th:classappend="${activeTab == 'staff'} ? 'active' : ''" class="df-nav-link">
+                    Staff
                 </a>
             </li>
             <li sec:authorize="hasRole('CUSTOMER')">

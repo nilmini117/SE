@@ -1,6 +1,5 @@
 package com.driveflow.demo_driveflow.promotion;
 
-import com.driveflow.demo_driveflow.vehicle.Vehicle;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,10 +48,6 @@ public class Promotion {
     @Column(name = "status")
     private String status; // ACTIVE, EXPIRED
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @ManyToOne
-    @JoinColumn(name = "vehicle_id")
-    private Vehicle vehicle;
 
     @PrePersist
     @PreUpdate

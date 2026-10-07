@@ -20,6 +20,8 @@ public interface BookingService {
     void declineBooking(Long id, String reason);
     void cancelBooking(Long id);
     Booking returnVehicle(Long bookingId);
+    java.math.BigDecimal calculateLateFee(Booking booking, LocalDate actualReturnDate);
+    java.math.BigDecimal calculateLateFee(long daysLate, java.math.BigDecimal dailyRentalRate);
 
     long getActiveBookingCount(Long customerId);
     boolean hasActiveBooking(Long customerId);

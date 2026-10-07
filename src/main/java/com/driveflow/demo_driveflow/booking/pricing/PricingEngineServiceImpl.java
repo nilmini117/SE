@@ -105,14 +105,9 @@ public class PricingEngineServiceImpl implements PricingEngineService {
             }
         }
 
-        // 2. If no coupon was specified, fetch any active seasonal promotion for the vehicle or general fleet
+        // 2. If no coupon was specified, fetch any active seasonal promotion for general fleet
         if (appliedPromo == null && !couponSpecified) {
-            List<Promotion> activePromos;
-            if (vehicleId != null) {
-                activePromos = promotionRepository.findActivePromotionsForVehicle(vehicleId, LocalDate.now());
-            } else {
-                activePromos = promotionRepository.findActivePromotions(LocalDate.now());
-            }
+            List<Promotion> activePromos = promotionRepository.findActivePromotions(LocalDate.now());
 
             if (!activePromos.isEmpty()) {
                 // Pick active promotion with the most favorable discount rate

@@ -33,14 +33,30 @@ public class User {
     @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "contact_number", length = 10)
+    @Column(name = "contact_number", length = 20)
     private String contactNumber;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_contact_number", joinColumns = @JoinColumn(name = "system_id"))
+    @Column(name = "contact_number", length = 20)
+    private java.util.List<String> contactNumbers = new java.util.ArrayList<>();
 
     @Column(name = "dob")
     private LocalDate dob;
 
     @Column(name = "password")
     private String password;
+
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    public Boolean getIsActive() {
+        return isActive == null || isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
 
     public String getNicNumber() {
         return nic;
@@ -67,5 +83,24 @@ public class User {
         String last = lastName != null ? lastName : "";
         String combined = (first + " " + last).trim();
         return combined.isEmpty() ? getEmail() : combined;
+    }
+
+    public java.util.List<String> getContactNumbers() {
+        if (contactNumbers == null) {
+            contactNumbers = new java.util.ArrayList<>();
+        }
+        return contactNumbers;
+    }
+
+    public void setContactNumbers(java.util.List<String> contactNumbers) {
+        if (contactNumbers == null) {
+            this.contactNumbers = new java.util.ArrayList<>();
+        } else {
+            this.contactNumbers = contactNumbers.stream()
+                    .filter(s -> s != null && !s.isBlank())
+                    .map(String::trim)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toCollection(java.util.ArrayList::new));
+        }
     }
 }

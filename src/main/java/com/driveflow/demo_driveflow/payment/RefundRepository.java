@@ -1,6 +1,9 @@
 package com.driveflow.demo_driveflow.payment;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
 public interface RefundRepository extends JpaRepository<Refund, Long> {
+    List<Refund> findAllByOrderByRefundDateDesc();
+    List<Refund> findByApprovalStatus(String approvalStatus);
 }

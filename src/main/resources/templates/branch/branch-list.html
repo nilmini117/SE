@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Branch Stations')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('branches')}"></nav>
+
+<main class="df-main">
+    <div class="df-header">
+        <div>
+            <h1 class="df-header-title">Branch Station Network</h1>
+            <p class="df-header-subtitle">Manage regional rental hubs, addresses, and multi-contact communications.</p>
+        </div>
+        <div class="df-header-actions">
+            <a th:href="@{/branches/new}" class="btn btn-primary" id="registerBranchBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Register New Branch
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <span th:text="${successMessage}">Success message</span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; border-radius: var(--radius-md); padding: 0.85rem 1.25rem;">
+        <span th:text="${errorMessage}">Error message</span>
+    </div>
+
+    <div class="df-table-container">
+        <table class="df-table">
+            <thead>
+            <tr>
+                <th>Branch ID</th>
+                <th>Branch Name</th>
+                <th>Location (Street & City)</th>
+                <th>Email</th>
+                <th>Contact Numbers (branch_contact_number)</th>
+                <th style="text-align: right;">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${branches}">
+                <td><strong th:text="'#BR-' + ${b.branchId}">#BR-1</strong></td>
+                <td>
+                    <strong th:text="${b.branchName}">Colombo Central</strong>
+                </td>
+                <td>
+                    <span th:text="${b.street + ', ' + b.city}">120 Galle Road, Colombo</span>
+                </td>
+                <td th:text="${b.email}">colombo@driveflow.com</td>
+                <td>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
+                        <span style="font-weight: 700; color: var(--slate-800);" th:text="${b.contactNumber}">0112345671</span>
+                        <span th:each="cn : ${b.contactNumbers}" th:if="${cn != b.contactNumber}"
+                              style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px;"
+                              th:text="${cn}">0112345679</span>
+                    </div>
+                </td>
+                <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
+                    <a th:href="@{/branches/{id}/edit(id=${b.branchId})}" class="btn btn-secondary btn-sm">Edit</a>
+                    <form th:action="@{/branches/{id}/delete(id=${b.branchId})}" method="post" style="display: inline;"
+                          onsubmit="return confirm('Are you sure you want to delete this branch?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

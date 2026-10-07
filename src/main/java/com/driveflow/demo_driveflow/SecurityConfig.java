@@ -92,9 +92,12 @@ public class SecurityConfig {
                         .hasRole("CUSTOMER")
                         .requestMatchers("/incidents/new").hasRole("CUSTOMER")
                         .requestMatchers("/incidents/api/**").hasRole("CUSTOMER")
-                        // Staff-only modules & endpoints (incident management, maintenance, payments)
+                        // Staff-only modules & endpoints (incident management, maintenance, payments, finance, staff, branches)
                         .requestMatchers("/incidents/**").hasRole("STAFF")
                         .requestMatchers("/maintenance/**").hasRole("STAFF")
+                        .requestMatchers("/finance/**", "/finance").hasRole("STAFF")
+                        .requestMatchers("/staff/**", "/staff").hasRole("STAFF")
+                        .requestMatchers("/branches/**", "/branches").hasRole("STAFF")
                         .requestMatchers("/payments/new", "/payments/*/refund", "/payments/*/cancel",
                                 "/payments/*/delete", "/payments/invoices/**")
                         .hasRole("STAFF")

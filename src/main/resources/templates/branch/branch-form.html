@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${branch.branchId != null} ? 'Edit Branch' : 'Register New Branch')}"></head>
+<body>
+
+<nav th:replace="~{fragments/layout :: navbar('branches')}"></nav>
+
+<main class="df-main">
+    <div style="max-width: 720px; margin: 0 auto 1.5rem;">
+        <a th:href="@{/branches}" class="btn btn-secondary btn-sm">
+            &larr; Back to Branches
+        </a>
+    </div>
+
+    <div th:if="${errorMessage}" class="alert alert-danger" style="max-width: 720px; margin: 0 auto 1.5rem; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: var(--radius-md);">
+        <span th:text="${errorMessage}">Error message</span>
+    </div>
+
+    <div class="df-form-card" style="max-width: 720px; margin: 0 auto; background: var(--surface); border: 1px solid var(--slate-200); border-radius: 12px; padding: 2rem;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--slate-900);"
+            th:text="${branch.branchId != null ? 'Edit Branch Station #' + branch.branchId : 'Register New Branch Station'}">
+            Register New Branch Station
+        </h2>
+        <p style="color: var(--slate-500); font-size: 0.9rem; margin-bottom: 2rem;">
+            Station location coordinates, street address, and multi-contact communication numbers (branch_contact_number).
+        </p>
+
+        <form th:action="${branch.branchId != null} ? @{/branches/{id}(id=${branch.branchId})} : @{/branches}"
+              th:object="${branch}" method="post">
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label class="form-label">Branch Name <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{branchName}" class="form-control" placeholder="e.g. Colombo Central Main Station" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label class="form-label">City <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{city}" class="form-control" placeholder="e.g. Colombo" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Street Address <span style="color: var(--danger);">*</span></label>
+                    <input type="text" th:field="*{street}" class="form-control" placeholder="e.g. 10 Galle Road, Kollupitiya" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Official Email <span style="color: var(--danger);">*</span></label>
+                    <input type="email" th:field="*{email}" class="form-control" placeholder="colombo@driveflow.com" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Primary Hotline / Contact <span style="color: var(--danger);">*</span></label>
+                    <input type="tel" th:field="*{contactNumber}" id="primaryContactNumber" class="form-control" placeholder="0112345678" required>
+                </div>
+            </div>
+
+            <!-- Additional Contact Numbers (branch_contact_number Table) -->
+            <div style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div>
+                        <strong style="color: var(--slate-800); font-size: 0.95rem;">Additional Branch Contact Numbers</strong>
+                        <p style="color: var(--slate-500); font-size: 0.8rem; margin: 0;">Populates the normalized branch_contact_number 1NF database table.</p>
+                    </div>
+                    <button type="button" id="addBranchPhoneBtn" class="btn btn-secondary btn-sm" onclick="addBranchPhoneRow()" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add Another Phone Number
+                    </button>
+                </div>
+
+                <div id="branchPhoneNumbersContainer" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div th:each="num : ${branch.contactNumbers}" th:if="${num != branch.contactNumber}" class="phone-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="tel" name="contactNumbers" th:value="${num}" class="form-control" placeholder="e.g. 0112345679" style="flex: 1;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding: 0.45rem 0.75rem;">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function addBranchPhoneRow() {
+                    const container = document.getElementById('branchPhoneNumbersContainer');
+                    const div = document.createElement('div');
+                    div.className = 'phone-row';
+                    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: center; margin-top: 0.4rem;';
+                    div.innerHTML = `
+                        <input type="tel" name="contactNumbers" class="form-control" placeholder="e.g. 0112999888" style="flex: 1;" required>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding: 0.45rem 0.75rem;">Remove</button>
+                    `;
+                    container.appendChild(div);
+                }
+            </script>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">
+                    <span th:text="${branch.branchId != null} ? 'Save Branch Changes' : 'Register Branch Station'">Submit</span>
+                </button>
+                <a th:href="@{/branches}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

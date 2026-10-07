@@ -16,4 +16,9 @@ public interface MaintenanceService {
     VehicleDocument addDocument(VehicleDocument document);
     VehicleDocument updateDocument(Long id, VehicleDocument document);
     void removeDocument(Long id);
+
+    // Routine inspections
+    List<Inspection> getAllInspections();
+    Inspection logInspection(Inspection inspection);
+    void removeInspection(Long id);
 }

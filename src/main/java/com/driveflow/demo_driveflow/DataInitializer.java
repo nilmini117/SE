@@ -79,6 +79,21 @@ public class DataInitializer implements CommandLineRunner {
         private IncidentRepository incidentRepository;
 
         @Autowired
+        private com.driveflow.demo_driveflow.booking.AdditionalServiceRepository additionalServiceRepository;
+
+        @Autowired
+        private com.driveflow.demo_driveflow.maintenance.VehicleDocumentRepository vehicleDocumentRepository;
+
+        @Autowired
+        private com.driveflow.demo_driveflow.maintenance.InspectionRepository inspectionRepository;
+
+        @Autowired
+        private com.driveflow.demo_driveflow.payment.HasDepositRepository hasDepositRepository;
+
+        @Autowired
+        private com.driveflow.demo_driveflow.payment.RefundRepository refundRepository;
+
+        @Autowired
         private PasswordEncoder passwordEncoder;
 
         @Autowired(required = false)
@@ -87,31 +102,76 @@ public class DataInitializer implements CommandLineRunner {
         @Override
         @Transactional
         public void run(String... args) {
-                // Ensure SQL Server database constraints accept updated statuses
+                // Ensure SQL Server database constraints and schema updates
                 if (jdbcTemplate != null) {
                         try {
                                 jdbcTemplate.execute(
                                                 "IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('vehicle') AND name = 'is_registered') " +
                                                 "BEGIN ALTER TABLE vehicle ADD is_registered BIT NOT NULL CONSTRAINT DF_vehicle_is_registered DEFAULT 1 WITH VALUES; END");
-                        } catch (Exception e) {
-                                // Table might not exist or running on in-memory DB in tests
-                        }
+                        } catch (Exception ignored) {}
+
                         try {
                                 jdbcTemplate.execute(
                                                 "ALTER TABLE vehicle DROP CONSTRAINT IF EXISTS chk_vehicle_status;");
                                 jdbcTemplate.execute(
                                                 "ALTER TABLE vehicle ADD CONSTRAINT chk_vehicle_status CHECK (status IN ('AVAILABLE', 'BOOKED', 'MAINTENANCE', 'DECOMMISSIONED', 'UNAVAILABLE'));");
-                        } catch (Exception e) {
-                                // Table might not exist or running on in-memory DB in tests
-                        }
+                        } catch (Exception ignored) {}
+
                         try {
                                 jdbcTemplate.execute(
                                                 "ALTER TABLE booking DROP CONSTRAINT IF EXISTS chk_booking_status;");
                                 jdbcTemplate.execute(
                                                 "ALTER TABLE booking ADD CONSTRAINT chk_booking_status CHECK (status IN ('PENDING', 'APPROVED', 'CONFIRMED', 'CANCELLED', 'COMPLETED', 'ACTIVE', 'RETURNED'));");
-                        } catch (Exception e) {
-                                // Table might not exist or running on in-memory DB in tests
-                        }
+                        } catch (Exception ignored) {}
+
+                        // 1. Drop vehicle_id from promotion table if present
+                        try {
+                                jdbcTemplate.execute("IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'fk_promotion_vehicle') ALTER TABLE promotion DROP CONSTRAINT fk_promotion_vehicle;");
+                                jdbcTemplate.execute("IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('promotion') AND name = 'vehicle_id') ALTER TABLE promotion DROP COLUMN vehicle_id;");
+                        } catch (Exception ignored) {}
+
+                        // 2. Add payment_type column to payment table
+                        try {
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('payment') AND name = 'payment_type') ALTER TABLE payment ADD payment_type VARCHAR(20) NULL;");
+                        } catch (Exception ignored) {}
+
+                        // 3. Create paypal_payment table
+                        try {
+                                jdbcTemplate.execute(
+                                        "IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'paypal_payment') " +
+                                        "CREATE TABLE paypal_payment (" +
+                                        "    paypal_transaction_id VARCHAR(100) PRIMARY KEY," +
+                                        "    booking_id BIGINT NOT NULL," +
+                                        "    payer_email VARCHAR(150) NOT NULL," +
+                                        "    amount DECIMAL(10,2) NOT NULL," +
+                                        "    CONSTRAINT fk_paypal_booking FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE" +
+                                        ");");
+                        } catch (Exception ignored) {}
+
+                        // 4. Inspection & VehicleDocument columns
+                        try {
+                                jdbcTemplate.execute("IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('inspection') AND name = 'booking_id' AND is_nullable = 0) ALTER TABLE inspection ALTER COLUMN booking_id BIGINT NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('inspection') AND name = 'vehicle_id') ALTER TABLE inspection ADD vehicle_id BIGINT NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('inspection') AND name = 'inspection_date') ALTER TABLE inspection ADD inspection_date DATE NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('inspection') AND name = 'result') ALTER TABLE inspection ADD result VARCHAR(50) NULL;");
+
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('vehicle_document') AND name = 'file_name') ALTER TABLE vehicle_document ADD file_name VARCHAR(255) NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('vehicle_document') AND name = 'file_path') ALTER TABLE vehicle_document ADD file_path VARCHAR(500) NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('vehicle_document') AND name = 'uploaded_at') ALTER TABLE vehicle_document ADD uploaded_at DATE NULL;");
+                        } catch (Exception ignored) {}
+
+                        // 5. HasDeposit & Refund columns
+                        try {
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('has_deposit') AND name = 'deposit_date') ALTER TABLE has_deposit ADD deposit_date DATE NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('has_deposit') AND name = 'payment_method') ALTER TABLE has_deposit ADD payment_method VARCHAR(50) NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('has_deposit') AND name = 'notes') ALTER TABLE has_deposit ADD notes VARCHAR(500) NULL;");
+
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('refund') AND name = 'reason') ALTER TABLE refund ADD reason VARCHAR(255) NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('refund') AND name = 'refund_date') ALTER TABLE refund ADD refund_date DATE NULL;");
+                                jdbcTemplate.execute("IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('refund') AND name = 'booking_id') ALTER TABLE refund ADD booking_id BIGINT NULL;");
+                                jdbcTemplate.execute("ALTER TABLE refund ALTER COLUMN payment_id BIGINT NULL;");
+                                jdbcTemplate.execute("ALTER TABLE has_deposit ALTER COLUMN payment_id BIGINT NULL;");
+                        } catch (Exception ignored) {}
                 }
 
                 // 1. Seed Branches (5 authentic Sri Lankan hub locations)
@@ -149,6 +209,15 @@ public class DataInitializer implements CommandLineRunner {
                 // 11. Seed Incident Reports
                 seedIncidents(customers, vehicles);
 
+                // 12. Seed Additional Services (Extras & Add-ons)
+                seedAdditionalServices();
+
+                // 13. Seed Vehicle Documents and Routine Inspections (Fleet Maintenance)
+                seedVehicleDocumentsAndInspections(vehicles);
+
+                // 14. Seed Security Deposits and Refunds (Corporate Finance)
+                seedDepositsAndRefunds(bookings);
+
                 System.out.println(">> DriveFlow Database Initializer: All core platform data successfully synced.");
         }
 
@@ -185,6 +254,14 @@ public class DataInitializer implements CommandLineRunner {
                         branch.setStreet(bData.street);
                         branch.setCity(bData.city);
                         branch.setContactNumber(bData.contact);
+
+                        List<String> contacts = new ArrayList<>();
+                        contacts.add(bData.contact);
+                        if (bData.contact != null && bData.contact.length() >= 9) {
+                            contacts.add("077" + bData.contact.substring(3));
+                        }
+                        branch.setContactNumbers(contacts);
+
                         branch.setEmail(bData.email);
                         branch = branchRepository.save(branch);
                         result.add(branch);
@@ -208,6 +285,7 @@ public class DataInitializer implements CommandLineRunner {
                         staff.setNic("199010010011");
                         staff.setEmail("staff@driveflow.com");
                         staff.setContactNumber("0771234567");
+                        staff.setContactNumbers(new ArrayList<>(List.of("0771234567", "0711122334")));
                         staff.setDob(LocalDate.of(1990, 1, 1));
                         staff.setPassword(passwordEncoder.encode("Staff123!"));
                         staff.setSalary(new BigDecimal("85000.00"));
@@ -224,6 +302,7 @@ public class DataInitializer implements CommandLineRunner {
                         manager.setNic("198520020022");
                         manager.setEmail("manager@driveflow.com");
                         manager.setContactNumber("0712345678");
+                        manager.setContactNumbers(new ArrayList<>(List.of("0712345678", "0772233445")));
                         manager.setDob(LocalDate.of(1985, 4, 12));
                         manager.setPassword(passwordEncoder.encode("Staff123!"));
                         manager.setSalary(new BigDecimal("125000.00"));
@@ -240,6 +319,7 @@ public class DataInitializer implements CommandLineRunner {
                         counter.setNic("199430030033");
                         counter.setEmail("counter@driveflow.com");
                         counter.setContactNumber("0753456789");
+                        counter.setContactNumbers(new ArrayList<>(List.of("0753456789", "0703344556")));
                         counter.setDob(LocalDate.of(1994, 9, 20));
                         counter.setPassword(passwordEncoder.encode("Staff123!"));
                         counter.setSalary(new BigDecimal("75000.00"));
@@ -275,6 +355,12 @@ public class DataInitializer implements CommandLineRunner {
                                                 || !c.getDrivingLicense().matches("^[A-Za-z]\\d{6}$")) {
                                         c.setDrivingLicense(cSeed.license);
                                 }
+                                String secondary = cSeed.mobile.startsWith("077")
+                                        ? ("071" + cSeed.mobile.substring(3))
+                                        : ("077" + cSeed.mobile.substring(3));
+                                if (c.getContactNumbers() == null || c.getContactNumbers().isEmpty()) {
+                                    c.setContactNumbers(new ArrayList<>(List.of(cSeed.mobile, secondary)));
+                                }
                                 customerRepository.save(c);
                                 result.add(c);
                         } else if (!userRepository.existsByEmail(cSeed.email)
@@ -285,6 +371,10 @@ public class DataInitializer implements CommandLineRunner {
                                 customer.setEmail(cSeed.email);
                                 customer.setNic(cSeed.nic);
                                 customer.setContactNumber(cSeed.mobile);
+                                String secondary = cSeed.mobile.startsWith("077")
+                                        ? ("071" + cSeed.mobile.substring(3))
+                                        : ("077" + cSeed.mobile.substring(3));
+                                customer.setContactNumbers(new ArrayList<>(List.of(cSeed.mobile, secondary)));
                                 customer.setDrivingLicense(cSeed.license);
                                 customer.setDob(cSeed.dob);
                                 customer.setPassword(passwordEncoder.encode("Customer123!"));
@@ -806,6 +896,121 @@ public class DataInitializer implements CommandLineRunner {
                                         "Low tyre pressure indicator illuminated on Southern Expressway E01. Inspected and refilled at expressway service area.");
                         inc.setStaffMessage("Tire checked, valve inspected, pressure normal. Cleared for operation.");
                         incidentRepository.save(inc);
+                }
+        }
+
+        private void seedAdditionalServices() {
+                if (additionalServiceRepository.count() == 0) {
+                        com.driveflow.demo_driveflow.booking.AdditionalService s1 = new com.driveflow.demo_driveflow.booking.AdditionalService();
+                        s1.setServiceName("GPS Navigation System");
+                        s1.setRatePerDay(new BigDecimal("500.00"));
+                        additionalServiceRepository.save(s1);
+
+                        com.driveflow.demo_driveflow.booking.AdditionalService s2 = new com.driveflow.demo_driveflow.booking.AdditionalService();
+                        s2.setServiceName("Child Safety Seat");
+                        s2.setRatePerDay(new BigDecimal("800.00"));
+                        additionalServiceRepository.save(s2);
+
+                        com.driveflow.demo_driveflow.booking.AdditionalService s3 = new com.driveflow.demo_driveflow.booking.AdditionalService();
+                        s3.setServiceName("Comprehensive Collision Damage Waiver (CDW)");
+                        s3.setRatePerDay(new BigDecimal("1500.00"));
+                        additionalServiceRepository.save(s3);
+
+                        com.driveflow.demo_driveflow.booking.AdditionalService s4 = new com.driveflow.demo_driveflow.booking.AdditionalService();
+                        s4.setServiceName("Additional Authorized Driver Permit");
+                        s4.setRatePerDay(new BigDecimal("600.00"));
+                        additionalServiceRepository.save(s4);
+
+                        com.driveflow.demo_driveflow.booking.AdditionalService s5 = new com.driveflow.demo_driveflow.booking.AdditionalService();
+                        s5.setServiceName("Portable 4G Wi-Fi Hotspot");
+                        s5.setRatePerDay(new BigDecimal("750.00"));
+                        additionalServiceRepository.save(s5);
+
+                        System.out.println(">> Seeded 5 standard Additional Services (Extras & Add-ons).");
+                }
+        }
+
+        private void seedVehicleDocumentsAndInspections(List<Vehicle> vehicles) {
+                if (vehicles == null || vehicles.isEmpty()) return;
+
+                if (vehicleDocumentRepository.count() == 0) {
+                        LocalDate now = LocalDate.now();
+                        for (int i = 0; i < Math.min(4, vehicles.size()); i++) {
+                                Vehicle v = vehicles.get(i);
+
+                                com.driveflow.demo_driveflow.maintenance.VehicleDocument d1 = new com.driveflow.demo_driveflow.maintenance.VehicleDocument();
+                                d1.setVehicle(v);
+                                d1.setDocType("Vehicle Registration Certificate (CR)");
+                                d1.setExpiryDate(now.plusYears(1).plusMonths(i));
+                                d1.setFileName("CR_" + v.getRegNo().replace(" ", "_") + ".pdf");
+                                d1.setFilePath(null);
+                                d1.setUploadedAt(now.minusMonths(2));
+                                vehicleDocumentRepository.save(d1);
+
+                                com.driveflow.demo_driveflow.maintenance.VehicleDocument d2 = new com.driveflow.demo_driveflow.maintenance.VehicleDocument();
+                                d2.setVehicle(v);
+                                d2.setDocType("Comprehensive Commercial Insurance Policy");
+                                d2.setExpiryDate(now.plusMonths(6 + i));
+                                d2.setFileName("Insurance_" + v.getRegNo().replace(" ", "_") + ".pdf");
+                                d2.setFilePath(null);
+                                d2.setUploadedAt(now.minusMonths(3));
+                                vehicleDocumentRepository.save(d2);
+                        }
+                        System.out.println(">> Seeded official Vehicle Documents & Compliance records.");
+                }
+
+                if (inspectionRepository.count() == 0) {
+                        LocalDate now = LocalDate.now();
+                        for (int i = 0; i < Math.min(3, vehicles.size()); i++) {
+                                Vehicle v = vehicles.get(i);
+
+                                com.driveflow.demo_driveflow.maintenance.Inspection insp1 = new com.driveflow.demo_driveflow.maintenance.Inspection();
+                                insp1.setVehicle(v);
+                                insp1.setType("ROUTINE");
+                                insp1.setInspectionDate(now.minusDays(i * 4 + 2));
+                                insp1.setFuelLevel(100 - (i * 10));
+                                insp1.setResult(i == 2 ? "NEEDS_REPAIR" : "PASSED");
+                                insp1.setDamageNotes(i == 2 ? "Right wiper blade worn; replacement scheduled." : "Optimal roadworthy condition. Fluids and brakes verified.");
+                                inspectionRepository.save(insp1);
+                        }
+                        System.out.println(">> Seeded Routine Vehicle Inspections.");
+                }
+        }
+
+        private void seedDepositsAndRefunds(List<Booking> bookings) {
+                if (bookings == null || bookings.isEmpty()) return;
+
+                if (hasDepositRepository.count() == 0) {
+                        LocalDate now = LocalDate.now();
+                        for (int i = 0; i < Math.min(3, bookings.size()); i++) {
+                                Booking b = bookings.get(i);
+                                com.driveflow.demo_driveflow.payment.HasDeposit dep = new com.driveflow.demo_driveflow.payment.HasDeposit();
+                                dep.setBooking(b);
+                                dep.setAmount(new BigDecimal("5000.00"));
+                                dep.setStatus(i == 0 ? "REFUNDED" : "HELD");
+                                dep.setPaymentMethod(i % 2 == 0 ? "CARD" : "CASH");
+                                dep.setDepositDate(now.minusDays(i * 3 + 1));
+                                dep.setNotes(i == 0 ? "Deposit safely refunded upon clean vehicle return." : "Held in escrow for rental security.");
+                                hasDepositRepository.save(dep);
+                        }
+                        System.out.println(">> Seeded Security Deposits (has_deposit).");
+                }
+
+                if (refundRepository.count() == 0) {
+                        LocalDate now = LocalDate.now();
+                        Booking b = bookings.get(0);
+                        com.driveflow.demo_driveflow.payment.Refund ref = new com.driveflow.demo_driveflow.payment.Refund();
+                        ref.setBooking(b);
+                        List<com.driveflow.demo_driveflow.payment.Payment> payments = paymentRepository.findAll();
+                        if (!payments.isEmpty()) {
+                                ref.setPayment(payments.get(0));
+                        }
+                        ref.setAmount(new BigDecimal("2500.00"));
+                        ref.setApprovalStatus("APPROVED");
+                        ref.setReason("Early Return Trip Adjustment");
+                        ref.setRefundDate(now.minusDays(1));
+                        refundRepository.save(ref);
+                        System.out.println(">> Seeded initial Refund record.");
                 }
         }
 }

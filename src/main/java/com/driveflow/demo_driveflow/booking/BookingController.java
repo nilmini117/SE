@@ -27,6 +27,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -62,6 +63,9 @@ public class BookingController {
 
     @Autowired
     private PromotionRepository promotionRepository;
+
+    @Autowired
+    private AdditionalServiceRepository additionalServiceRepository;
 
     @Autowired(required = false)
     private com.driveflow.demo_driveflow.otp.OtpService otpService;
@@ -231,6 +235,7 @@ public class BookingController {
         model.addAttribute("pricingBreakdown", initialBreakdown);
         model.addAttribute("moduleTitle", MODULE_TITLE);
         model.addAttribute("isStaff", false);
+        model.addAttribute("additionalServices", additionalServiceRepository.findAll());
 
         // Vehicles stationed at selected pickup branch (if branch selected)
         if (selectedBranch != null) {
@@ -250,6 +255,7 @@ public class BookingController {
             @RequestParam(value = "returnBranchId", required = false) Long returnBranchId,
             @RequestParam(value = "vehicleId", required = false) Long vehicleId,
             @RequestParam(value = "couponCode", required = false) String couponCode,
+            @RequestParam(value = "serviceIds", required = false) List<Long> serviceIds,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -351,13 +357,26 @@ public class BookingController {
                 end,
                 couponCode
         );
-        booking.setChargedRate(pricing.getFinalTotalCost());
+        BigDecimal baseChargedRate = pricing.getFinalTotalCost();
+        BigDecimal extrasTotal = BigDecimal.ZERO;
+        if (serviceIds != null && !serviceIds.isEmpty()) {
+            List<AdditionalService> chosenServices = additionalServiceRepository.findAllById(serviceIds);
+            booking.setAdditionalServices(chosenServices);
+            BigDecimal dailyExtras = chosenServices.stream()
+                    .map(s -> s.getRatePerDay() != null ? s.getRatePerDay() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            extrasTotal = dailyExtras.multiply(BigDecimal.valueOf(pricing.getDurationDays()));
+        }
+        booking.setChargedRate(baseChargedRate.add(extrasTotal));
         booking.setDuration(pricing.getDurationDays());
         booking.setQuantity(1);
 
         if (pricing.isPromotionApplied()) {
             String appliedTag = pricing.getCouponId() != null ? pricing.getCouponId() : couponCode;
-            booking.setStaffMessage("Applied Promo: " + appliedTag + " (" + pricing.getPromotionTitle() + " -" + pricing.getDiscountRate() + "%)");
+            booking.setStaffMessage("Applied Promo: " + appliedTag + " (" + pricing.getPromotionTitle() + " -" + pricing.getDiscountRate() + "%)" +
+                    (extrasTotal.compareTo(BigDecimal.ZERO) > 0 ? " | Extras: Rs. " + extrasTotal : ""));
+        } else if (extrasTotal.compareTo(BigDecimal.ZERO) > 0) {
+            booking.setStaffMessage("Selected " + (booking.getAdditionalServices() != null ? booking.getAdditionalServices().size() : 0) + " Extra Add-on(s) (Rs. " + extrasTotal + ")");
         }
 
         // 5. Payment Gate:
@@ -622,10 +641,21 @@ public class BookingController {
             @RequestParam(value = "pickupBranchId", required = false) Long pickupBranchId,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(value = "couponCode", required = false) String couponCode) {
+            @RequestParam(value = "couponCode", required = false) String couponCode,
+            @RequestParam(value = "serviceIds", required = false) List<Long> serviceIds) {
 
         PricingBreakdown breakdown = pricingEngineService.calculatePricing(
                 vehicleId, pickupBranchId, startDate, endDate, couponCode);
+
+        if (serviceIds != null && !serviceIds.isEmpty()) {
+            List<AdditionalService> chosenServices = additionalServiceRepository.findAllById(serviceIds);
+            BigDecimal dailyExtras = chosenServices.stream()
+                    .map(s -> s.getRatePerDay() != null ? s.getRatePerDay() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal extrasTotal = dailyExtras.multiply(BigDecimal.valueOf(breakdown.getDurationDays()));
+            breakdown.setFinalTotalCost(breakdown.getFinalTotalCost().add(extrasTotal));
+        }
+
         return ResponseEntity.ok(breakdown);
     }
 

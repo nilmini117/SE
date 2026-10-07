@@ -52,14 +52,49 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Contact Number <span style="color: var(--danger);">*</span></label>
-                    <input type="tel" name="contactNumber" th:value="${customer.contactNumber}" class="form-control" placeholder="+1-555-0199" required>
+                    <label class="form-label">Primary Contact Number <span style="color: var(--danger);">*</span></label>
+                    <input type="tel" name="contactNumber" id="primaryContactNumber" th:value="${customer.contactNumber}" class="form-control" placeholder="0771234567" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Driving License Number <span style="color: var(--danger);">*</span></label>
                     <input type="text" name="drivingLicense" th:value="${customer.drivingLicense}" class="form-control" placeholder="e.g. B123456" maxlength="7" required>
                 </div>
             </div>
+
+            <!-- Additional Contact Numbers (user_contact_number Table) -->
+            <div style="background: #f8fafc; border: 1px solid var(--slate-200); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <div>
+                        <strong style="color: var(--slate-800); font-size: 0.95rem;">Additional Contact Numbers</strong>
+                        <p style="color: var(--slate-500); font-size: 0.8rem; margin: 0;">Multi-phone support linked to your account profile (user_contact_number).</p>
+                    </div>
+                    <button type="button" id="addPhoneBtn" class="btn btn-secondary btn-sm" onclick="addPhoneNumberRow()" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        Add Another Phone Number
+                    </button>
+                </div>
+
+                <div id="phoneNumbersContainer" style="display: flex; flex-direction: column; gap: 0.6rem;">
+                    <div th:each="num, stat : ${customer.contactNumbers}" th:if="${num != customer.contactNumber}" class="phone-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="tel" name="contactNumbers" th:value="${num}" class="form-control" placeholder="e.g. 0112999888" style="flex: 1;">
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding: 0.45rem 0.75rem;">Remove</button>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function addPhoneNumberRow() {
+                    const container = document.getElementById('phoneNumbersContainer');
+                    const div = document.createElement('div');
+                    div.className = 'phone-row';
+                    div.style.cssText = 'display: flex; gap: 0.5rem; align-items: center; margin-top: 0.4rem;';
+                    div.innerHTML = `
+                        <input type="tel" name="contactNumbers" class="form-control" placeholder="e.g. 0719876543" style="flex: 1;" required>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()" style="padding: 0.45rem 0.75rem;">Remove</button>
+                    `;
+                    container.appendChild(div);
+                }
+            </script>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary" style="flex: 1;">Save Profile Changes</button>

@@ -34,7 +34,18 @@ public class Payment {
     @Column(name = "status")
     private String status = "COMPLETED"; // COMPLETED, CANCELLED
 
+    @Column(name = "payment_type")
+    private String paymentType = "CARD"; // "CARD" or "PAYPAL"
+
     @ManyToOne
     @JoinColumn(name = "invoice_id")
     private Invoice invoice;
+
+    public String getTypeOfPayment() {
+        return paymentType;
+    }
+
+    public void setTypeOfPayment(String typeOfPayment) {
+        this.paymentType = typeOfPayment;
+    }
 }

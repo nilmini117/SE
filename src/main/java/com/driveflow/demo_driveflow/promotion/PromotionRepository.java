@@ -17,12 +17,6 @@ public interface PromotionRepository extends JpaRepository<Promotion, Long> {
            "AND (p.endDate IS NULL OR p.endDate >= :today)")
     List<Promotion> findActivePromotions(@Param("today") LocalDate today);
 
-    @Query("SELECT p FROM Promotion p WHERE UPPER(p.status) = 'ACTIVE' " +
-           "AND (p.vehicle IS NULL OR p.vehicle.vehicleId = :vehicleId) " +
-           "AND (p.startDate IS NULL OR p.startDate <= :today) " +
-           "AND (p.endDate IS NULL OR p.endDate >= :today)")
-    List<Promotion> findActivePromotionsForVehicle(@Param("vehicleId") Long vehicleId, @Param("today") LocalDate today);
-
     Optional<Promotion> findByCouponCodeIgnoreCaseAndStatusIgnoreCase(String couponCode, String status);
 
     Optional<Promotion> findByCouponIdIgnoreCaseAndStatusIgnoreCase(String couponId, String status);

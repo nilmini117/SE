@@ -539,11 +539,34 @@ public class BookingServiceImpl implements BookingService {
             );
         }
 
-        // 1. Update Booking Status to RETURNED
-        booking.setStatus(BookingStatus.RETURNED.name());
-        booking.setStaffMessage("Vehicle successfully returned by customer. Inventory released to available.");
+        // 1. Calculate and Enforce Dedicated Late Fee:
+        // Formula: Total Charge = (Days Late * Daily Rental Rate) + (Days Late * 1000)
+        LocalDate actualReturnDate = LocalDate.now();
+        BigDecimal lateFee = calculateLateFee(booking, actualReturnDate);
+        String lateNotice = "";
+        if (lateFee.compareTo(BigDecimal.ZERO) > 0) {
+            long daysLate = java.time.temporal.ChronoUnit.DAYS.between(booking.getEndDate(), actualReturnDate);
+            lateNotice = " [Late Return Notice: " + daysLate + " day(s) late. Late Fee Charge: Rs. " + lateFee + " applied.]";
+            try {
+                invoiceRepository.findByBooking(booking).ifPresent(inv -> {
+                    inv.setLateFee(lateFee);
+                    BigDecimal rental = inv.getRentalAmt() != null ? inv.getRentalAmt() : BigDecimal.ZERO;
+                    inv.setTotalAmt(rental.add(lateFee));
+                    if ("PAID".equalsIgnoreCase(inv.getStatus())) {
+                        inv.setStatus("PARTIALLY_PAID");
+                    }
+                    invoiceRepository.save(inv);
+                });
+            } catch (Exception ex) {
+                log.warn("Failed to update invoice late fee: {}", ex.getMessage());
+            }
+        }
 
-        // 2. Automate Inventory Release: Flip associated vehicle status back to AVAILABLE
+        // 2. Update Booking Status to RETURNED
+        booking.setStatus(BookingStatus.RETURNED.name());
+        booking.setStaffMessage("Vehicle successfully returned by customer. Inventory released to available." + lateNotice);
+
+        // 3. Automate Inventory Release: Flip associated vehicle status back to AVAILABLE
         Vehicle vehicle = booking.getVehicle();
         if (vehicle != null) {
             vehicle.setStatus("AVAILABLE");
@@ -564,7 +587,7 @@ public class BookingServiceImpl implements BookingService {
                 emailService.sendVehicleReturnedThankYouEmail(toEmail, custName, saved.getBookingId(), vehicleDetails, "/feedback", isEarlyReturn);
                 String refundNotice = isEarlyReturn
                         ? "\n\nImportant Refund Notice: Since you returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff."
-                        : "";
+                        : (lateFee.compareTo(BigDecimal.ZERO) > 0 ? "\n\nLate Return Adjustment: A late fee of Rs. " + lateFee + " has been assessed on your invoice." : "");
                 emailService.sendNotification(
                         toEmail,
                         "DriveFlow Vehicle Return Confirmation: #BK-" + saved.getBookingId(),
@@ -577,6 +600,35 @@ public class BookingServiceImpl implements BookingService {
         }
 
         return saved;
+    }
+
+    @Override
+    public BigDecimal calculateLateFee(long daysLate, BigDecimal dailyRentalRate) {
+        if (daysLate <= 0) {
+            return BigDecimal.ZERO;
+        }
+        BigDecimal rate = (dailyRentalRate != null) ? dailyRentalRate : BigDecimal.ZERO;
+        BigDecimal days = BigDecimal.valueOf(daysLate);
+        // Formula: Total Charge = (Days Late * Daily Rental Rate) + (Days Late * 1000)
+        return days.multiply(rate).add(days.multiply(new BigDecimal("1000.00")));
+    }
+
+    @Override
+    public BigDecimal calculateLateFee(Booking booking, LocalDate actualReturnDate) {
+        if (booking == null || booking.getEndDate() == null || actualReturnDate == null) {
+            return BigDecimal.ZERO;
+        }
+        if (!actualReturnDate.isAfter(booking.getEndDate())) {
+            return BigDecimal.ZERO;
+        }
+        long daysLate = java.time.temporal.ChronoUnit.DAYS.between(booking.getEndDate(), actualReturnDate);
+        BigDecimal dailyRate = BigDecimal.ZERO;
+        if (booking.getVehicle() != null && booking.getVehicle().getDailyRate() != null) {
+            dailyRate = booking.getVehicle().getDailyRate();
+        } else if (booking.getChargedRate() != null && booking.getDuration() != null && booking.getDuration() > 0) {
+            dailyRate = booking.getChargedRate().divide(BigDecimal.valueOf(booking.getDuration()), 2, java.math.RoundingMode.HALF_UP);
+        }
+        return calculateLateFee(daysLate, dailyRate);
     }
 
     @Override

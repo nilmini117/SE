@@ -16,7 +16,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
  * 3. Daily Pricing & Scheduling:
  *    - Automatically calculates duration (days) and total cost formatted in Sri Lankan Rupees (Rs.)
  */
-export default function BookingReservationForm({ currentUser = null, branches: propBranches = null }) {
+export default function BookingReservationForm({ currentUser = null, branches: propBranches = null, additionalServices: propAddons = null }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -34,6 +34,17 @@ export default function BookingReservationForm({ currentUser = null, branches: p
   ];
 
   const branches = propBranches || defaultBranches;
+
+  // Default catalogue for Extras & Add-ons (additional_service)
+  const defaultAddons = [
+    { id: 1, name: 'GPS Navigation System', rate: 500, description: 'Turn-by-turn satellite voice guidance across Sri Lanka' },
+    { id: 2, name: 'Child Safety Seat', rate: 750, description: 'ISOFIX certified rear & front-facing child booster seat' },
+    { id: 3, name: 'Comprehensive Collision Damage Waiver (CDW)', rate: 2500, description: 'Zero deductible excess waiver for ultimate peace of mind' },
+    { id: 4, name: 'Additional Registered Driver', rate: 1000, description: 'Authorize a secondary verified driver on your rental contract' },
+    { id: 5, name: 'Emergency 24/7 Roadside Assistance', rate: 450, description: 'Island-wide towing, jump-start, and flat-tire recovery' }
+  ];
+
+  const addons = propAddons || defaultAddons;
 
   // Helper to extract actual daily rate and normalize vehicle state data
   const normalizeVehicle = (car) => {
@@ -80,6 +91,18 @@ export default function BookingReservationForm({ currentUser = null, branches: p
   const [discountPercent, setDiscountPercent] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(null);
+
+  // React state managing the selected "Extras & Add-ons" checkboxes
+  const [selectedAddonIds, setSelectedAddonIds] = useState([]);
+
+  // Add-on checkbox toggle handler
+  const handleAddonToggle = (addonId) => {
+    setSelectedAddonIds((prev) =>
+      prev.includes(addonId)
+        ? prev.filter((id) => id !== addonId)
+        : [...prev, addonId]
+    );
+  };
 
   // Available vehicles list when choosing manually
   const [availableVehicles, setAvailableVehicles] = useState([]);
@@ -143,18 +166,28 @@ export default function BookingReservationForm({ currentUser = null, branches: p
     }
   };
 
-  // Calculate rental duration in days
+  // Calculate rental duration in days (defaults to 3 days)
   const rentalDays = Math.max(
     1,
     Math.ceil((new Date(returnDate) - new Date(pickupDate)) / (1000 * 60 * 60 * 24))
   );
   const durationDays = rentalDays;
 
+  // Frontend calculation function:
+  // Loop through the selected add-ons, multiply their daily rate by the rental duration (3 days), and add them to the total
+  let totalAddonCost = 0;
+  for (const addonId of selectedAddonIds) {
+    const addon = addons.find((a) => a.id === addonId);
+    if (addon) {
+      totalAddonCost += (Number(addon.rate) || 0) * durationDays;
+    }
+  }
+
   // Extract actual daily rate and compute costs dynamically
   const activeDailyRate = selectedVehicle?.dailyRate || 12500;
   const baseTotal = activeDailyRate * rentalDays;
   const discountAmount = (baseTotal * discountPercent) / 100;
-  const finalTotal = baseTotal - discountAmount;
+  const finalTotal = baseTotal - discountAmount + totalAddonCost;
 
   // Action: Unlock / Change Vehicle
   const handleUnlockVehicle = () => {
@@ -178,6 +211,8 @@ export default function BookingReservationForm({ currentUser = null, branches: p
       pickupDate,
       returnDate,
       durationDays,
+      serviceIds: selectedAddonIds,
+      totalAddonCost,
       totalCharged: finalTotal,
       couponCode
     };
@@ -188,6 +223,8 @@ export default function BookingReservationForm({ currentUser = null, branches: p
         id: 'DF-' + Math.floor(100000 + Math.random() * 900000),
         model: selectedVehicle?.model || 'Reserved Vehicle',
         branch: branches.find(b => String(b.id) === String(pickupBranchId))?.name || 'Selected Branch',
+        baseTotal,
+        totalAddonCost,
         total: finalTotal,
         pickupDate,
         returnDate
@@ -210,20 +247,30 @@ export default function BookingReservationForm({ currentUser = null, branches: p
         </p>
         <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', textAlign: 'left', marginBottom: '2rem', fontSize: '0.9rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px dashed #e2e8f0' }}>
-            <span style="color: #64748b;">Booking Reference:</span>
-            <strong style="color: #0f172a;">{bookingSuccess.id}</strong>
+            <span style={{ color: '#64748b' }}>Booking Reference:</span>
+            <strong style={{ color: '#0f172a' }}>{bookingSuccess.id}</strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px dashed #e2e8f0' }}>
-            <span style="color: #64748b;">Vehicle:</span>
-            <strong style="color: #0f172a;">{bookingSuccess.model}</strong>
+            <span style={{ color: '#64748b' }}>Vehicle:</span>
+            <strong style={{ color: '#0f172a' }}>{bookingSuccess.model}</strong>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px dashed #e2e8f0' }}>
-            <span style="color: #64748b;">Pickup Station:</span>
-            <strong style="color: #0f172a;">{bookingSuccess.branch}</strong>
+            <span style={{ color: '#64748b' }}>Pickup Station:</span>
+            <strong style={{ color: '#0f172a' }}>{bookingSuccess.branch}</strong>
           </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px dashed #e2e8f0' }}>
+            <span style={{ color: '#64748b' }}>Base Rental ({durationDays} Days):</span>
+            <strong style={{ color: '#0f172a' }}>Rs. {bookingSuccess.baseTotal?.toLocaleString()}</strong>
+          </div>
+          {bookingSuccess.totalAddonCost > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0', borderBottom: '1px dashed #e2e8f0' }}>
+              <span style={{ color: '#0284c7' }}>Extras &amp; Add-ons:</span>
+              <strong style={{ color: '#0284c7' }}>+ Rs. {bookingSuccess.totalAddonCost?.toLocaleString()}</strong>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.35rem 0' }}>
-            <span style="color: #64748b;">Total Rental Amount:</span>
-            <strong style="color: #16a34a; font-size: 1.1rem;">Rs. {bookingSuccess.total.toLocaleString()}</strong>
+            <span style={{ color: '#64748b' }}>Total Rental Amount:</span>
+            <strong style={{ color: '#16a34a', fontSize: '1.1rem' }}>Rs. {bookingSuccess.total.toLocaleString()}</strong>
           </div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
@@ -440,7 +487,64 @@ export default function BookingReservationForm({ currentUser = null, branches: p
             </div>
           </div>
 
-          {/* SECTION 4: PRICING ENGINE (CALCULATED PAYMENT ARRAY) */}
+          {/* SECTION 4: EXTRAS & ADD-ONS (additional_service checkboxes) */}
+          <div style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '14px', padding: '1.35rem', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#16a34a', color: '#fff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem' }}>4</span>
+                Extras &amp; Add-ons (Optional)
+              </h3>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0369a1', backgroundColor: '#e0f2fe', padding: '0.2rem 0.6rem', borderRadius: '9999px', border: '1px solid #bae6fd' }}>
+                ✨ Additional Services
+              </span>
+            </div>
+            <p style={{ fontSize: '0.82rem', color: '#64748b', margin: '0 0 1rem' }}>
+              Select optional equipment or add-ons. Rates are multiplied by your rental duration ({durationDays} days).
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.85rem' }}>
+              {addons.map((addon) => {
+                const isChecked = selectedAddonIds.includes(addon.id);
+                return (
+                  <label
+                    key={addon.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '0.75rem',
+                      padding: '0.85rem 1rem',
+                      borderRadius: '10px',
+                      border: isChecked ? '1.5px solid #0284c7' : '1px solid #cbd5e1',
+                      backgroundColor: isChecked ? '#f0f9ff' : '#ffffff',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => handleAddonToggle(addon.id)}
+                      style={{ marginTop: '0.2rem', transform: 'scale(1.15)', accentColor: '#0284c7', cursor: 'pointer' }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.88rem' }}>
+                        {addon.name}
+                      </div>
+                      <div style={{ fontSize: '0.78rem', color: '#0284c7', fontWeight: 700, marginTop: '0.2rem' }}>
+                        Rs. {addon.rate.toLocaleString()} / day
+                      </div>
+                      {addon.description && (
+                        <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '0.15rem' }}>
+                          {addon.description}
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* SECTION 5: PRICING ENGINE (CALCULATED PAYMENT ARRAY) */}
           <div style={{ backgroundColor: '#ffffff', border: '2px solid #e2e8f0', borderRadius: '14px', overflow: 'hidden', marginBottom: '2rem' }}>
             <div style={{ backgroundColor: '#f1f5f9', padding: '0.75rem 1.25rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
@@ -451,14 +555,38 @@ export default function BookingReservationForm({ currentUser = null, branches: p
               </span>
             </div>
             <div style={{ padding: '1.25rem' }}>
+              {/* 1. Base Rental Rate */}
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px dashed #e2e8f0', fontSize: '0.92rem' }}>
                 <span style={{ color: '#64748b' }}>
                   Base Rental Rate (Rs. {selectedVehicle.dailyRate.toLocaleString()} × {rentalDays} Days)
                 </span>
                 <strong style={{ color: '#0f172a' }}>
-                  Rs. {(selectedVehicle.dailyRate * rentalDays).toLocaleString()}
+                  Rs. {baseTotal.toLocaleString()}
                 </strong>
               </div>
+
+              {/* 2. Expected UI Update: New line item directly below the Base Rental Rate to display the total add-on cost */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px dashed #e2e8f0', fontSize: '0.92rem' }}>
+                <span style={{ color: '#0284c7' }}>
+                  Extras &amp; Add-ons ({selectedAddonIds.length} Selected &bull; {durationDays} Days)
+                </span>
+                <strong style={{ color: '#0284c7' }}>
+                  + Rs. {totalAddonCost.toLocaleString()}
+                </strong>
+              </div>
+
+              {discountAmount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0', borderBottom: '1px dashed #e2e8f0', fontSize: '0.92rem' }}>
+                  <span style={{ color: '#16a34a' }}>
+                    Discount ({discountPercent}%)
+                  </span>
+                  <strong style={{ color: '#16a34a' }}>
+                    - Rs. {discountAmount.toLocaleString()}
+                  </strong>
+                </div>
+              )}
+
+              {/* 3. Final Calculated Cost */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '2px solid #e2e8f0' }}>
                 <div>
                   <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#64748b', fontWeight: 700 }}>
@@ -467,7 +595,7 @@ export default function BookingReservationForm({ currentUser = null, branches: p
                   <div style={{ fontSize: '0.78rem', color: '#15803d', fontWeight: 600 }}>Zero Hidden Fees &bull; Instant Confirmation</div>
                 </div>
                 <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#15803d' }}>
-                  Rs. {(selectedVehicle.dailyRate * rentalDays).toLocaleString()}
+                  Rs. {finalTotal.toLocaleString()}
                 </div>
               </div>
             </div>

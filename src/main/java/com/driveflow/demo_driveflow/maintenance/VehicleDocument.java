@@ -30,4 +30,13 @@ public class VehicleDocument {
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "file_path")
+    private String filePath;
+
+    @Column(name = "uploaded_at")
+    private LocalDate uploadedAt;
 }

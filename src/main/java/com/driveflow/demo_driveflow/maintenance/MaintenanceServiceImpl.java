@@ -31,6 +31,9 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     private VehicleDocumentRepository vehicleDocumentRepository;
 
     @Autowired
+    private InspectionRepository inspectionRepository;
+
+    @Autowired
     private EmailService emailService;
 
     @Autowired
@@ -200,5 +203,29 @@ public class MaintenanceServiceImpl implements MaintenanceService {
     @Transactional
     public void removeDocument(Long id) {
         vehicleDocumentRepository.deleteById(id);
+    }
+
+    // Routine inspections
+    @Override
+    public List<Inspection> getAllInspections() {
+        return inspectionRepository.findAllByOrderByInspectionDateDesc();
+    }
+
+    @Override
+    @Transactional
+    public Inspection logInspection(Inspection inspection) {
+        if (inspection.getType() == null || inspection.getType().isBlank()) {
+            inspection.setType("ROUTINE");
+        }
+        if (inspection.getInspectionDate() == null) {
+            inspection.setInspectionDate(LocalDate.now());
+        }
+        return inspectionRepository.save(inspection);
+    }
+
+    @Override
+    @Transactional
+    public void removeInspection(Long id) {
+        inspectionRepository.deleteById(id);
     }
 }

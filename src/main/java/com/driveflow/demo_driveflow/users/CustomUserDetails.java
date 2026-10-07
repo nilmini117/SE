@@ -15,15 +15,21 @@ public class CustomUserDetails implements UserDetails {
     private final String firstName;
     private final String lastName;
     private final String role;
+    private final boolean enabled;
     private final Collection<? extends GrantedAuthority> authorities;
 
     public CustomUserDetails(Long systemId, String email, String password, String firstName, String lastName, String role) {
+        this(systemId, email, password, firstName, lastName, role, true);
+    }
+
+    public CustomUserDetails(Long systemId, String email, String password, String firstName, String lastName, String role, boolean enabled) {
         this.systemId = systemId;
         this.email = email;
         this.password = password;
         this.firstName = firstName;
         this.lastName = lastName;
         this.role = role;
+        this.enabled = enabled;
         this.authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
@@ -92,6 +98,6 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }
