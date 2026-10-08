@@ -10,7 +10,7 @@
     <div class="df-header">
         <div>
             <h1 class="df-header-title">Fleet Maintenance & Legal Compliance</h1>
-            <p class="df-header-subtitle">Manage digital registration documents, roadworthiness certificates, and routine safety inspections.</p>
+            <p class="df-header-subtitle">Manage digital registration documents, roadworthiness certificates, and fleet compliance records.</p>
         </div>
         <div class="df-header-actions" style="display: flex; gap: 0.75rem;">
             <button type="button" class="btn btn-primary" onclick="openDocModal()">
@@ -21,13 +21,6 @@
                     <line x1="9" y1="15" x2="15" y2="15"></line>
                 </svg>
                 Upload Document
-            </button>
-            <button type="button" class="btn btn-secondary" onclick="openInspectionModal()" style="background: white; border: 1px solid var(--slate-300);">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                </svg>
-                Log Routine Inspection
             </button>
         </div>
     </div>
@@ -89,28 +82,25 @@
         <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
             <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Legal Documents</div>
             <div style="font-size: 1.85rem; font-weight: 800; color: #2563eb;" th:text="${documents != null ? documents.size() : 0}">8</div>
-            <div style="font-size: 0.78rem; color: #16a34a; margin-top: 0.25rem;" th:text="${validDocCount} + ' Valid &bull; ' + ${expiredDocCount} + ' Expired'">8 Valid &bull; 0 Expired</div>
+            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Registered compliance files</div>
         </div>
         <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
-            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Routine Inspections</div>
-            <div style="font-size: 1.85rem; font-weight: 800; color: var(--slate-900);" th:text="${inspections != null ? inspections.size() : 0}">15</div>
-            <div style="font-size: 0.78rem; color: var(--slate-400); margin-top: 0.25rem;">Health checks performed</div>
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Valid Documents</div>
+            <div style="font-size: 1.85rem; font-weight: 800; color: #16a34a;" th:text="${validDocCount}">8</div>
+            <div style="font-size: 0.78rem; color: #16a34a; margin-top: 0.25rem;">Active &amp; road compliant</div>
         </div>
         <div style="background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-lg); padding: 1.25rem; box-shadow: var(--shadow-sm);">
-            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Passed Safety Rate</div>
-            <div style="font-size: 1.85rem; font-weight: 800; color: #16a34a;" th:text="${passedCount}">12</div>
-            <div style="font-size: 0.78rem; color: #e11d48; margin-top: 0.25rem;" th:text="${attentionCount} + ' Needs Attention'">1 Needs Attention</div>
+            <div style="color: var(--slate-500); font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">Expired Documents</div>
+            <div style="font-size: 1.85rem; font-weight: 800;" th:style="${expiredDocCount > 0} ? 'color: #e11d48;' : 'color: var(--slate-900);'" th:text="${expiredDocCount}">0</div>
+            <div style="font-size: 0.78rem; margin-top: 0.25rem;" th:style="${expiredDocCount > 0} ? 'color: #e11d48;' : 'color: var(--slate-400);'" th:text="${expiredDocCount > 0} ? 'Requires renewal attention' : 'All documents up to date'">All documents up to date</div>
         </div>
     </div>
 
-    <!-- Inner Section Navigation -->
-    <div style="display: flex; gap: 1rem; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
-        <button type="button" id="tabDocBtn" onclick="switchSection('docs')" style="padding: 0.75rem 1.25rem; font-weight: 700; font-size: 0.95rem; border: none; background: none; cursor: pointer; color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px;">
+    <!-- Documents Section Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--slate-200); margin-bottom: 1.5rem;">
+        <div style="padding: 0.75rem 1.25rem; font-weight: 700; font-size: 0.95rem; color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px;">
             Digital Legal Documents (<span th:text="${documents != null ? documents.size() : 0}">0</span>)
-        </button>
-        <button type="button" id="tabInspBtn" onclick="switchSection('inspections')" style="padding: 0.75rem 1.25rem; font-weight: 600; font-size: 0.95rem; border: none; background: none; cursor: pointer; color: var(--slate-500); border-bottom: 3px solid transparent; margin-bottom: -2px;">
-            Routine Inspections History (<span th:text="${inspections != null ? inspections.size() : 0}">0</span>)
-        </button>
+        </div>
     </div>
 
     <!-- SECTION 1: DIGITAL LEGAL DOCUMENTS -->
@@ -139,25 +129,39 @@
                         <span th:if="${d.vehicle == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
                     </td>
                     <td>
-                        <span style="font-weight: 700; color: var(--slate-900);" th:text="${d.docType}">Commercial Registration</span>
+                        <span th:if="${d.docType == 'REVENUE_LICENSE'}" class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700;">Revenue License</span>
+                        <span th:if="${d.docType == 'INSURANCE'}" class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700;">Commercial Insurance</span>
+                        <span th:if="${d.docType == 'FITNESS_CERT'}" class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 700;">Fitness Certificate</span>
+                        <span th:if="${d.docType == 'EMISSION'}" class="badge" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; font-weight: 700;">Emission Report</span>
+                        <span th:if="${d.docType != 'REVENUE_LICENSE' and d.docType != 'INSURANCE' and d.docType != 'FITNESS_CERT' and d.docType != 'EMISSION'}" class="badge badge-secondary" th:text="${d.docType}">Document</span>
                     </td>
                     <td th:text="${d.expiryDate}">2026-12-31</td>
                     <td>
                         <span th:if="${d.expiryDate != null and d.expiryDate.isAfter(T(java.time.LocalDate).now())}" class="badge badge-success">Valid</span>
                         <span th:if="${d.expiryDate != null and !d.expiryDate.isAfter(T(java.time.LocalDate).now())}" class="badge badge-danger">Expired</span>
                     </td>
-                    <td>
-                        <a th:if="${d.filePath != null}" th:href="@{${d.filePath}}" target="_blank" class="badge badge-secondary" style="display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none;">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                <polyline points="7 10 12 15 17 10"></polyline>
-                                <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                            <span th:text="${d.fileName != null ? d.fileName : 'Download Document'}">file.pdf</span>
-                        </a>
+                    <td style="white-space: nowrap;">
+                        <div th:if="${d.filePath != null}" style="display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <a th:href="@{${d.filePath}}" target="_blank" class="badge badge-secondary" title="View / Open File" style="display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; padding: 0.3rem 0.55rem;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <span th:text="${d.fileName != null ? d.fileName : 'View File'}">file.pdf</span>
+                            </a>
+                            <a th:href="@{/maintenance/documents/{id}/download(id=${d.docId})}" th:download="${d.fileName != null ? d.fileName : 'document'}" class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none; padding: 0.3rem 0.6rem; border-radius: 4px; font-weight: 600;" title="Save file to local folder">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                <span>Save to folder</span>
+                            </a>
+                        </div>
                         <span th:if="${d.filePath == null}" style="color: var(--slate-400); font-size: 0.85rem;">Digital record</span>
                     </td>
-                    <td style="text-align: right;">
+                    <td style="text-align: right; white-space: nowrap;">
+                        <a th:href="@{/maintenance/documents/{id}/edit(id=${d.docId})}" class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem; text-decoration: none; margin-right: 0.35rem;">Edit</a>
                         <form th:action="@{/maintenance/documents/{id}/delete(id=${d.docId})}" method="post" style="display: inline;" onsubmit="return confirm('Are you sure you want to remove this legal document?');">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                             <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">Remove</button>
@@ -181,72 +185,6 @@
         </div>
     </div>
 
-    <!-- SECTION 2: ROUTINE INSPECTIONS -->
-    <div id="sectionInspections" style="display: none;">
-        <div class="df-table-container">
-            <table class="df-table" th:if="${inspections != null and !inspections.empty}">
-                <thead>
-                <tr>
-                    <th>Inspection ID</th>
-                    <th>Vehicle</th>
-                    <th>Inspection Date</th>
-                    <th>Fuel Level</th>
-                    <th>Result / Safety Status</th>
-                    <th>Condition / Damage Notes</th>
-                    <th style="text-align: right;">Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="i : ${inspections}">
-                    <td><strong th:text="'#INS-' + ${i.inspectionId}">#INS-1</strong></td>
-                    <td>
-                        <span th:if="${i.vehicle != null}">
-                            <strong th:text="${i.vehicle.model}">Nissan Leaf</strong>
-                            <span style="color: var(--slate-500); font-size: 0.85rem;" th:text="' (' + ${i.vehicle.regNo} + ')'"></span>
-                        </span>
-                        <span th:if="${i.vehicle == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
-                    </td>
-                    <td th:text="${i.inspectionDate}">2026-10-01</td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <div style="flex: 1; max-width: 80px; height: 8px; background: var(--slate-200); border-radius: 9999px; overflow: hidden;">
-                                <div th:style="'width: ' + ${i.fuelLevel != null ? i.fuelLevel : 100} + '%; height: 100%; background: #16a34a; border-radius: 9999px;'"></div>
-                            </div>
-                            <span style="font-size: 0.85rem; font-weight: 700;" th:text="${i.fuelLevel != null ? i.fuelLevel + '%' : '100%'}">100%</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span th:if="${i.result == 'PASSED'}" class="badge badge-success">Passed</span>
-                        <span th:if="${i.result == 'NEEDS_REPAIR'}" class="badge badge-warning" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">Needs Repair</span>
-                        <span th:if="${i.result == 'FAILED'}" class="badge badge-danger">Failed</span>
-                    </td>
-                    <td>
-                        <span th:if="${i.damageNotes != null and !i.damageNotes.blank}" th:text="${i.damageNotes}" style="font-size: 0.88rem; color: var(--slate-700);">No visible exterior defects</span>
-                        <span th:if="${i.damageNotes == null or i.damageNotes.blank}" style="color: var(--slate-400); font-size: 0.85rem; font-style: italic;">All standard safety criteria met</span>
-                    </td>
-                    <td style="text-align: right;">
-                        <form th:action="@{/maintenance/inspections/{id}/delete(id=${i.inspectionId})}" method="post" style="display: inline;" onsubmit="return confirm('Delete this inspection entry?');">
-                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                            <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.6rem; font-size: 0.78rem;">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-
-            <div class="empty-state" th:if="${inspections == null or inspections.empty}">
-                <div class="empty-state-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <h3 class="empty-state-title">No Routine Inspections Logged</h3>
-                <p class="empty-state-desc">Log dates and inspection results for routine vehicle maintenance and fleet health checks.</p>
-                <button type="button" class="btn btn-secondary" onclick="openInspectionModal()">Log First Inspection</button>
-            </div>
-        </div>
-    </div>
 </main>
 
 <!-- MODAL 1: UPLOAD DIGITAL REGISTRATION / COMPLIANCE DOCUMENT -->
@@ -265,13 +203,13 @@
             <button type="button" onclick="closeDocModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
         </div>
 
-        <form th:action="@{/maintenance/documents/upload}" method="post" enctype="multipart/form-data">
+        <form th:action="@{/maintenance/documents/upload( ${_csrf.parameterName}=${_csrf.token} )}" method="post" enctype="multipart/form-data">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem;">
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Fleet Vehicle <span style="color: var(--danger);">*</span></label>
-                    <select name="vehicleId" class="form-control" required style="width: 100%;">
+                    <select id="modalVehicleSelect" name="vehicleId" class="form-control" required style="width: 100%;">
                         <option value="" disabled selected>-- Select Vehicle --</option>
                         <option th:each="v : ${vehicles}"
                                 th:value="${v.vehicleId}"
@@ -282,7 +220,13 @@
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Document Type <span style="color: var(--danger);">*</span></label>
-                    <input type="text" name="docType" class="form-control" placeholder="e.g. Vehicle Registration Certificate, Revenue License, Commercial Insurance" required style="width: 100%;">
+                    <select id="modalDocTypeSelect" name="docType" class="form-control" required style="width: 100%;">
+                        <option value="" disabled selected>-- Select Document Type --</option>
+                        <option value="REVENUE_LICENSE">Revenue License</option>
+                        <option value="INSURANCE">Commercial Vehicle Insurance</option>
+                        <option value="FITNESS_CERT">Vehicle Fitness Certificate</option>
+                        <option value="EMISSION">Vehicle Emission Report</option>
+                    </select>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
@@ -291,9 +235,9 @@
                 </div>
 
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Digital Document File (PDF, PNG, JPG)</label>
+                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Digital Document File (PDF, PNG, JPG, DOC)</label>
                     <input type="file" name="documentFile" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="form-control" style="width: 100%; padding: 0.45rem;">
-                    <small style="color: var(--slate-500); font-size: 0.78rem;">Upload scanned copy or digital PDF of official registration document.</small>
+                    <small style="color: var(--slate-500); font-size: 0.78rem;">Upload scanned copy or digital PDF of official registration document (optional if logging record number/expiry only).</small>
                 </div>
             </div>
 
@@ -305,111 +249,28 @@
     </div>
 </div>
 
-<!-- MODAL 2: LOG ROUTINE INSPECTION -->
-<div id="inspectionModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-    <div style="background: white; border-radius: var(--radius-lg); width: 100%; max-width: 540px; box-shadow: var(--shadow-xl); overflow: hidden; margin: 1.5rem;">
-        <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--slate-100); display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 0.6rem;">
-                <div style="width: 34px; height: 34px; border-radius: 50%; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                    </svg>
-                </div>
-                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--slate-900); margin: 0;">Log Routine Vehicle Inspection</h3>
-            </div>
-            <button type="button" onclick="closeInspectionModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--slate-400); cursor: pointer; line-height: 1;">&times;</button>
-        </div>
-
-        <form th:action="@{/maintenance/inspections}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-            <div style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Fleet Vehicle <span style="color: var(--danger);">*</span></label>
-                    <select name="vehicleId" class="form-control" required style="width: 100%;">
-                        <option value="" disabled selected>-- Select Vehicle --</option>
-                        <option th:each="v : ${vehicles}"
-                                th:value="${v.vehicleId}"
-                                th:text="${v.model} + ' (' + ${v.regNo} + ')'">
-                        </option>
-                    </select>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Inspection Date</label>
-                        <input type="date" name="inspectionDate" class="form-control" th:value="${T(java.time.LocalDate).now()}" required style="width: 100%;">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Fuel Level (%)</label>
-                        <input type="number" name="fuelLevel" min="0" max="100" value="100" class="form-control" required style="width: 100%;">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Inspection Result <span style="color: var(--danger);">*</span></label>
-                    <select name="result" class="form-control" required style="width: 100%;">
-                        <option value="PASSED" selected>PASSED - Vehicle in optimal roadworthy condition</option>
-                        <option value="NEEDS_REPAIR">NEEDS_REPAIR - Minor defects detected, requires service</option>
-                        <option value="FAILED">FAILED - Safety hazard, decommission immediately</option>
-                    </select>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 0;">
-                    <label class="form-label" style="font-size: 0.88rem; font-weight: 700;">Condition & Damage Notes</label>
-                    <textarea name="damageNotes" class="form-control" rows="3" placeholder="Log brake pad condition, tire tread depth, fluid levels, or cosmetic remarks..."></textarea>
-                </div>
-            </div>
-
-            <div style="padding: 1rem 1.5rem; background: var(--slate-50); border-top: 1px solid var(--slate-100); display: flex; justify-content: flex-end; gap: 0.75rem;">
-                <button type="button" onclick="closeInspectionModal()" class="btn btn-secondary">Cancel</button>
-                <button type="submit" class="btn btn-primary" style="font-weight: 700;">Record Inspection</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-    function switchSection(section) {
-        var docSection = document.getElementById('sectionDocs');
-        var inspSection = document.getElementById('sectionInspections');
-        var docBtn = document.getElementById('tabDocBtn');
-        var inspBtn = document.getElementById('tabInspBtn');
-
-        if (section === 'docs') {
-            docSection.style.display = 'block';
-            inspSection.style.display = 'none';
-            docBtn.style.color = 'var(--primary)';
-            docBtn.style.borderBottomColor = 'var(--primary)';
-            inspBtn.style.color = 'var(--slate-500)';
-            inspBtn.style.borderBottomColor = 'transparent';
-        } else {
-            docSection.style.display = 'none';
-            inspSection.style.display = 'block';
-            inspBtn.style.color = 'var(--primary)';
-            inspBtn.style.borderBottomColor = 'var(--primary)';
-            docBtn.style.color = 'var(--slate-500)';
-            docBtn.style.borderBottomColor = 'transparent';
+    function openDocModal(vehicleId) {
+        var modal = document.getElementById('docModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            if (vehicleId) {
+                var select = document.getElementById('modalVehicleSelect');
+                if (select) select.value = vehicleId;
+            }
         }
     }
 
-    function openDocModal() {
-        document.getElementById('docModal').style.display = 'flex';
-    }
     function closeDocModal() {
-        document.getElementById('docModal').style.display = 'none';
-    }
-    function openInspectionModal() {
-        document.getElementById('inspectionModal').style.display = 'flex';
-    }
-    function closeInspectionModal() {
-        document.getElementById('inspectionModal').style.display = 'none';
+        var modal = document.getElementById('docModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     }
 
     window.addEventListener('click', function(e) {
-        if (e.target === document.getElementById('docModal')) closeDocModal();
-        if (e.target === document.getElementById('inspectionModal')) closeInspectionModal();
+        var modal = document.getElementById('docModal');
+        if (e.target === modal) closeDocModal();
     });
 </script>
 

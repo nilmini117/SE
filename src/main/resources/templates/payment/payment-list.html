@@ -22,7 +22,7 @@
         </div>
     </div>
 
-    <!-- Navigation Tabs (Only Main Processed Payments and Company Sales Information) -->
+    <!-- Navigation Tabs -->
     <div class="df-tabs" id="paymentTabs">
         <a th:href="@{/payments(tab='transactions')}"
            id="tabBtnTransactions"
@@ -45,6 +45,14 @@
                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
             </svg>
             Company Sales Information
+        </a>
+        <a th:href="@{/finance}"
+           id="tabBtnFinance"
+           class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Finance Panel (Deposits &amp; Refunds)
         </a>
     </div>
 
@@ -257,8 +265,11 @@
         }
         var btnTransactions = document.getElementById('tabBtnTransactions');
         var btnSales = document.getElementById('tabBtnSales');
+        var btnFinance = document.getElementById('tabBtnFinance');
         var paneTransactions = document.getElementById('paneTransactions');
         var paneSales = document.getElementById('paneSales');
+
+        if (btnFinance) btnFinance.classList.remove('active');
 
         if (tabName === 'sales') {
             btnTransactions.classList.remove('active');

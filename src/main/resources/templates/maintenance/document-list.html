@@ -30,12 +30,25 @@
             </svg>
             Service Schedules
         </a>
-        <a th:href="@{/maintenance/documents}" class="df-tab-item active">
+        <a th:href="@{/maintenance/fleet}" class="df-tab-item active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
             </svg>
-            Vehicle Documents & Compliance
+            Fleet Maintenance &amp; Documents
+        </a>
+        <a th:href="@{/maintenance/companies}" class="df-tab-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"></path>
+                <path d="M9 8h1"></path>
+                <path d="M9 12h1"></path>
+                <path d="M9 16h1"></path>
+                <path d="M14 8h1"></path>
+                <path d="M14 12h1"></path>
+                <path d="M14 16h1"></path>
+                <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+            </svg>
+            Outsourced Partners
         </a>
     </div>
 
@@ -79,7 +92,11 @@
                     <span th:if="${d.vehicle == null}" style="color: var(--slate-400); font-style: italic;">Unassigned</span>
                 </td>
                 <td>
-                    <span style="font-weight: 700; color: var(--slate-900);" th:text="${d.docType}">Comprehensive Insurance</span>
+                    <span th:if="${d.docType == 'REVENUE_LICENSE'}" class="badge" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700;">Revenue License</span>
+                    <span th:if="${d.docType == 'INSURANCE'}" class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700;">Commercial Insurance</span>
+                    <span th:if="${d.docType == 'FITNESS_CERT'}" class="badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-weight: 700;">Fitness Certificate</span>
+                    <span th:if="${d.docType == 'EMISSION'}" class="badge" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #e9d5ff; font-weight: 700;">Emission Report</span>
+                    <span th:if="${d.docType != 'REVENUE_LICENSE' and d.docType != 'INSURANCE' and d.docType != 'FITNESS_CERT' and d.docType != 'EMISSION'}" class="badge badge-secondary" th:text="${d.docType}">Document</span>
                 </td>
                 <td th:text="${d.expiryDate}">2026-12-31</td>
                 <td>

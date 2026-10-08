@@ -38,7 +38,7 @@
                 <th>Branch Name</th>
                 <th>Location (Street & City)</th>
                 <th>Email</th>
-                <th>Contact Numbers (branch_contact_number)</th>
+                <th>Contact Number</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
             </thead>
@@ -53,12 +53,7 @@
                 </td>
                 <td th:text="${b.email}">colombo@driveflow.com</td>
                 <td>
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; align-items: center;">
-                        <span style="font-weight: 700; color: var(--slate-800);" th:text="${b.contactNumber}">0112345671</span>
-                        <span th:each="cn : ${b.contactNumbers}" th:if="${cn != b.contactNumber}"
-                              style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; font-weight: 600; padding: 0.15rem 0.5rem; border-radius: 9999px;"
-                              th:text="${cn}">0112345679</span>
-                    </div>
+                    <strong style="color: var(--slate-800);" th:text="${b.contactNumber}">0112345678</strong>
                 </td>
                 <td style="text-align: right; display: flex; gap: 0.35rem; justify-content: flex-end;">
                     <a th:href="@{/branches/{id}/edit(id=${b.branchId})}" class="btn btn-secondary btn-sm">Edit</a>

@@ -257,9 +257,6 @@ public class DataInitializer implements CommandLineRunner {
 
                         List<String> contacts = new ArrayList<>();
                         contacts.add(bData.contact);
-                        if (bData.contact != null && bData.contact.length() >= 9) {
-                            contacts.add("077" + bData.contact.substring(3));
-                        }
                         branch.setContactNumbers(contacts);
 
                         branch.setEmail(bData.email);
@@ -940,7 +937,7 @@ public class DataInitializer implements CommandLineRunner {
 
                                 com.driveflow.demo_driveflow.maintenance.VehicleDocument d1 = new com.driveflow.demo_driveflow.maintenance.VehicleDocument();
                                 d1.setVehicle(v);
-                                d1.setDocType("Vehicle Registration Certificate (CR)");
+                                d1.setDocType("REVENUE_LICENSE");
                                 d1.setExpiryDate(now.plusYears(1).plusMonths(i));
                                 d1.setFileName("CR_" + v.getRegNo().replace(" ", "_") + ".pdf");
                                 d1.setFilePath(null);
@@ -949,7 +946,7 @@ public class DataInitializer implements CommandLineRunner {
 
                                 com.driveflow.demo_driveflow.maintenance.VehicleDocument d2 = new com.driveflow.demo_driveflow.maintenance.VehicleDocument();
                                 d2.setVehicle(v);
-                                d2.setDocType("Comprehensive Commercial Insurance Policy");
+                                d2.setDocType("INSURANCE");
                                 d2.setExpiryDate(now.plusMonths(6 + i));
                                 d2.setFileName("Insurance_" + v.getRegNo().replace(" ", "_") + ".pdf");
                                 d2.setFilePath(null);

@@ -7,7 +7,7 @@
 
 <main class="df-main">
     <div style="max-width: 680px; margin: 0 auto 1.5rem;">
-        <a th:href="@{/maintenance/documents}" class="btn btn-secondary btn-sm">
+        <a th:href="@{/maintenance/fleet}" class="btn btn-secondary btn-sm">
             &larr; Back to Documents
         </a>
     </div>
@@ -21,8 +21,9 @@
             Assign legal document to a vehicle, including insurance policies, road worthiness certificates, or registration.
         </p>
 
-        <form th:action="${document.docId != null} ? @{/maintenance/documents/{id}(id=${document.docId})} : @{/maintenance/documents}"
-              th:object="${document}" method="post">
+        <form th:action="${document.docId != null} ? @{/maintenance/documents/{id}(id=${document.docId}, ${_csrf.parameterName}=${_csrf.token})} : @{/maintenance/documents( ${_csrf.parameterName}=${_csrf.token} )}"
+              th:object="${document}" method="post" enctype="multipart/form-data">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
             <div class="form-group">
                 <label class="form-label">Fleet Vehicle <span style="color: var(--danger);">*</span></label>
@@ -37,13 +38,29 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Document Title / Type</label>
-                <input type="text" th:field="*{docType}" class="form-control" placeholder="e.g. Comprehensive Commercial Insurance" required>
+                <label class="form-label">Document Type <span style="color: var(--danger);">*</span></label>
+                <select th:field="*{docType}" class="form-control" required>
+                    <option value="" disabled th:selected="${document.docType == null}">-- Select Document Type --</option>
+                    <option value="REVENUE_LICENSE" th:selected="${document.docType == 'REVENUE_LICENSE'}">Revenue License</option>
+                    <option value="INSURANCE" th:selected="${document.docType == 'INSURANCE'}">Commercial Vehicle Insurance</option>
+                    <option value="FITNESS_CERT" th:selected="${document.docType == 'FITNESS_CERT'}">Vehicle Fitness Certificate</option>
+                    <option value="EMISSION" th:selected="${document.docType == 'EMISSION'}">Vehicle Emission Report</option>
+                </select>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Document Expiration Date</label>
+                <label class="form-label">Document Expiration Date <span style="color: var(--danger);">*</span></label>
                 <input type="date" th:field="*{expiryDate}" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Digital Document File (PDF, PNG, JPG, DOC)</label>
+                <input type="file" name="documentFile" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" class="form-control" style="padding: 0.45rem;">
+                <div th:if="${document.filePath != null}" style="margin-top: 0.4rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span>Currently attached: <a th:href="@{${document.filePath}}" target="_blank" th:text="${document.fileName != null ? document.fileName : 'View File'}">document</a></span>
+                    <a th:if="${document.docId != null}" th:href="@{/maintenance/documents/{id}/download(id=${document.docId})}" th:download="${document.fileName}" class="badge" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; text-decoration: none; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600;">Save to folder</a>
+                </div>
+                <small style="color: var(--slate-500); font-size: 0.78rem;">Upload scanned copy or digital PDF of official registration document.</small>
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
@@ -51,7 +68,7 @@
                         th:text="${document.docId != null} ? 'Update Document' : 'Save Document'">
                     Save Document
                 </button>
-                <a th:href="@{/maintenance/documents}" class="btn btn-secondary">Cancel</a>
+                <a th:href="@{/maintenance/fleet}" class="btn btn-secondary">Cancel</a>
             </div>
         </form>
     </div>

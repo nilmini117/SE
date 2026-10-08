@@ -34,7 +34,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/vehicles/api/**"))
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/api/**", "/vehicles/api/**", "/maintenance/documents", "/maintenance/documents/**"))
                 .authorizeHttpRequests(auth -> auth
                         // Public Read-Only Endpoints: Anyone (unauthenticated or customer) can view
                         // static assets, login, and vehicle catalog (GET only)
