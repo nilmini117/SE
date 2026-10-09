@@ -516,6 +516,19 @@
                     });
             });
 
+        // Reactive Fleet Sync: Listen for vehicle return events in other tabs / modals
+        window.addEventListener('storage', function (e) {
+            if (e.key === 'df_fleet_updated') {
+                window.location.reload();
+            }
+        });
+        window.addEventListener('fleetRefresh', function () {
+            window.location.reload();
+        });
+        window.addEventListener('vehicleReturned', function () {
+            window.location.reload();
+        });
+
         // Modal elements
         const modal = document.getElementById('deleteConfirmationModal');
         const modalDetails = document.getElementById('deleteModalVehicleDetails');

@@ -188,6 +188,130 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
       });
   };
 
+  // Vehicle Return Modal State & Logic
+  const [returnModal, setReturnModal] = useState({
+    isOpen: false,
+    booking: null,
+    otp: '',
+    otpSent: false,
+    maskedEmail: '',
+    isEarlyReturn: false,
+    refundNotice: '',
+    loading: false,
+    error: null,
+    success: null
+  });
+
+  const openReturnModal = (booking) => {
+    setReturnModal({
+      isOpen: true,
+      booking: booking,
+      otp: '',
+      otpSent: false,
+      maskedEmail: '',
+      isEarlyReturn: false,
+      refundNotice: '',
+      loading: true,
+      error: null,
+      success: null
+    });
+
+    // Request 6-digit OTP code hitting dedicated backend endpoint
+    fetch(`/api/bookings/${booking.bookingId}/return/request-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setReturnModal(prev => ({
+            ...prev,
+            otpSent: true,
+            maskedEmail: data.maskedEmail || '',
+            isEarlyReturn: data.isEarlyReturn || false,
+            refundNotice: data.refundNotice || '',
+            loading: false
+          }));
+        } else {
+          setReturnModal(prev => ({
+            ...prev,
+            error: data.message || 'Failed to dispatch verification OTP code.',
+            loading: false
+          }));
+        }
+      })
+      .catch(err => {
+        setReturnModal(prev => ({
+          ...prev,
+          error: 'Network error requesting OTP: ' + err.message,
+          loading: false
+        }));
+      });
+  };
+
+  const handleConfirmReturn = (e) => {
+    e.preventDefault();
+    if (!returnModal.booking || !returnModal.otp.trim() || returnModal.otp.trim().length !== 6) {
+      setReturnModal(prev => ({ ...prev, error: 'Please enter the 6-digit OTP code sent to your email.' }));
+      return;
+    }
+
+    setReturnModal(prev => ({ ...prev, loading: true, error: null }));
+
+    // Hits dedicated backend endpoint mapped to returnVehicle(bookingId)
+    fetch(`/api/bookings/${returnModal.booking.bookingId}/return`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ otp: returnModal.otp.trim() })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setReturnModal(prev => ({
+            ...prev,
+            loading: false,
+            success: data.message || 'Vehicle successfully returned! Inventory released to AVAILABLE.'
+          }));
+
+          // 1. Update local booking state to RETURNED
+          setConfirmedBookings(prev =>
+            prev.map(b =>
+              b.bookingId === returnModal.booking.bookingId
+                ? { ...b, bookingStatus: 'RETURNED', status: 'RETURNED' }
+                : b
+            )
+          );
+
+          // 2. Dispatch events across window and storage so Vehicle Catalog updates instantly
+          window.dispatchEvent(new CustomEvent('vehicleReturned', { detail: data }));
+          window.dispatchEvent(new CustomEvent('fleetRefresh'));
+          try {
+            localStorage.setItem('df_fleet_updated', Date.now().toString());
+          } catch (_) {}
+
+          setTimeout(() => {
+            setReturnModal({ isOpen: false, booking: null, otp: '', otpSent: false, maskedEmail: '', isEarlyReturn: false, refundNotice: '', loading: false, error: null, success: null });
+            if (data.feedbackUrl) {
+              window.location.href = data.feedbackUrl;
+            }
+          }, 1800);
+        } else {
+          setReturnModal(prev => ({
+            ...prev,
+            loading: false,
+            error: data.message || 'Return failed. Please check OTP code.'
+          }));
+        }
+      })
+      .catch(err => {
+        setReturnModal(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Network error processing vehicle return: ' + err.message
+        }));
+      });
+  };
+
   const unpaidCount = confirmedBookings.filter(b => !b.isPaid).length;
   const paidCount = confirmedBookings.filter(b => b.isPaid).length;
 
@@ -386,10 +510,46 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
                         >
                           Pay with Card &rarr;
                         </button>
+                      ) : (b.bookingStatus === 'RETURNED' || b.status === 'RETURNED') ? (
+                        <a
+                          href={`/feedback/new?bookingId=${b.bookingId}`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            padding: '0.42rem 0.85rem',
+                            background: '#059669',
+                            color: '#ffffff',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            textDecoration: 'none'
+                          }}
+                        >
+                          Write Feedback &rarr;
+                        </a>
                       ) : (
-                        <span style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>
-                          Settled
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openReturnModal(b)}
+                          style={{
+                            background: '#2563eb',
+                            color: '#ffffff',
+                            border: 'none',
+                            padding: '0.45rem 0.85rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem'
+                          }}
+                          title="Execute return and release vehicle back to AVAILABLE inventory"
+                        >
+                          Return Vehicle
+                        </button>
                       )}
                     </td>
                   </tr>
@@ -681,6 +841,144 @@ export default function CustomerInvoicesPayments({ initialBookings = null, custo
           </div>
         </form>
       </div>
+
+      {/* Return Vehicle OTP Verification Modal */}
+      {returnModal.isOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.7)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            maxWidth: '520px',
+            width: '100%',
+            padding: '1.75rem',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+            position: 'relative'
+          }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', margin: '0 0 0.5rem' }}>
+              Confirm Vehicle Return & Release Inventory
+            </h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', margin: '0 0 1rem' }}>
+              Returning booking <strong>#BK-{returnModal.booking?.bookingId}</strong> for <strong>{returnModal.booking?.vehicleModel}</strong>.
+            </p>
+
+            {returnModal.isEarlyReturn && (
+              <div style={{
+                background: '#fffbeb',
+                border: '1px solid #fde68a',
+                color: '#92400e',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.82rem',
+                marginBottom: '1rem'
+              }}>
+                <strong>Early Return Notice:</strong> {returnModal.refundNotice || 'Since you have returned before your scheduled end date, your refund money can be collected from the branch front desk.'}
+              </div>
+            )}
+
+            {returnModal.error && (
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                color: '#991b1b',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.85rem',
+                marginBottom: '1rem'
+              }}>
+                {returnModal.error}
+              </div>
+            )}
+
+            {returnModal.success && (
+              <div style={{
+                background: '#ecfdf5',
+                border: '1px solid #a7f3d0',
+                color: '#065f46',
+                borderRadius: '8px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.85rem',
+                marginBottom: '1rem'
+              }}>
+                {returnModal.success}
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmReturn}>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontWeight: 700, fontSize: '0.85rem', color: '#334155', marginBottom: '0.35rem' }}>
+                  6-Digit Return Authorization OTP:
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={returnModal.otp}
+                  onChange={(e) => setReturnModal(prev => ({ ...prev, otp: e.target.value.replace(/\D/g, '') }))}
+                  placeholder="e.g. 123456"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '8px',
+                    fontSize: '1.2rem',
+                    letterSpacing: '0.25em',
+                    textAlign: 'center',
+                    fontWeight: 800
+                  }}
+                  autoFocus
+                />
+                <span style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.35rem', display: 'block' }}>
+                  {returnModal.maskedEmail ? `Code sent to ${returnModal.maskedEmail}` : 'Check your email inbox for the 6-digit code.'}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={() => setReturnModal(prev => ({ ...prev, isOpen: false }))}
+                  disabled={returnModal.loading}
+                  style={{
+                    padding: '0.6rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={returnModal.loading || returnModal.otp.length !== 6}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    cursor: (returnModal.loading || returnModal.otp.length !== 6) ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 4px rgba(37, 99, 235, 0.25)'
+                  }}
+                >
+                  {returnModal.loading ? 'Verifying & Releasing...' : 'Confirm Return'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );

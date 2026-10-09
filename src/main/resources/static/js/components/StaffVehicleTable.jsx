@@ -96,14 +96,8 @@ export default function StaffVehicleTable({
   });
   const [notification, setNotification] = useState(null);
 
-  // Fetch initial fleet data from backend API
-  useEffect(() => {
-    if (initialVehicles) {
-      setVehicles(initialVehicles);
-      setLoading(false);
-      return;
-    }
-
+  // Live Fleet Data Fetching Engine
+  const fetchFleet = () => {
     setLoading(true);
     fetch('/api/vehicles')
       .then(res => {
@@ -127,7 +121,36 @@ export default function StaffVehicleTable({
             setLoading(false);
           });
       });
+  };
+
+  // Fetch initial fleet data from backend API
+  useEffect(() => {
+    if (initialVehicles) {
+      setVehicles(initialVehicles);
+      setLoading(false);
+      return;
+    }
+    fetchFleet();
   }, [initialVehicles]);
+
+  // Reactive fleet synchronization on window/storage events (e.g. when vehicle is returned)
+  useEffect(() => {
+    const handleRefresh = () => fetchFleet();
+    const handleStorage = (e) => {
+      if (e.key === 'df_fleet_updated' || e.key === 'df_booking_updated') {
+        fetchFleet();
+      }
+    };
+
+    window.addEventListener('fleetRefresh', handleRefresh);
+    window.addEventListener('vehicleReturned', handleRefresh);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('fleetRefresh', handleRefresh);
+      window.removeEventListener('vehicleReturned', handleRefresh);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   // Synchronize when external props change
   useEffect(() => {
@@ -390,6 +413,31 @@ export default function StaffVehicleTable({
               <span>{showRegisterForm ? 'Close Registration' : 'Register Vehicle'}</span>
             </button>
           )}
+
+          {/* Live Fleet Refresh Button */}
+          <button
+            type="button"
+            onClick={fetchFleet}
+            disabled={loading}
+            style={{
+              backgroundColor: '#f1f5f9',
+              color: '#334155',
+              border: '1px solid #cbd5e1',
+              borderRadius: '8px',
+              padding: '0.5rem 0.85rem',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              transition: 'background-color 0.15s'
+            }}
+            title="Re-fetch live vehicle statuses from backend database"
+          >
+            <span>🔄</span>
+            <span>{loading ? 'Refreshing...' : 'Refresh Fleet'}</span>
+          </button>
         </div>
       </div>
 

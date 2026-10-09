@@ -631,6 +631,12 @@
                 spinner.style.display = 'none';
                 btnText.innerHTML = '&#10003; Return Confirmed!';
 
+                try {
+                    localStorage.setItem('df_fleet_updated', Date.now().toString());
+                    window.dispatchEvent(new CustomEvent('vehicleReturned', { detail: result.data }));
+                    window.dispatchEvent(new CustomEvent('fleetRefresh'));
+                } catch (e) {}
+
                 if (result.data.isEarlyReturn) {
                     successBox.innerHTML = '<strong>Vehicle Returned Successfully!</strong><br>' +
                         (result.data.refundNotice || 'Since you have returned the vehicle before your scheduled end date, your refund money can be collected from the branch front desk after giving the car key to the staff.') +

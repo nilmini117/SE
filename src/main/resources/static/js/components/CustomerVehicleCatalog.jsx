@@ -58,14 +58,8 @@ export default function CustomerVehicleCatalog({
   const [loading, setLoading] = useState(!initialVehicles);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Fetch all vehicles from backend if not provided as props
-  useEffect(() => {
-    if (initialVehicles) {
-      setAllVehicles(initialVehicles);
-      setLoading(false);
-      return;
-    }
-
+  // Live Catalog Fetching Engine
+  const refreshCatalog = () => {
     setLoading(true);
     fetch('/vehicles/api/by-brand?availableOnly=true')
       .then(res => {
@@ -81,7 +75,36 @@ export default function CustomerVehicleCatalog({
         setAllVehicles(defaultMockPark);
         setLoading(false);
       });
+  };
+
+  // Fetch all vehicles from backend if not provided as props
+  useEffect(() => {
+    if (initialVehicles) {
+      setAllVehicles(initialVehicles);
+      setLoading(false);
+      return;
+    }
+    refreshCatalog();
   }, [propVehicles, liveVehicles]);
+
+  // Reactive fleet synchronization on window/storage events (e.g. when vehicle is returned)
+  useEffect(() => {
+    const handleRefresh = () => refreshCatalog();
+    const handleStorage = (e) => {
+      if (e.key === 'df_fleet_updated' || e.key === 'df_booking_updated') {
+        refreshCatalog();
+      }
+    };
+
+    window.addEventListener('fleetRefresh', handleRefresh);
+    window.addEventListener('vehicleReturned', handleRefresh);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('fleetRefresh', handleRefresh);
+      window.removeEventListener('vehicleReturned', handleRefresh);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   // Synchronize when external props change
   useEffect(() => {
